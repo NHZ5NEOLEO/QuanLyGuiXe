@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng Quan Hệ Thống - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- Custom Design System -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        .chart-container-box { min-height: 320px; position: relative; }
+        .donut-container-box { min-height: 250px; position: relative; }
+        .text-xs { font-size: 0.75rem; }
+        .pulse-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background-color: #10b981;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .metric-card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06) !important;
+        }
+        .text-indigo {
+            color: #6366f1 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <div th:replace="~{layout/fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-wrapper">
+        <!-- Topbar Header -->
+        <div th:replace="~{layout/fragments/header :: header}"></div>
+
+        <!-- Main Content Body -->
+        <main class="content-body" role="main">
+            <!-- Page Header with Period Filter & Live Auto-Refresh -->
+            <div class="d-flex flex-column flex-lg-row lg:items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h1 class="h3 fw-bold text-dark mb-0">Tổng quan bãi xe</h1>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 small d-inline-flex align-items-center gap-1">
+                            <span class="pulse-dot"></span> LIVE REALTIME
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-0 mt-1">Giám sát số lượng phương tiện, lưu lượng xe vào/ra, doanh thu và an ninh bãi đỗ</p>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Auto-refresh controls -->
+                    <div class="d-flex align-items-center bg-white border rounded-3 p-1 px-2 shadow-sm gap-2">
+                        <button type="button" class="btn btn-sm p-1 text-primary border-0" id="btnManualRefresh" onclick="manualRefresh()" title="Làm mới dữ liệu ngay">
+                            <i class="fa-solid fa-rotate" id="refreshIcon"></i>
+                        </button>
+                        <span class="small text-muted" id="autoRefreshLabel">Tự động: <b>30s</b></span>
+                        <div class="form-check form-switch m-0 p-0 ps-4">
+                            <input class="form-check-input ms-0" type="checkbox" role="switch" id="autoRefreshSwitch" checked onchange="toggleAutoRefresh(this.checked)" title="Bật/Tắt tự động làm mới">
+                        </div>
+                    </div>
+
+                    <!-- Period Filter -->
+                    <div class="btn-group shadow-sm" role="group" aria-label="Bộ lọc kỳ">
+                        <a th:href="@{/dashboard(period='today')}" 
+                           th:classappend="${selectedPeriod == 'today' or selectedPeriod == null} ? 'btn-primary' : 'btn-outline-secondary'"
+                           class="btn btn-sm">Hôm nay</a>
+                        <a th:href="@{/dashboard(period='7days')}" 
+                           th:classappend="${selectedPeriod == '7days'} ? 'btn-primary' : 'btn-outline-secondary'"
+                           class="btn btn-sm">7 ngày</a>
+                        <a th:href="@{/dashboard(period='30days')}" 
+                           th:classappend="${selectedPeriod == '30days'} ? 'btn-primary' : 'btn-outline-secondary'"
+                           class="btn btn-sm">30 ngày</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards Grid (5 Cards) -->
+            <div class="row g-3 mb-4">
+                <!-- KPI 1: Xe đang gửi trong bãi -->
+                <div class="col-sm-6 col-xl">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white metric-card-hover">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted text-uppercase">Xe trong bãi</span>
+                            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-2">
+                                <i class="fa-solid fa-car-side fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-2 fw-bold text-primary font-monospace" id="kpiXeDangTrongBai" th:text="${stats != null ? stats.xeDangTrongBai : 0}">0</span>
+                            <span class="small text-muted fw-medium">xe</span>
+                        </div>
+                        <div class="small text-muted mt-2 d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                            <span>Đang có mặt trong bãi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Lượt xe vào hôm nay -->
+                <div class="col-sm-6 col-xl">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white metric-card-hover">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted text-uppercase">Lượt xe vào</span>
+                            <div class="p-2 bg-success bg-opacity-10 text-success rounded-2">
+                                <i class="fa-solid fa-arrow-right-to-bracket fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-2 fw-bold text-dark font-monospace" id="kpiLuotVao" th:text="${stats != null ? stats.luotVaoHomNay : 0}">0</span>
+                            <span class="small text-success fw-medium">lượt xe</span>
+                        </div>
+                        <div class="small text-muted mt-2 d-flex align-items-center gap-1">
+                            <i class="fa-regular fa-clock"></i>
+                            <span>Ghi nhận từ 00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Lượt xe ra hôm nay -->
+                <div class="col-sm-6 col-xl">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white metric-card-hover">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted text-uppercase">Lượt xe ra</span>
+                            <div class="p-2 bg-warning bg-opacity-10 text-warning rounded-2">
+                                <i class="fa-solid fa-arrow-right-from-bracket fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-2 fw-bold text-dark font-monospace" id="kpiLuotRa" th:text="${stats != null ? stats.luotRaHomNay : 0}">0</span>
+                            <span class="small text-warning fw-medium">lượt xe</span>
+                        </div>
+                        <div class="small text-muted mt-2 d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                            <span>Đã thanh toán xong</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Doanh thu trong ngày -->
+                <div class="col-sm-6 col-xl">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white metric-card-hover">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted text-uppercase">Doanh thu hôm nay</span>
+                            <div class="p-2 bg-info bg-opacity-10 text-info rounded-2">
+                                <i class="fa-solid fa-coins fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-2 fw-bold text-primary font-monospace" id="kpiDoanhThu"
+                                  th:text="${stats != null ? #numbers.formatDecimal(stats.doanhThuHomNay, 0, 'POINT', 0, 'COMMA') + ' đ' : '0 đ'}">0 đ</span>
+                        </div>
+                        <div class="small text-muted mt-2 d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-database text-muted"></i>
+                            <span>Dữ liệu thực SQL Server</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Vé tháng cư dân đang hiệu lực -->
+                <div class="col-sm-6 col-xl">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white metric-card-hover">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted text-uppercase">Vé tháng cư dân</span>
+                            <div class="p-2 bg-secondary bg-opacity-10 text-secondary rounded-2">
+                                <i class="fa-solid fa-id-card fs-5 text-indigo"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-2 fw-bold text-dark font-monospace" th:text="${stats != null ? stats.tongVeThangHoatDong : 0}">0</span>
+                            <span class="small text-muted">thẻ hoạt động</span>
+                        </div>
+                        <div class="small mt-2">
+                            <a th:href="@{/ve-thang}" class="text-decoration-none text-primary fw-semibold d-flex align-items-center gap-1">
+                                <span>Quản lý vé tháng</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Navigation Shortcuts -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 hover-shadow transition" role="button" data-bs-toggle="modal" data-bs-target="#quickCheckInModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="p-2 bg-success text-white rounded-2">
+                                <i class="fa-solid fa-arrow-right-to-bracket fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Tiếp nhận xe vào</div>
+                                <div class="text-muted small">Mở popup tạo vé vào nhanh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <a th:href="@{/parking/check-out}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 hover-shadow transition">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="p-2 bg-warning text-white rounded-2">
+                                    <i class="fa-solid fa-arrow-right-from-bracket fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Xe ra (Cổng ra)</div>
+                                    <div class="text-muted small">Quét mã camera, tính phí & xuất bãi</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 hover-shadow transition" role="button" data-bs-toggle="modal" data-bs-target="#quickLookupModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="p-2 bg-primary text-white rounded-2">
+                                <i class="fa-solid fa-magnifying-glass fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Tra cứu nhanh xe</div>
+                                <div class="text-muted small">Tìm biển số & tính phí tức thời</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <a th:href="@{/reports}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 hover-shadow transition">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="p-2 bg-info text-white rounded-2">
+                                    <i class="fa-solid fa-chart-line fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Thống kê & Báo cáo</div>
+                                    <div class="text-muted small">Biểu đồ doanh thu chi tiết</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Overdue Vehicle / Security Alert Banner (If Any) -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden" 
+                 th:classappend="${overdueCount > 0} ? 'border-start border-4 border-danger' : 'border-start border-4 border-success'">
+                <div class="card-body p-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="p-2 rounded-circle" th:classappend="${overdueCount > 0} ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'">
+                                <i class="fa-solid fs-5" th:classappend="${overdueCount > 0} ? 'fa-triangle-exclamation' : 'fa-shield-halved'"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                    <span>Cảnh báo an ninh & Phương tiện lưu bãi quá hạn (> 24 giờ)</span>
+                                    <span th:if="${overdueCount > 0}" class="badge bg-danger" th:text="${overdueCount} + ' xe quá hạn'">1 xe</span>
+                                    <span th:if="${overdueCount == 0}" class="badge bg-success">An toàn 100%</span>
+                                </div>
+                                <small class="text-muted" th:if="${overdueCount > 0}">
+                                    Phát hiện các phương tiện lưu bãi liên tục quá 24 giờ chưa ra. Cần kiểm tra an ninh hoặc đối chiếu danh sách đen.
+                                </small>
+                                <small class="text-muted" th:if="${overdueCount == 0}">
+                                    Tất cả phương tiện đang gửi đều trong khung thời gian hợp lệ. Không có xe nào quá hạn hoặc nghi vấn.
+                                </small>
+                            </div>
+                        </div>
+                        <div th:if="${overdueCount > 0}" class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1" 
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseOverdueList" aria-expanded="false" aria-controls="collapseOverdueList" id="btnToggleOverdue">
+                                <i class="fa-solid fa-list-ul"></i>
+                                <span>Xem danh sách (<span th:text="${overdueCount}">0</span> xe)</span>
+                                <i class="fa-solid fa-chevron-down ms-1" id="iconOverdueChevron"></i>
+                            </button>
+                            <a th:href="@{/active-vehicles}" class="btn btn-sm btn-danger fw-semibold">
+                                Quản lý lưu bãi <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Overdue list preview -->
+                    <div class="collapse mt-3 pt-3 border-top" id="collapseOverdueList" th:if="${overdueVehicles != null and not #lists.isEmpty(overdueVehicles)}">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless align-middle mb-0 small">
+                                <thead>
+                                    <tr class="text-muted">
+                                        <th>Biển Số</th>
+                                        <th>Loại Xe</th>
+                                        <th>Thời Gian Vào</th>
+                                        <th>Thời Lượng Đã Gửi</th>
+                                        <th class="text-end">Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="ov : ${overdueVehicles}">
+                                        <td><span class="badge bg-light text-dark border font-monospace fw-bold" th:text="${ov.bienSoXe}">29A-99999</span></td>
+                                        <td th:text="${ov.loaiXe != null ? ov.loaiXe.tenLoai : '—'}">Ô tô</td>
+                                        <td th:text="${ov.thoiGianVao != null ? #temporals.format(ov.thoiGianVao, 'dd/MM/yyyy HH:mm') : '—'}">01/01 08:00</td>
+                                        <td class="text-danger fw-semibold"><i class="fa-regular fa-clock me-1"></i>Trên 24 giờ</td>
+                                        <td class="text-end">
+                                            <a th:href="@{'/tickets/' + ${ov.id}}" class="btn btn-xs btn-outline-primary py-0 px-2">Xem vé</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Occupancy Row -->
+            <div class="row g-4 mb-4">
+                <!-- Main Chart: Traffic 7 Days vs Peak Hours -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <h2 class="h5 fw-bold text-dark mb-0" id="chartMainTitle">Hoạt động bãi xe (7 ngày gần nhất)</h2>
+                                <small class="text-muted" id="chartSubTitle">Biến động lưu lượng xe vào và ra theo từng ngày</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Chế độ biểu đồ">
+                                    <button type="button" class="btn btn-primary" id="btnChart7Days" onclick="switchChartMode('7days')">
+                                        <i class="fa-solid fa-chart-column me-1"></i> 7 ngày gần nhất
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="btnChartHourly" onclick="switchChartMode('hourly')">
+                                        <i class="fa-solid fa-clock me-1"></i> Giờ cao điểm (Peak Hours)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 chart-container-box">
+                            <canvas id="trafficActivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Cơ cấu loại xe trong bãi (Doughnut Chart) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="h5 fw-bold text-dark mb-0">Cơ cấu loại xe</h2>
+                                <small class="text-muted">Phân bổ phương tiện đang gửi</small>
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" th:text="'Tổng: ' + (${stats != null ? stats.xeDangTrongBai : 0}) + ' xe'">0 xe</span>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column justify-content-between">
+                            <div class="donut-container-box mb-3">
+                                <canvas id="vehicleDistributionChart"></canvas>
+                            </div>
+                            <!-- Breakdown list from vehicleDistribution -->
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center small mb-1" th:each="entry, stat : ${vehicleDistribution}">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-circle text-xs" 
+                                           th:classappend="${stat.index == 0 ? 'text-primary' : (stat.index == 1 ? 'text-success' : (stat.index == 2 ? 'text-warning' : 'text-purple'))}"></i>
+                                        <span class="text-dark fw-medium" th:text="${entry.key}">Loại xe</span>
+                                    </div>
+                                    <span class="font-monospace fw-bold text-dark" th:text="${entry.value} + ' xe'">0 xe</span>
+                                </div>
+                                <div th:if="${#maps.isEmpty(vehicleDistribution)}" class="text-center text-muted small py-2">
+                                    Không có xe nào đang gửi trong bãi
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Table -->
+            <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="h5 fw-bold text-dark mb-0">Lượt xe vào / ra gần đây</h2>
+                        <small class="text-muted">10 lượt xe vào/ra mới nhất trong hệ thống</small>
+                    </div>
+                    <a th:href="@{/tickets}" class="btn btn-sm btn-outline-primary">
+                        Xem tất cả vé xe <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Mã Vé</th>
+                                <th>Biển Số Xe</th>
+                                <th>Loại Xe</th>
+                                <th>Thời Gian Vào</th>
+                                <th>Thời Gian Ra</th>
+                                <th>Chi Phí</th>
+                                <th>Trạng Thái</th>
+                                <th class="text-end">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(recentActivities)}">
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fa-regular fa-folder-open fs-3 d-block mb-2"></i>
+                                    Chưa có lượt xe vào / ra nào được ghi nhận
+                                </td>
+                            </tr>
+                            <tr th:each="vx : ${recentActivities}">
+                                <td>
+                                    <span class="font-monospace fw-semibold text-primary" th:text="${vx.maQR}">QR-001</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-2 py-1 font-monospace fw-bold" th:text="${vx.bienSoXe}">29A-12345</span>
+                                </td>
+                                <td th:text="${vx.loaiXe != null ? vx.loaiXe.tenLoai : '—'}">Xe máy</td>
+                                <td class="small" th:text="${vx.thoiGianVao != null ? #temporals.format(vx.thoiGianVao, 'dd/MM/yyyy HH:mm') : '—'}">01/01 08:00</td>
+                                <td class="small" th:text="${vx.thoiGianRa != null ? #temporals.format(vx.thoiGianRa, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                                <td class="fw-semibold text-dark font-monospace" 
+                                    th:text="${vx.chiPhi != null ? #numbers.formatDecimal(vx.chiPhi, 0, 'POINT', 0, 'COMMA') + ' đ' : '—'}">0 đ</td>
+                                <td>
+                                    <span th:if="${vx.trangThai == 'Đang gửi'}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                        <i class="fa-solid fa-circle-dot me-1"></i> Đang gửi
+                                    </span>
+                                    <span th:if="${vx.trangThai == 'Đã ra'}" class="badge bg-secondary bg-opacity-10 text-secondary border">
+                                        <i class="fa-solid fa-check me-1"></i> Đã ra
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{'/tickets/' + ${vx.id}}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Xem chi tiết vé">
+                                        <i class="fa-solid fa-eye me-1"></i> Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Reusable Footer -->
+        <div th:replace="~{layout/fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 1: TIẾP NHẬN XE VÀO NHANH (QUICK CHECK-IN)                         -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="quickCheckInModal" tabindex="-1" aria-labelledby="quickCheckInModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary text-white py-3 px-4">
+                <h5 class="modal-title fw-bold" id="quickCheckInModalLabel">
+                    <i class="fa-solid fa-plus-circle me-2"></i>Tiếp Nhận Xe Vào Nhanh
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickCheckInForm" onsubmit="handleQuickCheckIn(event)">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark" for="quickPlateInput">
+                            Biển Số Xe <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-lg font-monospace fw-bold text-uppercase" 
+                               id="quickPlateInput" placeholder="VD: 30A-123.45 hoặc 29B1-123.45" required autocomplete="off">
+                        <div class="form-text text-muted small">Nhập định dạng chuẩn biển số Việt Nam (ô tô hoặc xe máy).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark" for="quickVehicleTypeSelect">
+                            Loại Phương Tiện <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-lg" id="quickVehicleTypeSelect" required>
+                            <option th:each="lx : ${loaiXes}" th:value="${lx.id}" th:text="${lx.tenLoai}">Xe máy</option>
+                            <option th:if="${#lists.isEmpty(loaiXes)}" value="1">Xe máy</option>
+                            <option th:if="${#lists.isEmpty(loaiXes)}" value="2">Ô tô 4-7 chỗ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark" for="quickCheckInNote">Ghi Chú (Tùy chọn)</label>
+                        <input type="text" class="form-control" id="quickCheckInNote" placeholder="Màu sắc xe, ghi chú đặc biệt...">
+                    </div>
+                    <div id="quickCheckInAlert" class="alert d-none py-2 small mb-0"></div>
+                </div>
+                <div class="modal-footer bg-light py-3 px-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnSubmitQuickCheckIn">
+                        <i class="fa-solid fa-barcode me-1"></i> Tạo Vé & Mở Barie
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 2: TRA CỨU NHANH BIỂN SỐ / MÃ VÉ (QUICK LOOKUP)                    -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="quickLookupModal" tabindex="-1" aria-labelledby="quickLookupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white py-3 px-4">
+                <h5 class="modal-title fw-bold" id="quickLookupModalLabel">
+                    <i class="fa-solid fa-magnifying-glass me-2 text-primary"></i>Tra Cứu Nhanh Biển Số / Mã Vé
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control form-control-lg font-monospace fw-bold text-uppercase" 
+                           id="lookupModalInput" placeholder="Nhập biển số (29A-12345) hoặc mã vé (QR-...)" autocomplete="off">
+                    <button class="btn btn-primary px-3 fw-bold" type="button" id="btnExecLookup" onclick="handleQuickLookup()">
+                        <i class="fa-solid fa-search me-1"></i> Tra cứu
+                    </button>
+                </div>
+
+                <div id="lookupLoadingBox" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="small text-muted mt-2">Đang tìm kiếm thông tin phương tiện...</div>
+                </div>
+
+                <div id="lookupResultBox" class="d-none">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 px-4">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{layout/fragments/header :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/app.js}"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Data passed from Spring Boot Controller
+    const chartLabels7Days = /*[[${trafficActivity != null ? trafficActivity.labels : {}}]]*/ [];
+    const inData7Days = /*[[${trafficActivity != null ? trafficActivity.inCounts : {}}]]*/ [];
+    const outData7Days = /*[[${trafficActivity != null ? trafficActivity.outCounts : {}}]]*/ [];
+    const hourlyTrafficMap = /*[[${hourlyTraffic != null ? hourlyTraffic : {}}]]*/ {};
+    const vehicleDistMap = /*[[${vehicleDistribution != null ? vehicleDistribution : {}}]]*/ {};
+
+    let mainChart = null;
+    let currentChartMode = '7days';
+
+    // Initialize Charts on DOM Ready
+    document.addEventListener('DOMContentLoaded', () => {
+        initMainChart();
+        initVehicleDistributionChart();
+        initAutoRefresh();
+        bindGlobalSearchTrigger();
+    });
+
+    function initMainChart() {
+        const canvas = document.getElementById('trafficActivityChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        mainChart = new Chart(ctx, {
+            type: 'bar',
+            data: getChartData7Days(),
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            boxWidth: 12,
+                            boxHeight: 12,
+                            usePointStyle: true,
+                            font: { family: 'Inter', size: 12, weight: 600 },
+                            color: '#475569'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#0F172A',
+                        titleFont: { family: 'Inter', size: 13, weight: 700 },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.dataset.label + ': ' + (context.raw || 0) + ' lượt xe';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: { family: 'Inter', size: 11 },
+                            color: '#64748B'
+                        },
+                        grid: { color: '#F1F5F9' }
+                    },
+                    x: {
+                        ticks: {
+                            font: { family: 'Inter', size: 11, weight: 600 },
+                            color: '#64748B'
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function getChartData7Days() {
+        return {
+            labels: chartLabels7Days,
+            datasets: [
+                {
+                    label: 'Lượt xe vào',
+                    data: inData7Days,
+                    backgroundColor: '#1E40AF',
+                    hoverBackgroundColor: '#1D4ED8',
+                    borderRadius: 4,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.7
+                },
+                {
+                    label: 'Lượt xe ra',
+                    data: outData7Days,
+                    backgroundColor: '#10B981',
+                    hoverBackgroundColor: '#059669',
+                    borderRadius: 4,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.7
+                }
+            ]
+        };
+    }
+
+    function getChartDataHourly() {
+        const labels = Object.keys(hourlyTrafficMap);
+        const data = Object.values(hourlyTrafficMap);
+        return {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Lượt xe vào theo giờ (Hôm nay)',
+                    data: data,
+                    backgroundColor: '#6366F1',
+                    hoverBackgroundColor: '#4F46E5',
+                    borderRadius: 4,
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.8
+                }
+            ]
+        };
+    }
+
+    function switchChartMode(mode) {
+        if (!mainChart) return;
+        currentChartMode = mode;
+        const btn7Days = document.getElementById('btnChart7Days');
+        const btnHourly = document.getElementById('btnChartHourly');
+        const titleEl = document.getElementById('chartMainTitle');
+        const subTitleEl = document.getElementById('chartSubTitle');
+
+        if (mode === '7days') {
+            btn7Days.classList.replace('btn-outline-secondary', 'btn-primary');
+            btnHourly.classList.replace('btn-primary', 'btn-outline-secondary');
+            titleEl.textContent = 'Hoạt động bãi xe (7 ngày gần nhất)';
+            subTitleEl.textContent = 'Biến động lưu lượng xe vào và ra theo từng ngày';
+            mainChart.data = getChartData7Days();
+        } else {
+            btnHourly.classList.replace('btn-outline-secondary', 'btn-primary');
+            btn7Days.classList.replace('btn-primary', 'btn-outline-secondary');
+            titleEl.textContent = 'Lưu lượng xe theo khung giờ (Giờ cao điểm hôm nay)';
+            subTitleEl.textContent = 'Giám sát 24 khung giờ trong ngày để phát hiện giờ cao điểm xe vào bãi';
+            mainChart.data = getChartDataHourly();
+        }
+        mainChart.update();
+    }
+
+    // Doughnut Chart: Vehicle Distribution
+    function initVehicleDistributionChart() {
+        const canvas = document.getElementById('vehicleDistributionChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let labels = Object.keys(vehicleDistMap);
+        let data = Object.values(vehicleDistMap);
+
+        if (labels.length === 0 || data.every(v => v === 0)) {
+            labels = ['Chưa có xe'];
+            data = [1];
+        }
+
+        const bgColors = ['#1E40AF', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#94A3B8'];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: bgColors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw + ' xe';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // =========================================================================
+    // LIVE AUTO-REFRESH (30s)
+    // =========================================================================
+    let refreshTimerSeconds = 30;
+    let autoRefreshInterval = null;
+    let isAutoRefreshActive = true;
+
+    function initAutoRefresh() {
+        autoRefreshInterval = setInterval(() => {
+            if (!isAutoRefreshActive) return;
+            refreshTimerSeconds--;
+            const labelEl = document.getElementById('autoRefreshLabel');
+            if (labelEl) {
+                labelEl.innerHTML = `Tự động: <b>${refreshTimerSeconds}s</b>`;
+            }
+            if (refreshTimerSeconds <= 0) {
+                refreshTimerSeconds = 30;
+                fetchLatestMetrics();
+            }
+        }, 1000);
+    }
+
+    function toggleAutoRefresh(enabled) {
+        isAutoRefreshActive = enabled;
+        const labelEl = document.getElementById('autoRefreshLabel');
+        if (labelEl) {
+            labelEl.innerHTML = enabled ? `Tự động: <b>${refreshTimerSeconds}s</b>` : `Tự động: <b>TẮT</b>`;
+        }
+    }
+
+    async function manualRefresh() {
+        const icon = document.getElementById('refreshIcon');
+        if (icon) icon.classList.add('fa-spin');
+        await fetchLatestMetrics();
+        refreshTimerSeconds = 30;
+        setTimeout(() => {
+            if (icon) icon.classList.remove('fa-spin');
+        }, 600);
+    }
+
+    async function fetchLatestMetrics() {
+        try {
+            const resp = await fetch('/api/reports/summary?period=today');
+            if (!resp.ok) return;
+            const data = await resp.json();
+
+            // Update KPI numbers
+            const elXe = document.getElementById('kpiXeDangTrongBai');
+            const elVao = document.getElementById('kpiLuotVao');
+            const elRa = document.getElementById('kpiLuotRa');
+            const elTien = document.getElementById('kpiDoanhThu');
+
+            if (elXe && data.xeDangTrongBai !== undefined) elXe.textContent = data.xeDangTrongBai;
+            if (elVao && data.luotVaoHomNay !== undefined) elVao.textContent = data.luotVaoHomNay;
+            if (elRa && data.luotRaHomNay !== undefined) elRa.textContent = data.luotRaHomNay;
+            if (elTien && data.doanhThuHomNay !== undefined) {
+                elTien.textContent = new Intl.NumberFormat('vi-VN').format(data.doanhThuHomNay) + ' đ';
+            }
+        } catch (e) {
+            console.warn('Auto refresh error:', e);
+        }
+    }
+
+    // =========================================================================
+    // MODAL QUICK CHECK-IN
+    // =========================================================================
+    async function handleQuickCheckIn(e) {
+        e.preventDefault();
+        const plateInput = document.getElementById('quickPlateInput');
+        const typeSelect = document.getElementById('quickVehicleTypeSelect');
+        const noteInput = document.getElementById('quickCheckInNote');
+        const alertBox = document.getElementById('quickCheckInAlert');
+        const btn = document.getElementById('btnSubmitQuickCheckIn');
+
+        const plate = plateInput.value.trim().toUpperCase();
+        if (!plate) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo vé...';
+        alertBox.className = 'alert d-none';
+
+        try {
+            const payload = {
+                bienSoXe: plate,
+                loaiXeId: parseInt(typeSelect.value),
+                ghiChu: noteInput ? noteInput.value.trim() : ''
+            };
+
+            const resp = await fetch('/api/parking/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await resp.json();
+
+            if (resp.ok) {
+                // Hide modal
+                const modalEl = document.getElementById('quickCheckInModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+
+                // Show SweetAlert ticket
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Xe vào bãi thành công!',
+                    html: `
+                        <div class="text-center my-2">
+                            <div class="h4 font-monospace fw-bold text-primary mb-1">${data.bienSoXe || plate}</div>
+                            <div class="badge bg-success mb-3">${data.tenLoaiXe || 'Phương tiện'}</div>
+                            <div class="mb-2"><img src="${data.qrCodeBase64 ? 'data:image/png;base64,' + data.qrCodeBase64 : ''}" class="img-thumbnail qr-thumb-150"></div>
+                            <div class="small text-muted font-monospace">Mã vé: <b>${data.maQR}</b></div>
+                            <div class="small text-muted">Giờ vào: <b>${data.thoiGianVao || 'Vừa xong'}</b></div>
+                        </div>
+                    `,
+                    confirmButtonText: 'Đóng & Làm mới',
+                    confirmButtonColor: '#1e40af'
+                }).then(() => {
+                    manualRefresh();
+                    window.location.reload();
+                });
+                plateInput.value = '';
+            } else {
+                alertBox.className = 'alert alert-danger py-2 small mb-0';
+                alertBox.textContent = data.message || 'Không thể tạo lượt gửi xe. Vui lòng thử lại!';
+            }
+        } catch (err) {
+            alertBox.className = 'alert alert-danger py-2 small mb-0';
+            alertBox.textContent = 'Lỗi kết nối máy chủ: ' + err.message;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-barcode me-1"></i> Tạo Vé & Mở Barie';
+        }
+    }
+
+    // =========================================================================
+    // MODAL QUICK LOOKUP
+    // =========================================================================
+    async function handleQuickLookup() {
+        const input = document.getElementById('lookupModalInput');
+        const query = input.value.trim();
+        const resultBox = document.getElementById('lookupResultBox');
+        const loadingBox = document.getElementById('lookupLoadingBox');
+
+        if (!query) return;
+
+        resultBox.className = 'd-none';
+        loadingBox.className = 'text-center py-4';
+
+        try {
+            const resp = await fetch('/api/parking/preview-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier: query })
+            });
+
+            loadingBox.className = 'd-none';
+            resultBox.className = 'd-block';
+
+            if (resp.ok) {
+                const data = await resp.json();
+                resultBox.innerHTML = `
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary fs-6 font-monospace">${data.bienSoXe}</span>
+                            <span class="badge bg-success">${data.tenLoaiXe || 'Phương tiện'}</span>
+                        </div>
+                        <ul class="list-unstyled small mb-3 lh-lg text-dark">
+                            <li><span class="text-muted">Mã vé QR:</span> <b class="font-monospace">${data.maQR}</b></li>
+                            <li><span class="text-muted">Thời điểm vào:</span> <b>${data.thoiGianVao || '—'}</b></li>
+                            <li><span class="text-muted">Thời lượng gửi:</span> <b class="text-primary">${data.thoiLuong || 'Đang gửi'}</b></li>
+                            <li><span class="text-muted">Hình thức vé:</span> <b>${data.laVeThang ? '<span class="badge bg-info text-dark">Vé tháng cư dân</span>' : 'Vé lượt'}</b></li>
+                            <li class="fs-5 fw-bold text-danger mt-1"><span class="text-muted fs-6">Phí tạm tính:</span> ${new Intl.NumberFormat('vi-VN').format(data.soTien || 0)} đ</li>
+                        </ul>
+                        <div class="d-flex gap-2">
+                            <a href="/tickets/${data.veXeId}" class="btn btn-sm btn-outline-primary flex-grow-1">Xem Chi Tiết Vé</a>
+                            <a href="/parking/check-out?keyword=${encodeURIComponent(data.bienSoXe)}" class="btn btn-sm btn-warning fw-bold flex-grow-1 text-dark">Xuất Bãi & Thu Phí</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const errData = await resp.json();
+                resultBox.innerHTML = `
+                    <div class="alert alert-warning py-3 text-center mb-0 small">
+                        <i class="fa-solid fa-circle-exclamation fs-4 text-warning d-block mb-2"></i>
+                        ${errData.message || 'Không tìm thấy xe đang gửi khớp với thông tin "' + query + '".'}
+                    </div>
+                `;
+            }
+        } catch (err) {
+            loadingBox.className = 'd-none';
+            resultBox.className = 'd-block';
+            resultBox.innerHTML = `<div class="alert alert-danger py-2 small mb-0">Lỗi kết nối: ${err.message}</div>`;
+        }
+    }
+
+    // Listen for '/' key to trigger quick lookup modal
+    function bindGlobalSearchTrigger() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                const modalEl = document.getElementById('quickLookupModal');
+                if (modalEl) {
+                    const m = new bootstrap.Modal(modalEl);
+                    m.show();
+                    setTimeout(() => {
+                        const inp = document.getElementById('lookupModalInput');
+                        if (inp) inp.focus();
+                    }, 400);
+                }
+            }
+        });
+
+        // If topbar search input is clicked, open lookup modal
+        const topSearch = document.querySelector('.header-search-input');
+        if (topSearch) {
+            topSearch.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modalEl = document.getElementById('quickLookupModal');
+                if (modalEl) {
+                    const m = new bootstrap.Modal(modalEl);
+                    m.show();
+                    setTimeout(() => {
+                        const inp = document.getElementById('lookupModalInput');
+                        if (inp) inp.focus();
+                    }, 400);
+                }
+            });
+        }
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

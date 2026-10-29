@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh Giá Dịch Vụ — QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='danh-gia')}"></div>
+
+    <main class="flex-grow-1">
+        <!-- =================================================================
+             KHU VỰC A: TIÊU ĐỀ TRANG
+             ================================================================= -->
+        <section class="portal-page-header">
+            <div class="container-xl px-3 px-sm-4 text-center">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border text-xs fw-bold text-warning mb-2">
+                    <i class="fa-solid fa-star"></i>
+                    <span>LẮNG NGHE &bull; CẢI THIỆN CHẤT LƯỢNG</span>
+                </div>
+                <h1 class="portal-page-title">ĐÁNH GIÁ DỊCH VỤ</h1>
+                <p class="portal-page-desc mx-auto mw-600">
+                    Ý kiến của bạn giúp chúng tôi cải thiện chất lượng phục vụ.
+                </p>
+            </div>
+        </section>
+
+        <!-- Main Feedback Section -->
+        <section class="pb-5">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="row g-4 justify-content-center">
+
+                    <!-- Left Column: Feedback Form -->
+                    <div class="col-lg-7">
+                        <div class="portal-card p-4 p-md-4 mb-4">
+                            <!-- Success Toast / Alert -->
+                            <div id="feedbackSuccessAlert" class="alert alert-success border-success d-flex align-items-center gap-2 text-xs fw-semibold mb-4 d-none" role="alert">
+                                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
+                                <span id="feedbackSuccessMsg">Cảm ơn bạn đã đóng góp ý kiến quý báu cho bãi đỗ xe! Dữ liệu đã được ghi nhận.</span>
+                            </div>
+
+                            <!-- Error Alert -->
+                            <div id="feedbackErrorAlert" class="alert alert-danger border-danger d-flex align-items-center gap-2 text-xs fw-semibold mb-4 d-none" role="alert">
+                                <i class="fa-solid fa-circle-exclamation fs-5 text-danger"></i>
+                                <span id="feedbackErrorMsg">Vui lòng kiểm tra lại thông tin góp ý.</span>
+                            </div>
+
+                            <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)" novalidate>
+
+                                <!-- =================================================================
+                                     KHU VỰC B: ĐIỂM ĐÁNH GIÁ (INTERACTIVE 5-STAR RATING)
+                                     ================================================================= -->
+                                <div class="mb-4 text-center p-3.5 bg-light rounded-3 border">
+                                    <label class="form-label fw-bold text-dark text-xs text-uppercase letter-spacing-1 mb-2 d-block">
+                                        Mức độ hài lòng của bạn <span class="text-danger">*</span>
+                                    </label>
+
+                                    <!-- 5 Star Interactive Row -->
+                                    <div class="star-rating-box justify-content-center mb-2" id="starContainer">
+                                        <i class="fa-solid fa-star active" data-rating="1" onclick="setRating(1)" onmouseover="hoverRating(1)" onmouseout="resetHover()"></i>
+                                        <i class="fa-solid fa-star active" data-rating="2" onclick="setRating(2)" onmouseover="hoverRating(2)" onmouseout="resetHover()"></i>
+                                        <i class="fa-solid fa-star active" data-rating="3" onclick="setRating(3)" onmouseover="hoverRating(3)" onmouseout="resetHover()"></i>
+                                        <i class="fa-solid fa-star active" data-rating="4" onclick="setRating(4)" onmouseover="hoverRating(4)" onmouseout="resetHover()"></i>
+                                        <i class="fa-solid fa-star active" data-rating="5" onclick="setRating(5)" onmouseover="hoverRating(5)" onmouseout="resetHover()"></i>
+                                    </div>
+                                    <input type="hidden" id="soSaoInput" value="5">
+
+                                    <!-- Explanatory Label -->
+                                    <div class="rating-badge-label text-warning" id="ratingLabel">
+                                        Rất hài lòng (5/5 sao)
+                                    </div>
+                                    <div class="text-2xs text-muted mt-1">Chạm hoặc di chuột vào ngôi sao để chọn mức điểm</div>
+                                </div>
+
+                                <!-- =================================================================
+                                     KHU VỰC C: NỘI DUNG PHẢN HỒI
+                                     ================================================================= -->
+                                <!-- 1. Nhóm nội dung đánh giá -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">
+                                        Chủ đề góp ý chính:
+                                    </label>
+                                    <div class="d-flex flex-wrap gap-2" id="categoryChips">
+                                        <span class="category-chip" data-cat="THAI_DO" onclick="selectCategory(this, 'THAI_DO')">
+                                            <i class="fa-solid fa-user-tie me-1"></i>Thái độ phục vụ
+                                        </span>
+                                        <span class="category-chip" data-cat="TOC_DO" onclick="selectCategory(this, 'TOC_DO')">
+                                            <i class="fa-solid fa-bolt me-1"></i>Tốc độ xử lý cổng
+                                        </span>
+                                        <span class="category-chip" data-cat="AN_NINH" onclick="selectCategory(this, 'AN_NINH')">
+                                            <i class="fa-solid fa-shield-halved me-1"></i>An ninh &amp; Giữ xe
+                                        </span>
+                                        <span class="category-chip" data-cat="GIA_CA" onclick="selectCategory(this, 'GIA_CA')">
+                                            <i class="fa-solid fa-receipt me-1"></i>Giá vé &amp; Thanh toán
+                                        </span>
+                                        <span class="category-chip active" data-cat="CHUNG" onclick="selectCategory(this, 'CHUNG')">
+                                            <i class="fa-solid fa-comments me-1"></i>Góp ý chung
+                                        </span>
+                                    </div>
+                                    <input type="hidden" id="loaiDichVuInput" value="CHUNG">
+                                </div>
+
+                                <!-- 2. Nội dung góp ý chi tiết -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="noiDung" class="form-label small fw-bold text-dark mb-0">
+                                            Nội dung đánh giá &amp; góp ý <span class="text-danger">*</span>
+                                        </label>
+                                        <span class="text-2xs text-muted" id="charCounter">0 / 500 ký tự</span>
+                                    </div>
+                                    <textarea id="noiDung" class="form-control portal-form-control" rows="4" maxlength="500" 
+                                              placeholder="Chia sẻ trải nghiệm gửi xe của bạn tại bãi xe (thời gian chờ, thái độ nhân viên, tình trạng cơ sở vật chất)..." 
+                                              required oninput="handleCharCount(this)"></textarea>
+                                    <div class="invalid-feedback text-xs">Vui lòng nhập nội dung đánh giá (tối thiểu 5 ký tự).</div>
+                                </div>
+
+                                <!-- 3. Thông tin người gửi (Tùy chọn) -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label for="hoTen" class="form-label small fw-bold text-dark">
+                                            Họ và tên <span class="text-muted fw-normal">(Tùy chọn)</span>
+                                        </label>
+                                        <input type="text" id="hoTen" class="form-control portal-form-control" 
+                                               placeholder="Ẩn danh nếu để trống">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="sdt" class="form-label small fw-bold text-dark">
+                                            Số điện thoại <span class="text-muted fw-normal">(Tùy chọn)</span>
+                                        </label>
+                                        <input type="tel" id="sdt" class="form-control portal-form-control" 
+                                               placeholder="Dùng để liên hệ nếu cần hỗ trợ">
+                                    </div>
+                                </div>
+
+                                <!-- =================================================================
+                                     KHU VỰC D: NÚT GỬI ĐÁNH GIÁ
+                                     ================================================================= -->
+                                <div>
+                                    <button type="submit" id="btnSubmitFeedback" class="btn btn-portal-primary w-100 py-3 fw-bold fs-6">
+                                        <span id="btnFeedbackText">
+                                            <i class="fa-solid fa-paper-plane me-1.5"></i>GỬI ĐÁNH GIÁ
+                                        </span>
+                                        <span id="btnFeedbackSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    </button>
+                                    <div class="text-center text-2xs text-muted mt-2">
+                                        Đánh giá của bạn sẽ được lưu trực tiếp vào cơ sở dữ liệu để ban quản lý tiếp thu và cải tiến dịch vụ.
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Real Reviews & Average Stats from Database -->
+                    <div class="col-lg-5">
+                        <!-- Rating Summary Bento Card -->
+                        <div class="portal-card p-4 mb-4">
+                            <h3 class="h6 fw-bold text-dark text-uppercase letter-spacing-1 mb-3">
+                                <i class="fa-solid fa-chart-simple text-warning me-1.5"></i>Thống Kê Khách Hàng Thực Tế
+                            </h3>
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light border mb-3">
+                                <div class="text-center pe-3 border-end">
+                                    <div class="fs-1 fw-bold text-warning font-monospace lh-1" id="avgScoreDisplay">5.0</div>
+                                    <div class="text-2xs text-muted fw-bold text-uppercase mt-1">ĐIỂM TRUNG BÌNH</div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-1 text-warning mb-1">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <div class="small text-muted">
+                                        Dựa trên <strong class="text-dark font-monospace" id="totalReviewsDisplay" th:text="${recentReviews != null ? #lists.size(recentReviews) : 0}">0</strong> lượt đánh giá từ khách hàng.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-muted">
+                                <i class="fa-solid fa-circle-check text-success me-1"></i>
+                                100% đánh giá được ghi nhận trực tiếp từ người gửi xe thực tế tại bãi.
+                            </div>
+                        </div>
+
+                        <!-- Recent Feedback List -->
+                        <div class="portal-card p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                <h3 class="h6 fw-bold text-dark text-uppercase letter-spacing-1 mb-0">
+                                    <i class="fa-solid fa-comments text-primary me-1.5"></i>Đánh Giá Gần Đây
+                                </h3>
+                                <span class="badge bg-light text-muted border text-2xs">Từ SQL Server</span>
+                            </div>
+
+                            <!-- List Container -->
+                            <div id="recentReviewsList" class="d-flex flex-column gap-3">
+                                <!-- Thymeleaf Server Rendered List -->
+                                <div th:if="${recentReviews == null or #lists.isEmpty(recentReviews)}" class="text-center py-4 text-muted small">
+                                    <i class="fa-regular fa-comment-dots fs-3 d-block mb-2 opacity-50"></i>
+                                    Chưa có đánh giá nào được lưu. Hãy là người đầu tiên gửi ý kiến góp ý!
+                                </div>
+
+                                <div th:each="r : ${recentReviews}" class="p-3 rounded-3 bg-light border">
+                                    <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong class="small text-dark" th:text="${r['hoTen'] != null and !#strings.isEmpty(r['hoTen']) ? r['hoTen'] : 'Khách gửi xe'}">Khách hàng</strong>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 text-2xs" 
+                                                  th:text="${r['loaiDichVu'] == 'THAI_DO' ? 'Thái độ phục vụ' : (r['loaiDichVu'] == 'TOC_DO' ? 'Tốc độ xử lý' : (r['loaiDichVu'] == 'AN_NINH' ? 'An ninh' : (r['loaiDichVu'] == 'GIA_CA' ? 'Giá vé' : 'Chung')))}">
+                                                Góp ý
+                                            </span>
+                                        </div>
+                                        <div class="text-warning text-xs">
+                                            <span th:each="i : ${#numbers.sequence(1, r['soSao'] != null ? r['soSao'] : 5)}">★</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-1.5 lh-sm" th:text="${r['noiDung']}">
+                                        Nội dung đánh giá của khách hàng.
+                                    </p>
+                                    <div class="text-2xs text-muted font-monospace" th:text="${r['thoiGian'] != null ? #strings.substring(r['thoiGian'], 0, 10) : ''}">
+                                        2026-10-24
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer -->
+    <div th:replace="~{portal/fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Client JavaScript -->
+    <script>
+        let currentRating = 5;
+        const labels = {
+            1: 'Rất chưa hài lòng (1/5 sao)',
+            2: 'Chưa hài lòng (2/5 sao)',
+            3: 'Bình thường (3/5 sao)',
+            4: 'Hài lòng (4/5 sao)',
+            5: 'Rất hài lòng (5/5 sao)'
+        };
+
+        const stars = document.querySelectorAll('#starContainer .fa-star');
+        const soSaoInput = document.getElementById('soSaoInput');
+        const ratingLabel = document.getElementById('ratingLabel');
+        const loaiDichVuInput = document.getElementById('loaiDichVuInput');
+        const noiDungInput = document.getElementById('noiDung');
+        const hoTenInput = document.getElementById('hoTen');
+        const sdtInput = document.getElementById('sdt');
+        const charCounter = document.getElementById('charCounter');
+
+        const btnSubmitFeedback = document.getElementById('btnSubmitFeedback');
+        const btnFeedbackText = document.getElementById('btnFeedbackText');
+        const btnFeedbackSpinner = document.getElementById('btnFeedbackSpinner');
+        const feedbackSuccessAlert = document.getElementById('feedbackSuccessAlert');
+        const feedbackErrorAlert = document.getElementById('feedbackErrorAlert');
+        const feedbackErrorMsg = document.getElementById('feedbackErrorMsg');
+
+        function setRating(val) {
+            currentRating = val;
+            soSaoInput.value = val;
+            ratingLabel.textContent = labels[val];
+            renderStars(val);
+        }
+
+        function hoverRating(val) {
+            renderStars(val);
+            ratingLabel.textContent = labels[val];
+        }
+
+        function resetHover() {
+            renderStars(currentRating);
+            ratingLabel.textContent = labels[currentRating];
+        }
+
+        function renderStars(count) {
+            stars.forEach((s, idx) => {
+                if (idx < count) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        function selectCategory(el, cat) {
+            document.querySelectorAll('#categoryChips .category-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            loaiDichVuInput.value = cat;
+        }
+
+        function handleCharCount(textarea) {
+            charCounter.textContent = textarea.value.length + ' / 500 ký tự';
+        }
+
+        async function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            feedbackSuccessAlert.classList.add('d-none');
+            feedbackErrorAlert.classList.add('d-none');
+
+            const content = noiDungInput.value.trim();
+            if (!content || content.length < 5) {
+                feedbackErrorMsg.textContent = 'Vui lòng nhập nội dung đánh giá cụ thể (tối thiểu 5 ký tự).';
+                feedbackErrorAlert.classList.remove('d-none');
+                noiDungInput.focus();
+                return;
+            }
+
+            btnSubmitFeedback.disabled = true;
+            btnFeedbackText.classList.add('d-none');
+            btnFeedbackSpinner.classList.remove('d-none');
+
+            const payload = {
+                soSao: parseInt(soSaoInput.value || '5'),
+                loaiDichVu: loaiDichVuInput.value || 'CHUNG',
+                noiDung: content,
+                hoTen: hoTenInput.value.trim() || 'Khách gửi xe',
+                sdt: sdtInput.value.trim()
+            };
+
+            try {
+                const res = await fetch('/portal/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    feedbackSuccessAlert.classList.remove('d-none');
+                    document.getElementById('feedbackForm').reset();
+                    setRating(5);
+                    charCounter.textContent = '0 / 500 ký tự';
+
+                    // Refresh review list from server API
+                    refreshReviews();
+                } else {
+                    feedbackErrorMsg.textContent = data.message || 'Lỗi khi lưu đánh giá. Vui lòng thử lại.';
+                    feedbackErrorAlert.classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error('Lỗi gửi đánh giá:', err);
+                feedbackErrorMsg.textContent = 'Không thể kết nối máy chủ để lưu đánh giá. Vui lòng thử lại sau.';
+                feedbackErrorAlert.classList.remove('d-none');
+            } finally {
+                btnSubmitFeedback.disabled = false;
+                btnFeedbackText.classList.remove('d-none');
+                btnFeedbackSpinner.classList.add('d-none');
+            }
+        }
+
+        async function refreshReviews() {
+            try {
+                const res = await fetch('/portal/api/feedbacks');
+                if (!res.ok) return;
+                const reviews = await res.json();
+                if (!reviews || reviews.length === 0) return;
+
+                const listEl = document.getElementById('recentReviewsList');
+                listEl.innerHTML = '';
+
+                let totalScore = 0;
+
+                reviews.forEach(r => {
+                    totalScore += (r.soSao || 5);
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-3 bg-light border';
+
+                    const starsStr = '★'.repeat(r.soSao || 5);
+                    const catMap = {
+                        'THAI_DO': 'Thái độ phục vụ',
+                        'TOC_DO': 'Tốc độ xử lý',
+                        'AN_NINH': 'An ninh',
+                        'GIA_CA': 'Giá vé',
+                        'CHUNG': 'Góp ý chung'
+                    };
+                    const catLabel = catMap[r.loaiDichVu] || 'Góp ý';
+                    const timeStr = r.thoiGian ? r.thoiGian.substring(0, 10) : '';
+
+                    item.innerHTML = `
+                        <div class="d-flex align-items-center justify-content-between mb-1.5">
+                            <div class="d-flex align-items-center gap-2">
+                                <strong class="small text-dark">${r.hoTen || 'Khách gửi xe'}</strong>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 text-2xs">${catLabel}</span>
+                            </div>
+                            <div class="text-warning text-xs">${starsStr}</div>
+                        </div>
+                        <p class="text-muted small mb-1.5 lh-sm">${r.noiDung || ''}</p>
+                        <div class="text-2xs text-muted font-monospace">${timeStr}</div>
+                    `;
+                    listEl.appendChild(item);
+                });
+
+                const avg = (totalScore / reviews.length).toFixed(1);
+                document.getElementById('avgScoreDisplay').textContent = avg;
+                document.getElementById('totalReviewsDisplay').textContent = reviews.length;
+            } catch (err) {
+                console.error('Lỗi làm mới đánh giá:', err);
+            }
+        }
+    </script>
+</body>
+</html>

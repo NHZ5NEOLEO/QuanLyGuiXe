@@ -1,0 +1,576 @@
+{
+	"info": {
+		"_postman_id": "parking-management-api-collection",
+		"name": "Phần Mềm Quản Lý Gửi Xe - REST API Collection",
+		"description": "Bộ sưu tập kiểm thử toàn diện cho hệ thống Quản lý gửi xe thông minh (Spring Boot + SQL Server + ZXing QR + Thymeleaf). Hỗ trợ kiểm thử đầy đủ các nghiệp vụ Check-in, Check-out, QR Code, Tính phí, Quản lý phương tiện và Báo cáo doanh thu.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost",
+			"type": "string"
+		},
+		{
+			"key": "ticketCode",
+			"value": "QR-DEMO-001",
+			"type": "string"
+		},
+		{
+			"key": "ticketId",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Xác thực & Tài khoản (Auth)",
+			"item": [
+				{
+					"name": "Đăng nhập Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Đăng nhập với vai trò Quản Trị Viên (ADMIN). Hệ thống tạo Session và Cookie JSESSIONID."
+					}
+				},
+				{
+					"name": "Đăng nhập Nhân viên trực cổng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"baove\",\n    \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Đăng nhập với vai trò Nhân Viên Trực Cổng (NHAN_VIEN)."
+					}
+				},
+				{
+					"name": "Lấy thông tin người dùng hiện tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Trả về thông tin chi tiết tài khoản đang đăng nhập trong Session."
+					}
+				},
+				{
+					"name": "Đăng xuất",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Hủy session và đăng xuất khỏi hệ thống."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Quản lý phương tiện (Vehicles)",
+			"item": [
+				{
+					"name": "Lấy danh sách tất cả phương tiện",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles"
+							]
+						},
+						"description": "Lấy toàn bộ danh mục phương tiện đã đăng ký trong cơ sở dữ liệu."
+					}
+				},
+				{
+					"name": "Tìm kiếm phương tiện theo biển số",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/search?query=29B1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"search"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "29B1"
+								}
+							]
+						},
+						"description": "Tìm kiếm phương tiện theo biển số, tên chủ xe hoặc số điện thoại."
+					}
+				},
+				{
+					"name": "Xem chi tiết phương tiện theo ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1"
+							]
+						},
+						"description": "Lấy thông tin chi tiết của một phương tiện."
+					}
+				},
+				{
+					"name": "Thêm phương tiện mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bienSoXe\": \"30K-99988\",\n    \"loaiXeId\": 2,\n    \"chuXe\": \"Trần Văn Minh\",\n    \"soDienThoai\": \"0988112233\",\n    \"moTa\": \"Honda CR-V màu trắng, Căn hộ 502\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles"
+							]
+						},
+						"description": "Tạo hồ sơ phương tiện mới có kiểm tra chống trùng lặp biển số."
+					}
+				},
+				{
+					"name": "Chỉnh sửa thông tin phương tiện",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bienSoXe\": \"30K-99988\",\n    \"loaiXeId\": 2,\n    \"chuXe\": \"Trần Văn Minh (Đã cập nhật)\",\n    \"soDienThoai\": \"0988112233\",\n    \"moTa\": \"Xe đã đổi màu sơn\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1"
+							]
+						},
+						"description": "Cập nhật thông tin phương tiện."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Nghiệp vụ gửi xe (Check-in)",
+			"item": [
+				{
+					"name": "Gửi xe - Check-in xe vãng lai",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bienSoXe\": \"51K-12345\",\n    \"loaiXeId\": 1,\n    \"maViTri\": \"B-05\",\n    \"ghiChu\": \"Khách vào gửi tầng hầm B1\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/parking/check-in",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"parking",
+								"check-in"
+							]
+						},
+						"description": "Ghi nhận xe vào bãi, sinh mã vé duy nhất và mã QR, gán ô đỗ, ghi nhận thời gian máy chủ."
+					}
+				},
+				{
+					"name": "Kiểm tra nhanh biển số xe (Check Plate)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/gate/check-plate?plate=29B1-88888",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"gate",
+								"check-plate"
+							],
+							"query": [
+								{
+									"key": "plate",
+									"value": "29B1-88888"
+								}
+							]
+						},
+						"description": "Kiểm tra thông tin vé tháng, đặt chỗ trước và danh sách đen của biển số xe."
+					}
+				},
+				{
+					"name": "Kiểm tra biển số xe Danh sách đen (Blacklist)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/gate/check-plate?plate=59X3-99999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"gate",
+								"check-plate"
+							],
+							"query": [
+								{
+									"key": "plate",
+									"value": "59X3-99999"
+								}
+							]
+						},
+						"description": "Kiểm tra phương tiện trong danh sách đen, kích hoạt cảnh báo an ninh."
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Nghiệp vụ nhận xe (Check-out)",
+			"item": [
+				{
+					"name": "Xem trước chi phí Check-out (Preview)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"{{ticketCode}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/parking/preview-checkout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"parking",
+								"preview-checkout"
+							]
+						},
+						"description": "Tra cứu vé xe qua Mã vé / Mã QR, tính toán thời lượng và chi phí gửi xe theo quy tắc biểu phí."
+					}
+				},
+				{
+					"name": "Xác nhận nhận xe - Hoàn tất Check-out",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ticketCode\": \"{{ticketCode}}\",\n    \"hinhThucThanhToan\": \"TIEN_MAT\",\n    \"ghiChu\": \"Đã thu đủ tiền mặt tại cổng ra\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/parking/check-out",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"parking",
+								"check-out"
+							]
+						},
+						"description": "Hoàn tất nhận xe, ghi nhận thời gian ra, lưu chi phí thực tế, giải phóng vị trí đỗ xe."
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Quản lý mã QR & Tra cứu vé (QR Code & Tickets)",
+			"item": [
+				{
+					"name": "Tải ảnh mã QR định dạng PNG",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/parking/qr/{{ticketCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"parking",
+								"qr",
+								"{{ticketCode}}"
+							]
+						},
+						"description": "Endpoint trả về trực tiếp luồng ảnh mã QR dạng image/png sinh bởi thư viện ZXing."
+					}
+				},
+				{
+					"name": "Danh sách tất cả vé xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tickets"
+							]
+						},
+						"description": "Lấy danh sách tất cả các lượt gửi xe trong hệ thống."
+					}
+				},
+				{
+					"name": "Lọc vé xe đang ở trong bãi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets?status=Đang gửi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tickets"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Đang gửi"
+								}
+							]
+						},
+						"description": "Lọc các phương tiện hiện đang đỗ trong bãi."
+					}
+				},
+				{
+					"name": "Tra cứu vé xe theo Mã vé / Mã QR",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/code/{{ticketCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tickets",
+								"code",
+								"{{ticketCode}}"
+							]
+						},
+						"description": "Tra cứu chi tiết lượt gửi bằng mã QR token."
+					}
+				},
+				{
+					"name": "Chi tiết vé xe theo ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tickets/{{ticketId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tickets",
+								"{{ticketId}}"
+							]
+						},
+						"description": "Xem chi tiết vé xe theo ID."
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Thống kê & Báo cáo (Reports & Analytics)",
+			"item": [
+				{
+					"name": "Thống kê tổng quan bãi xe (KPI Summary)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/summary?period=today",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "today"
+								}
+							]
+						},
+						"description": "Lấy số xe trong bãi, chỗ trống, lượt vào, lượt ra, doanh thu hôm nay và tỷ lệ lấp đầy."
+					}
+				},
+				{
+					"name": "Báo cáo doanh thu theo thời gian",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/revenue?startDate=2026-10-01&endDate=2026-10-12",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"revenue"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-10-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-10-12"
+								}
+							]
+						},
+						"description": "Báo cáo doanh thu chi tiết theo từng ngày và cơ cấu doanh thu theo từng loại phương tiện."
+					}
+				},
+				{
+					"name": "Thống kê lưu lượng phương tiện (In/Out/Occupancy)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/vehicles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"vehicles"
+							]
+						},
+						"description": "Thống kê tổng lượt vào, tổng lượt ra và số lượng xe đang lưu bãi."
+					}
+				}
+			]
+		}
+	]
+}

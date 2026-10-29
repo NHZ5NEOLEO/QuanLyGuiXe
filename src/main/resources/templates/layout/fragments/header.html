@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Fragment</title>
+</head>
+<body>
+
+<!-- ========================================================================= -->
+<!-- TOPBAR HEADER FRAGMENT (UI/UX Pro Max Standard)                           -->
+<!-- ========================================================================= -->
+<header th:fragment="header" class="app-header" role="banner">
+    <div class="header-left">
+        <!-- Mobile/Tablet Hamburger Toggle -->
+        <button type="button" class="btn btn-sm btn-outline-pro d-lg-none p-2 border" onclick="toggleMobileSidebar(true)" aria-label="Mở menu điều hướng">
+            <i class="fa-solid fa-bars fs-6" aria-hidden="true"></i>
+        </button>
+
+        <!-- Breadcrumbs -->
+        <div class="header-breadcrumb">
+            <a th:href="${session.userRole == 'NHAN_VIEN' ? '/gui-xe' : '/tong-quan'}" th:title="${session.userRole == 'NHAN_VIEN' ? 'Về bàn trực xe vào' : 'Về trang tổng quan'}"><i class="fa-solid fa-house" aria-hidden="true"></i></a>
+            <span>/</span>
+            <span class="active-crumb" th:text="${pageTitle != null ? pageTitle : 'Hệ thống Quản lý Bãi xe'}">Tổng quan</span>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <!-- Global Quick Search Form -->
+        <form class="header-search-form" th:action="@{/ve-xe}" method="get" role="search">
+            <i class="fa-solid fa-magnifying-glass header-search-icon" aria-hidden="true"></i>
+            <input type="text" name="keyword" class="header-search-input" placeholder="Tìm biển số, mã vé (Nhấn /)..." autocomplete="off" aria-label="Tìm kiếm nhanh">
+        </form>
+
+        <!-- Live Vietnamese Date Badge -->
+        <div class="header-date-badge d-none d-md-flex" id="headerLiveDate">
+            <i class="fa-regular fa-calendar-days text-primary me-1" aria-hidden="true"></i> Đang tải ngày...
+        </div>
+
+
+        <!-- User Profile Pill -->
+        <div class="d-flex align-items-center gap-2 ps-2 border-start">
+            <div class="user-avatar-circle avatar-sm" 
+                 th:text="${session.userName != null ? #strings.substring(session.userName, 0, 1).toUpperCase() : 'A'}">
+                A
+            </div>
+            <div class="d-none d-xl-block text-start lh-sm">
+                <div class="small fw-bold text-dark" th:text="${session.userName != null ? session.userName : 'Admin Quản Trị'}">Admin</div>
+                <small class="text-muted user-role-label" th:text="${session.userRole != null ? (session.userRole == 'NHAN_VIEN' ? 'NHÂN VIÊN' : session.userRole) : 'ADMIN'}">ADMIN</small>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Sidebar Backdrop overlay -->
+<div th:fragment="backdrop" class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
+</body>
+</html>

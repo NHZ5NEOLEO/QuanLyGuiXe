@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cảnh Báo An Ninh và Blacklist - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Shared Sidebar -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Shared Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-box">
+                    <h2>Cảnh báo an ninh & Danh sách đen</h2>
+                    <p>Giám sát xe gửi tồn bãi quá 24h và kiểm soát các phương tiện nghi vấn vi phạm pháp luật</p>
+                </div>
+            </div>
+
+            <!-- Flash alerts -->
+            <div th:if="${successMessage}" class="alert-pro alert-success-pro" role="alert">
+                <i class="fa-solid fa-circle-check fs-5"></i>
+                <div class="flex-grow-1" th:text="${successMessage}">Thao tác thành công.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert-pro alert-error-pro" role="alert">
+                <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                <div class="flex-grow-1" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-xs border" id="secTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 fw-bold" th:classappend="${activeTab == 'overdue'} ? 'active' : ''" id="overdue-tab" data-bs-toggle="tab" data-bs-target="#overdue" type="button" role="tab">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i> Xe tồn bãi quá 24 giờ (<span th:text="${#lists.size(overdueVehicles)}">0</span>)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 fw-bold" th:classappend="${activeTab == 'blacklist'} ? 'active' : ''" id="blacklist-tab" data-bs-toggle="tab" data-bs-target="#blacklist" type="button" role="tab">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> Danh sách đen nghi vấn (<span th:text="${#lists.size(blacklist)}">0</span>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="secTabContent">
+                
+                <!-- ================= TAB XE TỒN BÃI QUÁ 24H ================= -->
+                <div class="tab-pane fade" th:classappend="${activeTab == 'overdue'} ? 'show active' : ''" id="overdue" role="tabpanel">
+                    <div class="card-pro">
+                        <div class="card-header-pro">
+                            <h3 class="card-title-pro text-danger">
+                                <i class="fa-solid fa-circle-exclamation text-danger"></i> Danh sách phương tiện lưu bãi > 24 giờ chưa xuất
+                            </h3>
+                            <span class="badge-pro badge-error-pro">Cần kiểm tra an ninh</span>
+                        </div>
+
+                        <div class="table-responsive-pro">
+                            <table class="table-pro">
+                                <thead>
+                                    <tr>
+                                        <th>Mã Vé</th>
+                                        <th>Biển Số Xe</th>
+                                        <th>Loại Xe</th>
+                                        <th>Thời Gian Vào</th>
+                                        <th>Cảnh Báo</th>
+                                        <th>Hình Thức</th>
+                                        <th class="text-end">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(overdueVehicles)}">
+                                        <td colspan="8" class="text-center py-4 text-success fw-semibold">
+                                            <i class="fa-solid fa-circle-check fa-lg me-1"></i> Bãi xe hiện tại không có phương tiện nào tồn bãi quá 24h!
+                                        </td>
+                                    </tr>
+                                    <tr th:each="v : ${overdueVehicles}">
+                                        <td class="font-monospace text-primary fw-bold" th:text="${v.maQR}">QR-12345</td>
+                                        <td>
+                                            <span class="plate-tag" th:text="${v.bienSoXe}">29A-12345</span>
+                                        </td>
+                                        <td><span th:text="${v.loaiXe != null ? v.loaiXe.tenLoai : 'Chưa rõ'}">Ô tô</span></td>
+                                        <td><small class="text-muted" th:text="${#temporals.format(v.thoiGianVao, 'HH:mm dd/MM/yyyy')}">10/10/2026</small></td>
+                                        <td><span class="badge-pro badge-error-pro">Quá 24 giờ</span></td>
+                                        <td><span class="badge-pro badge-neutral-pro" th:text="${v.veThang != null ? 'Vé tháng' : 'Vé lượt'}">Vé lượt</span></td>
+                                        <td class="text-end">
+                                            <a th:href="@{/gate(tab='checkout', query=${v.bienSoXe})}" class="btn-pro btn-danger-pro btn-sm-pro py-1">
+                                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out ngay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= TAB DANH SÁCH ĐEN BLACKLIST ================= -->
+                <div class="tab-pane fade" th:classappend="${activeTab == 'blacklist'} ? 'show active' : ''" id="blacklist" role="tabpanel">
+                    <div class="row g-4">
+                        <!-- Form Thêm Xe Vào Blacklist -->
+                        <div class="col-lg-4">
+                            <div class="card-pro">
+                                <div class="card-header-pro">
+                                    <h3 class="card-title-pro text-danger">
+                                        <i class="fa-solid fa-ban text-danger"></i> Thêm xe vào Blacklist
+                                    </h3>
+                                </div>
+
+                                <form action="/security-alerts/blacklist/add" method="post">
+                                    <div class="form-group-pro">
+                                        <label class="form-label-pro">Biển số xe nghi vấn: <span class="required">*</span></label>
+                                        <input type="text" class="form-control form-control-pro text-uppercase fw-bold" name="bienSoXe" placeholder="VD: 59X3-99999" required>
+                                    </div>
+
+                                    <div class="form-group-pro">
+                                        <label class="form-label-pro">Mức độ cảnh báo:</label>
+                                        <select class="form-select form-select-pro" name="mucDo" title="Mức độ cảnh báo" aria-label="Mức độ cảnh báo">
+                                            <option value="NGUY_HIEM">NGUY HIỂM (Báo mất cắp, gây án)</option>
+                                            <option value="CANH_BAO">CẢNH BÁO (Nợ tiền vé, vi phạm nội quy)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group-pro">
+                                        <label class="form-label-pro">Lý do đưa vào danh sách: <span class="required">*</span></label>
+                                        <textarea class="form-control form-control-pro" name="lyDo" rows="3" placeholder="Ghi rõ thông tin vụ việc, nguồn tin..." required></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-pro btn-danger-pro w-100 py-2">
+                                        <i class="fa-solid fa-shield-virus"></i> Thêm vào danh sách đen
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Danh Sách Các Xe Đang Bị Theo Dõi -->
+                        <div class="col-lg-8">
+                            <div class="card-pro">
+                                <div class="card-header-pro">
+                                    <h3 class="card-title-pro">
+                                        <i class="fa-solid fa-list-check text-danger"></i> Danh sách xe đang bị giám sát an ninh
+                                    </h3>
+                                </div>
+
+                                <div class="table-responsive-pro">
+                                    <table class="table-pro">
+                                        <thead>
+                                            <tr>
+                                                <th>Biển Số Xe</th>
+                                                <th>Mức Độ</th>
+                                                <th>Lý Do / Vụ Việc</th>
+                                                <th>Ngày Thêm</th>
+                                                <th class="text-end">Thao Tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${#lists.isEmpty(blacklist)}">
+                                                <td colspan="5" class="text-center py-4 text-muted">Danh sách đen hiện đang trống</td>
+                                            </tr>
+                                            <tr th:each="b : ${blacklist}">
+                                                <td>
+                                                    <span class="plate-tag plate-tag-danger" th:text="${b.bienSoXe}">59X3-99999</span>
+                                                </td>
+                                                <td>
+                                                    <span th:if="${b.mucDo == 'NGUY_HIEM'}" class="badge-pro badge-error-pro">NGUY HIỂM</span>
+                                                    <span th:if="${b.mucDo != 'NGUY_HIEM'}" class="badge-pro badge-warning-pro">CẢNH BÁO</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-dark fw-medium" th:text="${b.lyDo}">Xe mất cắp</span>
+                                                </td>
+                                                <td><small class="text-muted" th:text="${#temporals.format(b.ngayThem, 'dd/MM/yyyy')}">10/10/2026</small></td>
+                                                <td class="text-end">
+                                                    <form action="/security-alerts/blacklist/delete" method="post" class="d-inline">
+                                                        <input type="hidden" name="id" th:value="${b.id}">
+                                                        <button type="submit" class="btn-pro btn-outline-pro btn-sm-pro text-danger border-0" 
+                                                                title="Xóa khỏi danh sách đen" aria-label="Xóa khỏi danh sách đen"
+                                                                onclick="return confirm('Bạn có chắc muốn xóa xe này khỏi danh sách đen?')">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+        <!-- Reusable Operational Footer -->
+        <div th:replace="~{fragments/footer :: app-footer}"></div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{fragments/navbar :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>

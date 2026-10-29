@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Giá Gửi Xe - PARKING</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- PARKING Design System -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Content Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Bảng giá gửi xe</h1>
+                    <p class="page-subtitle">Quản lý và cấu hình mức thu phí linh hoạt theo loại phương tiện và khung giờ</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPriceModal">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm mức giá mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reusable Flash Alerts -->
+            <div th:replace="~{fragments/alerts :: flash-alerts}"></div>
+
+            <div class="row g-4">
+                <!-- Vehicle Pricing Cards -->
+                <div class="col-lg-8">
+                    <div class="card-pro">
+                        <div class="card-pro-header">
+                            <div class="card-pro-title">
+                                <i class="fa-solid fa-tags text-primary me-2"></i> Biểu phí theo loại phương tiện
+                            </div>
+                            <span class="badge badge-success" th:text="${loaiXes != null ? loaiXes.size() + ' loại xe áp dụng' : '0'}">3 loại</span>
+                        </div>
+                        <div class="card-pro-body">
+                            <div class="row g-4">
+                                <div class="col-md-6" th:each="lx : ${loaiXes}">
+                                    <div class="card border rounded-3 p-3 h-100 bg-white shadow-xs">
+                                        <form th:action="@{/price-settings/update}" method="post" onsubmit="return confirmSave(event, this)">
+                                            <input type="hidden" name="id" th:value="${lx.id}">
+                                            
+                                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0 price-type-icon">
+                                                    <i class="fa-solid fs-5" th:classappend="${lx.iconClass != null ? lx.iconClass : 'fa-car'}"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold text-dark mb-0 fs-6" th:text="${lx.tenLoai}">Xe máy</h6>
+                                                    <small class="text-secondary" th:text="${lx.moTa != null ? lx.moTa : 'Phương tiện cơ giới tiêu chuẩn'}">Mô tả</small>
+                                                </div>
+                                                <span class="badge badge-info">Áp dụng</span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold text-secondary mb-1">
+                                                    <i class="fa-solid fa-sun text-warning me-1"></i> Giá ban ngày (06:00 - 22:00):
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control fw-bold text-dark currency-mask" 
+                                                           name="giaBanNgay" th:value="${#numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA')}" 
+                                                           title="Giá vé ban ngày" aria-label="Giá vé ban ngày" placeholder="Giá vé ban ngày" required>
+                                                    <span class="input-group-text bg-light text-secondary fw-semibold">đ / lượt</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold text-secondary mb-1">
+                                                    <i class="fa-solid fa-moon text-primary me-1"></i> Giá ban đêm (22:00 - 06:00):
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control fw-bold text-dark currency-mask" 
+                                                           name="giaBanDem" th:value="${#numbers.formatDecimal(lx.giaBanDem, 0, 'POINT', 0, 'COMMA')}" 
+                                                           title="Giá vé ban đêm" aria-label="Giá vé ban đêm" placeholder="Giá vé ban đêm" required>
+                                                    <span class="input-group-text bg-light text-secondary fw-semibold">đ / lượt</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold text-secondary mb-1">
+                                                    <i class="fa-solid fa-calendar-check text-success me-1"></i> Giá vé tháng cố định:
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control fw-bold text-success currency-mask" 
+                                                           name="giaThang" th:value="${#numbers.formatDecimal(lx.giaThang, 0, 'POINT', 0, 'COMMA')}" 
+                                                           title="Giá vé tháng" aria-label="Giá vé tháng" placeholder="Giá vé tháng" required>
+                                                    <span class="input-group-text bg-light text-secondary fw-semibold">đ / tháng</span>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-sm btn-outline-primary w-100 fw-semibold">
+                                                <i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculation Rules & Policy -->
+                <div class="col-lg-4">
+                    <div class="card-pro h-100">
+                        <div class="card-pro-header">
+                            <div class="card-pro-title">
+                                <i class="fa-solid fa-circle-info text-info me-2"></i> Quy tắc tính phí bãi xe
+                            </div>
+                        </div>
+                        <div class="card-pro-body">
+                            <ul class="list-unstyled d-flex flex-column gap-3 small mb-0">
+                                <li class="d-flex align-items-start gap-3 p-2 rounded-2 bg-light">
+                                    <div class="rounded-circle p-2 bg-white text-warning shadow-xs flex-shrink-0">
+                                        <i class="fa-solid fa-sun"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark">Khung giờ ban ngày:</strong>
+                                        <p class="text-secondary mb-0 mt-1">Từ 06:00 đến 21:59 cùng ngày. Áp dụng đơn giá lượt ban ngày chuẩn theo quy định ban quản lý.</p>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-3 p-2 rounded-2 bg-light">
+                                    <div class="rounded-circle p-2 bg-white text-primary shadow-xs flex-shrink-0">
+                                        <i class="fa-solid fa-moon"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark">Khung giờ ban đêm:</strong>
+                                        <p class="text-secondary mb-0 mt-1">Từ 22:00 đêm đến 05:59 sáng hôm sau hoặc khi thời gian đỗ xe kéo dài qua đêm qua 12 tiếng liên tục.</p>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-3 p-2 rounded-2 bg-light">
+                                    <div class="rounded-circle p-2 bg-white text-success shadow-xs flex-shrink-0">
+                                        <i class="fa-solid fa-id-card"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark">Khách hàng có vé tháng:</strong>
+                                        <p class="text-secondary mb-0 mt-1">Miễn phí 100% tất cả các lượt vào ra trong suốt thời hạn hiệu lực của vé. Hệ thống tự động nhận diện tại cổng.</p>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-3 p-2 rounded-2 bg-light">
+                                    <div class="rounded-circle p-2 bg-white text-danger shadow-xs flex-shrink-0">
+                                        <i class="fa-solid fa-qrcode"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark">Thanh toán tự động VietQR:</strong>
+                                        <p class="text-secondary mb-0 mt-1">Tự động sinh mã VietQR NAPAS chính xác theo biểu phí và khấu trừ tiền cọc trực tuyến nếu đã đặt chỗ trước.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        <!-- Reusable Operational Footer -->
+        <div th:replace="~{fragments/footer :: app-footer}"></div>
+    </div>
+</div>
+
+<!-- Modal Thêm Loại Xe Mới -->
+<div class="modal fade" id="addPriceModal" tabindex="-1" aria-labelledby="addPriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="addPriceModalLabel">
+                    <i class="fa-solid fa-plus-circle me-2"></i>Thêm Mức Giá Phương Tiện Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/price-settings/create}" method="post">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Tên loại phương tiện: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="tenLoai" placeholder="Ví dụ: Xe tải nhẹ, Xe điện..." required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Giá ngày (đ/lượt): <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control currency-mask" name="giaBanNgay" placeholder="VD: 5.000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Giá đêm (đ/lượt): <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control currency-mask" name="giaBanDem" placeholder="VD: 10.000" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Giá vé tháng (đ/tháng): <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control currency-mask" name="giaThang" placeholder="VD: 150.000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Biểu tượng (FontAwesome icon):</label>
+                        <select class="form-select" name="iconClass">
+                            <option value="fa-motorcycle">fa-motorcycle (Xe máy)</option>
+                            <option value="fa-car" selected>fa-car (Ô tô)</option>
+                            <option value="fa-bicycle">fa-bicycle (Xe đạp)</option>
+                            <option value="fa-truck">fa-truck (Xe tải)</option>
+                            <option value="fa-van-shuttle">fa-van-shuttle (Xe van / Khách)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Mô tả chi tiết:</label>
+                        <input type="text" class="form-control" name="moTa" placeholder="Ví dụ: Áp dụng cho các loại xe trọng tải dưới 1.5 tấn">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">
+                        <i class="fa-solid fa-save me-1"></i> Lưu biểu phí
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Sidebar Backdrop -->
+<div th:replace="~{fragments/navbar :: backdrop}"></div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Global App JS -->
+<script th:src="@{/js/app.js}"></script>
+
+<script>
+    function cleanCurrencyMasks(form) {
+        form.querySelectorAll('.currency-mask').forEach(function(input) {
+            input.value = input.value.replace(/\./g, '').trim();
+        });
+    }
+
+    // Tự động định dạng dấu chấm phân cách hàng nghìn khi người dùng gõ phím
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.classList.contains('currency-mask')) {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val) {
+                e.target.value = new Intl.NumberFormat('vi-VN').format(val);
+            } else {
+                e.target.value = '';
+            }
+        }
+    });
+
+    // Xử lý trước khi submit form tạo mới
+    document.addEventListener('submit', function(e) {
+        if (e.target) {
+            cleanCurrencyMasks(e.target);
+        }
+    }, true);
+
+    function confirmSave(e, form) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Xác nhận thay đổi?',
+            text: 'Biểu phí mới sẽ áp dụng ngay cho các lượt xe vào tiếp theo.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            cancelButtonColor: '#64748B',
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> Xác nhận lưu',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cleanCurrencyMasks(form);
+                form.submit();
+            }
+        });
+        return false;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xe Vào Bãi - Cổng Khách Hàng - QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, a, label, li, td, th {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        div:not([class*="fa-"]), span:not([class*="fa-"]) {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .fa, .fas, .fa-solid {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .far, .fa-regular {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .fab, .fa-brands {
+            font-family: "Font Awesome 6 Brands" !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .fa::before, .fas::before, .fa-solid::before,
+        .far::before, .fa-regular::before,
+        .fab::before, .fa-brands::before,
+        [class*="fa-"]::before, [class^="fa-"]::before {
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            font-style: inherit !important;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background-color: var(--bg-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .portal-client-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            max-width: 480px;
+            width: 100%;
+            padding: 32px 28px;
+        }
+        .client-header-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            color: #ffffff;
+            border-radius: var(--radius);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+        }
+        .ticket-highlight {
+            font-family: 'Consolas', monospace;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary);
+            background: var(--primary-light);
+            border: 1px dashed var(--primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            display: inline-block;
+            letter-spacing: 1px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="portal-client-card">
+    <div class="text-center mb-4">
+        <div class="client-header-icon">
+            <i class="fa-solid fa-right-to-bracket"></i>
+        </div>
+        <div class="small fw-bold text-primary text-uppercase letter-spacing-1 mb-1">CỔNG KIỂM SOÁT VÀO BÃI</div>
+        <h1 class="h4 fw-bold text-dark mb-1">Xe Vào Bãi</h1>
+        <p class="text-muted small mb-0">Nhập biển số để đăng ký lượt xe vào bãi nhanh chóng và thuận tiện</p>
+    </div>
+
+    <form id="formGuiXe" novalidate>
+        <div class="form-group-pro mb-3">
+            <label for="bienSoXe" class="form-label-pro">
+                Biển số phương tiện <span class="required">*</span>
+            </label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="fa-solid fa-id-card"></i>
+                </span>
+                <input type="text" class="form-control form-control-pro border-start-0 text-uppercase fw-bold" 
+                       id="bienSoXe" name="bienSoXe" placeholder="Ví dụ: 30A-123.45 hoặc 29B1-888.88" required maxlength="20" autofocus autocomplete="off">
+            </div>
+            <div id="plateFeedback" class="small mt-1"></div>
+            <div class="form-help-text">Bắt buộc gồm mã tỉnh và sê-ri chữ. Không chấp nhận chỉ nhập toàn số.</div>
+        </div>
+
+        <div class="form-group-pro mb-3">
+            <label class="form-label-pro d-flex justify-content-between align-items-center">
+                <span>Loại phương tiện</span>
+                <small class="text-muted fw-normal">Chạm icon để chọn</small>
+            </label>
+            <div class="row g-2 mb-2" id="customerVehicleCards">
+                <div th:each="lx : ${loaiXes}" class="col-6">
+                    <div class="vehicle-type-card text-center p-2 rounded-2"
+                         th:classappend="${lxStat.first} ? 'active' : ''"
+                         th:data-id="${lx.id}"
+                         onclick="selectCustomerVehicle(this.getAttribute('data-id'))">
+                        <div class="vehicle-icon-box my-1">
+                            <i th:class="${'fa-solid fs-2 ' + (lx.iconClass != null and !lx.iconClass.isEmpty() ? (lx.iconClass.startsWith('fa-') ? lx.iconClass : 'fa-' + lx.iconClass) : (#strings.containsIgnoreCase(lx.tenLoai, 'tô') or #strings.containsIgnoreCase(lx.tenLoai, 'car') ? 'fa-car' : (#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'fa-motorcycle' : (#strings.containsIgnoreCase(lx.tenLoai, 'đạp') or #strings.containsIgnoreCase(lx.tenLoai, 'điện') ? 'fa-bicycle' : 'fa-truck'))))}"></i>
+                        </div>
+                        <div class="vehicle-name fw-bold small text-truncate" th:text="${lx.tenLoai}">Xe máy</div>
+                        <div class="vehicle-price text-muted text-xs" 
+                             th:text="${#numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' VNĐ/lượt'}">4,000 VNĐ/lượt</div>
+                    </div>
+                </div>
+            </div>
+            <select class="form-select form-select-pro d-none" id="loaiXeId" name="loaiXeId" title="Chọn loại phương tiện" aria-label="Chọn loại phương tiện">
+                <option th:each="lx : ${loaiXes}" th:value="${lx.id}" th:text="${lx.tenLoai}"></option>
+            </select>
+        </div>
+
+        <div class="form-group-pro mb-4">
+            <label for="ghiChu" class="form-label-pro">Ghi chú phương tiện (tùy chọn)</label>
+            <input type="text" class="form-control form-control-pro" id="ghiChu" name="ghiChu" placeholder="Màu sắc, nhãn hiệu hoặc đặc điểm nhận diện...">
+        </div>
+
+        <button type="submit" class="btn-pro btn-primary-pro btn-lg-pro w-100 fw-bold" id="nutXacNhan">
+            <i class="fa-solid fa-paper-plane"></i> Xác nhận xe vào bãi
+        </button>
+    </form>
+
+    <!-- Kết quả đăng ký lượt gửi -->
+    <div id="hopKetQua" class="alert-pro alert-success-pro mt-4 d-none" role="alert">
+        <div class="w-100" id="noiDungKetQua"></div>
+    </div>
+
+    <!-- Thông báo hướng dẫn nghiệp vụ -->
+    <div class="p-3 rounded-2 bg-light border mt-4 small text-secondary">
+        <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-info text-primary me-1"></i> Quy trình kiểm soát tại cổng:</div>
+        <div class="mb-1">1. Sau khi gửi thông tin, yêu cầu xe vào sẽ được chuyển đến màn hình trực cổng của bảo vệ.</div>
+        <div class="mb-1">2. Nhân viên bảo vệ sẽ đối chiếu thực tế phương tiện và <strong>xác nhận mở cần barie</strong>.</div>
+        <div>3. Quý khách vui lòng lưu lại mã vé để xuất trình khi xe ra bãi.</div>
+    </div>
+
+    <div class="text-center mt-3">
+        <a href="/" class="small text-muted text-decoration-none">
+            <i class="fa-solid fa-house me-1"></i> Quay lại Cổng thông tin bãi xe
+        </a>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+function selectCustomerVehicle(id) {
+    const sel = document.getElementById('loaiXeId');
+    if (sel) sel.value = id;
+    document.querySelectorAll('#customerVehicleCards .vehicle-type-card').forEach(card => {
+        if (card.getAttribute('data-id') == id) {
+            card.classList.add('active');
+        } else {
+            card.classList.remove('active');
+        }
+    });
+}
+
+function checkPlateValid(val) {
+    const clean = val.replace(/[\s\-\.,_]+/g, '').toUpperCase();
+    if (!clean) return { valid: false, msg: '' };
+    if (/^\d+$/.test(clean)) {
+        return { valid: false, msg: 'Biển số xe không thể chỉ gồm các chữ số! Cần có sê-ri chữ (VD: 30A-123.45 hoặc 29B1-888.88).' };
+    }
+    if (/^[A-Z]+$/.test(clean)) {
+        return { valid: false, msg: 'Biển số xe không thể chỉ gồm chữ cái! Cần có số đăng ký (VD: 30A-123.45).' };
+    }
+    if (clean.length < 6) {
+        return { valid: false, msg: 'Độ dài quá ngắn. Biển số xe hợp lệ gồm 6-10 ký tự.' };
+    }
+    if (!/^\d{2}/.test(clean) && !/^[A-Z]{2}/.test(clean)) {
+        return { valid: false, msg: 'Biển số phải bắt đầu bằng 2 số mã tỉnh (VD: 29, 30, 51...).' };
+    }
+    if (/^\d{2}/.test(clean) && !/^\d{2}[A-Z]/.test(clean)) {
+        return { valid: false, msg: 'Sau 2 số mã tỉnh phải là sê-ri chữ cái (VD: 30A, 29B...).' };
+    }
+    if (!/\d{4,5}$/.test(clean)) {
+        return { valid: false, msg: 'Phần số đăng ký cuối phải có 4 hoặc 5 chữ số.' };
+    }
+    return { valid: true, msg: 'Biển số đúng định dạng: ' + val };
+}
+
+const plateInput = document.getElementById('bienSoXe');
+const fb = document.getElementById('plateFeedback');
+if (plateInput) {
+    plateInput.addEventListener('input', function() {
+        const res = checkPlateValid(this.value);
+        if (!this.value.trim()) {
+            fb.innerHTML = '';
+            this.classList.remove('is-invalid', 'is-valid');
+        } else if (res.valid) {
+            fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i>' + res.msg + '</span>';
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            fb.innerHTML = '<span class="text-danger fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>' + res.msg + '</span>';
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        }
+    });
+}
+
+document.getElementById('formGuiXe').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('nutXacNhan');
+    const bienSo = document.getElementById('bienSoXe').value.trim();
+    if (!bienSo) {
+        alert('Vui lòng nhập biển số xe!');
+        return;
+    }
+
+    const check = checkPlateValid(bienSo);
+    if (!check.valid) {
+        alert('Biển số xe không hợp lệ!\n\n' + check.msg);
+        document.getElementById('bienSoXe').focus();
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang gửi yêu cầu...';
+
+    fetch('/api/gate/qr-checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            bienSoXe: bienSo,
+            loaiXeId: document.getElementById('loaiXeId').value || null,
+            ghiChu: document.getElementById('ghiChu').value || null
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        const box = document.getElementById('hopKetQua');
+        const content = document.getElementById('noiDungKetQua');
+        box.classList.remove('d-none');
+
+        if (data.success) {
+            box.className = 'alert-pro alert-success-pro mt-4';
+            content.innerHTML = `
+                <div class="fw-bold text-success fs-6 mb-2"><i class="fa-solid fa-circle-check me-1"></i> ${data.message}</div>
+                <div class="small text-dark mb-1"><strong>Biển số ghi nhận:</strong> ${data.bienSoXe}</div>
+                <div class="small text-dark mb-1"><strong>Loại xe:</strong> ${data.loaiXe}</div>
+                <div class="small text-dark mb-2"><strong>Thời gian vào:</strong> ${new Date(data.thoiGianVao).toLocaleString('vi-VN')}</div>
+                <div class="mt-2 text-center">
+                    <small class="text-muted d-block fw-semibold">MÃ VÉ CỦA BẠN:</small>
+                    <div class="ticket-highlight">${data.maVe}</div>
+                    <small class="text-muted d-block text-xs">⚠️ Hãy chụp ảnh hoặc ghi nhớ mã vé này để tra cứu khi xe ra bãi!</small>
+                </div>
+            `;
+            document.getElementById('formGuiXe').reset();
+            if (fb) fb.innerHTML = '';
+        } else {
+            box.className = 'alert-pro alert-error-pro mt-4';
+            content.innerHTML = `<div class="fw-bold text-danger mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Yêu cầu chưa thành công</div><div class="small">${data.message}</div>`;
+        }
+    })
+    .catch(err => {
+        const box = document.getElementById('hopKetQua');
+        box.classList.remove('d-none');
+        box.className = 'alert-pro alert-error-pro mt-4';
+        document.getElementById('noiDungKetQua').innerHTML = `<div class="fw-bold text-danger mb-1">Lỗi kết nối máy chủ</div><div class="small">${err.message}</div>`;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Xác nhận xe vào bãi';
+    });
+});
+</script>
+</body>
+</html>

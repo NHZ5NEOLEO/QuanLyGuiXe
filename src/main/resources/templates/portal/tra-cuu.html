@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu Phương Tiện — QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='tra-cuu')}"></div>
+
+    <main class="flex-grow-1">
+        <!-- =================================================================
+             KHU VỰC A: TIÊU ĐỀ TRANG
+             ================================================================= -->
+        <section class="portal-page-header">
+            <div class="container-xl px-3 px-sm-4 text-center">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border text-xs fw-bold text-primary mb-2">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>CỔNG TRA CỨU THÔNG TIN XE TRỰC TUYẾN</span>
+                </div>
+                <h1 class="portal-page-title">TRA CỨU PHƯƠNG TIỆN</h1>
+                <p class="portal-page-desc mx-auto mw-600">
+                    Nhập biển số xe hoặc mã vé để tìm thông tin lượt gửi.
+                </p>
+            </div>
+        </section>
+
+        <!-- Main Search & Results Container -->
+        <section class="pb-5">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-xl-7">
+                        <!-- =================================================================
+                             KHU VỰC B: THANH TÌM KIẾM
+                             ================================================================= -->
+                        <div class="lookup-box mb-4">
+                            <form id="lookupForm" onsubmit="handleSearch(event)" class="mb-3">
+                                <label for="plateInput" class="form-label fw-bold text-dark small text-uppercase mb-2 d-inline-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-car-side text-primary"></i>
+                                    <span>Biển số xe cần tra cứu</span>
+                                </label>
+                                <div class="lookup-input-group">
+                                    <span class="ps-2 pe-1 text-muted d-flex align-items-center">
+                                        <i class="fa-solid fa-hashtag text-primary fs-5"></i>
+                                    </span>
+                                    <input type="text" id="plateInput" class="form-control lookup-input font-monospace flex-grow-1" 
+                                           placeholder="VD: 30A-123.45 HOẶC 33M2-5678" 
+                                           th:value="${searchedPlate}" 
+                                           autocomplete="off" 
+                                           autofocus>
+                                    <button type="button" id="clearBtn" class="lookup-clear-btn d-none" onclick="clearInput()" title="Xóa nội dung">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                    <button type="submit" id="searchBtn" class="btn btn-portal-primary px-4 py-2 rounded-2 text-nowrap flex-shrink-0">
+                                        <span id="btnSearchText" class="d-inline-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                            <span>Tra cứu</span>
+                                        </span>
+                                        <span id="btnSearchSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Guidelines & Sample Plates (Không vỡ dòng, căn đều đẹp) -->
+                            <div class="pt-2.5 border-top d-flex flex-column gap-2 text-xs text-muted">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-info text-primary flex-shrink-0"></i>
+                                    <span>Hỗ trợ biển ô tô, xe máy toàn quốc (khoảng trắng tự chuẩn hóa).</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="fw-semibold text-dark"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Mẫu xe trong bãi:</span>
+                                    <button type="button" onclick="setPlate('33M2-5678')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2.5 rounded-2">33M2-5678 (Xe máy)</button>
+                                    <button type="button" onclick="setPlate('30A-123.45')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2.5 rounded-2">30A-123.45 (Ô tô)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- =================================================================
+                             KHU VỰC C & D: KẾT QUẢ TRA CỨU & CÁC TRẠNG THÁI TÌM KIẾM
+                             ================================================================= -->
+
+                        <!-- TRẠNG THÁI 1: CHƯA NHẬP THÔNG TIN (INITIAL STATE) -->
+                        <div id="stateInitial" class="portal-card p-4 p-md-5 text-center">
+                            <div class="stat-icon-wrapper stat-icon-blue mx-auto mb-3 avatar-56">
+                                <i class="fa-solid fa-keyboard"></i>
+                            </div>
+                            <h3 class="h5 fw-bold text-dark mb-2">Nhập biển số để bắt đầu tra cứu</h3>
+                            <p class="text-muted small mx-auto mb-4 mw-480">
+                                Hệ thống sẽ đối soát lượt xe đang gửi trong bãi đỗ và thông tin vé tháng cư dân đã đăng ký trong cơ sở dữ liệu.
+                            </p>
+                            <div class="row g-3 text-start justify-content-center">
+                                <div class="col-sm-6">
+                                    <div class="p-3 rounded-3 bg-light border h-100">
+                                        <div class="fw-bold text-dark text-xs mb-1 d-flex align-items-center gap-1.5">
+                                            <i class="fa-solid fa-clock text-primary"></i>
+                                            <span>Theo dõi thời lượng đỗ</span>
+                                        </div>
+                                        <div class="text-muted text-xs">Biết chính xác thời điểm xe vào bãi và tổng thời gian gửi xe đến phút hiện tại.</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-3 rounded-3 bg-light border h-100">
+                                        <div class="fw-bold text-dark text-xs mb-1 d-flex align-items-center gap-1.5">
+                                            <i class="fa-solid fa-shield-halved text-success"></i>
+                                            <span>Bảo mật dữ liệu an toàn</span>
+                                        </div>
+                                        <div class="text-muted text-xs">Chỉ hiển thị thông tin phương tiện liên quan đến biển số được tra cứu.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TRẠNG THÁI 2: ĐANG TÌM KIẾM (LOADING STATE) -->
+                        <div id="stateLoading" class="portal-card p-5 text-center d-none">
+                            <div class="spinner-border text-primary mb-3 spinner-3rem" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <h3 class="h5 fw-bold text-dark mb-1">Đang tra cứu dữ liệu...</h3>
+                            <p class="text-muted small mb-0">Hệ thống đang truy vấn cơ sở dữ liệu lượt xe và thông tin vé tháng.</p>
+                        </div>
+
+                        <!-- TRẠNG THÁI 3: TÌM THẤY KẾT QUẢ (FOUND STATE) -->
+                        <div id="stateFound" class="result-card d-none">
+                            <!-- Card Header: Biển số & Trạng thái -->
+                            <div class="result-card-header">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="plate-badge-display" id="resPlate">
+                                        30A-123.45
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" id="resLoaiXe">Phương tiện</div>
+                                        <span class="text-xs text-muted">Thông tin lượt gửi ghi nhận</span>
+                                    </div>
+                                </div>
+                                <div id="resStatusBadge">
+                                    <!-- Dynamic badge -->
+                                </div>
+                            </div>
+
+                            <!-- Card Body: Thời gian & Vị trí -->
+                            <div class="p-4 p-md-4">
+                                <div class="row g-3 mb-4">
+                                    <!-- Thời gian vào -->
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border h-100">
+                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">
+                                                <i class="fa-solid fa-arrow-right-to-bracket text-primary me-1"></i>Thời gian vào bãi
+                                            </div>
+                                            <div class="fs-5 fw-bold text-dark font-monospace" id="resThoiGianVao">
+                                                --
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">Ghi nhận lúc tiếp nhận xe</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Thời lượng gửi -->
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border h-100">
+                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">
+                                                <i class="fa-solid fa-hourglass-half text-warning me-1"></i>Thời lượng gửi xe
+                                            </div>
+                                            <div class="fs-5 fw-bold text-primary font-monospace" id="resThoiLuong">
+                                                --
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">Tính đến thời điểm hiện tại</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vị trí đỗ -->
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border h-100">
+                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">
+                                                <i class="fa-solid fa-location-dot text-danger me-1"></i>Vị trí quy hoạch
+                                            </div>
+                                            <div class="fs-5 fw-bold text-dark font-monospace" id="resViTri">
+                                                --
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">Khu vực phân bổ trong bãi</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Mã vé định danh -->
+                                    <div class="col-sm-6">
+                                        <div class="p-3 rounded-3 bg-light border h-100">
+                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">
+                                                <i class="fa-solid fa-qrcode text-info me-1"></i>Mã vé điện tử
+                                            </div>
+                                            <div class="fs-6 fw-bold text-dark font-monospace" id="resMaTicket">
+                                                --
+                                            </div>
+                                            <div class="text-xs text-muted mt-1">Mã đối soát khi nhận xe</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chi tiết vé tháng (nếu có) -->
+                                <div id="resMonthlyBlock" class="p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 mb-4 d-none">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-primary text-white text-xs fw-bold px-2 py-1">
+                                            <i class="fa-solid fa-id-card me-1"></i>VÉ THÁNG HỢP LỆ
+                                        </span>
+                                        <span class="text-xs text-muted">Mã thẻ: <strong class="font-monospace text-dark" id="resMaThe">--</strong></span>
+                                    </div>
+                                    <div class="row g-2 text-sm">
+                                        <div class="col-sm-6">
+                                            <span class="text-muted">Chủ phương tiện:</span>
+                                            <strong class="text-dark ms-1" id="resChuXe">--</strong>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <span class="text-muted">Hạn sử dụng:</span>
+                                            <strong class="text-success ms-1 font-monospace" id="resNgayHetHan">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Phí gửi xe & Quy tắc thanh toán -->
+                                <div class="p-3 rounded-3 bg-light border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                                    <div>
+                                        <div class="small fw-bold text-dark">Quy định tính phí khi xuất bãi:</div>
+                                        <div class="text-xs text-muted" id="resNotePhi">
+                                            Áp dụng theo bảng giá niêm yết hiện hành của bãi xe khi làm thủ tục nhận xe tại cổng ra.
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a th:href="@{/bang-gia-dich-vu}" class="btn btn-sm btn-outline-secondary fw-bold text-xs text-nowrap">
+                                            <i class="fa-solid fa-tag me-1"></i>Xem biểu phí
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold text-xs text-nowrap" onclick="window.print()">
+                                            <i class="fa-solid fa-print me-1"></i>In kết quả
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TRẠNG THÁI 4: KHÔNG TÌM THẤY (NOT FOUND STATE) -->
+                        <div id="stateNotFound" class="portal-card p-4 p-md-5 text-center d-none">
+                            <div class="stat-icon-wrapper stat-icon-amber mx-auto mb-3 avatar-56">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            </div>
+                            <h3 class="h5 fw-bold text-dark mb-2">Không tìm thấy phương tiện</h3>
+                            <p class="text-muted small mx-auto mb-4 mw-480" id="notFoundMessage">
+                                Không tìm thấy dữ liệu phương tiện đang gửi trong bãi hoặc đã đăng ký vé tháng.
+                            </p>
+                            <div class="p-3 rounded-3 bg-light border text-start small text-muted mx-auto mw-480">
+                                <div class="fw-bold text-dark mb-1">Gợi ý kiểm tra:</div>
+                                <ul class="mb-0 ps-3">
+                                    <li>Kiểm tra lại tính chính xác của biển số vừa nhập (khoảng trắng, ký tự).</li>
+                                    <li>Nếu bạn vừa gửi xe, hệ thống có thể mất vài giây để cập nhật lượt gửi.</li>
+                                    <li>Nếu xe đã hoàn tất thủ tục xuất bãi, lượt gửi sẽ không còn ở trạng thái đang gửi.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- TRẠNG THÁI 5: DỮ LIỆU ĐẦU VÀO KHÔNG HỢP LỆ (INVALID STATE) -->
+                        <div id="stateInvalid" class="alert alert-warning border-warning d-flex align-items-center gap-2 mb-4 d-none" role="alert">
+                            <i class="fa-solid fa-triangle-exclamation text-warning fs-5"></i>
+                            <div class="small fw-semibold">
+                                Vui lòng nhập biển số xe hợp lệ (tối thiểu 4 ký tự) để tiến hành tra cứu.
+                            </div>
+                        </div>
+
+                        <!-- TRẠNG THÁI 6: LỖI KẾT NỐI HOẶC MÁY CHỦ (ERROR STATE) -->
+                        <div id="stateError" class="alert alert-danger border-danger d-flex align-items-center gap-2 mb-4 d-none" role="alert">
+                            <i class="fa-solid fa-circle-xmark text-danger fs-5"></i>
+                            <div class="small fw-semibold">
+                                Không thể kết nối đến máy chủ hệ thống. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau giây lát.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer -->
+    <div th:replace="~{portal/fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Lookup Client JavaScript -->
+    <script>
+        const plateInput = document.getElementById('plateInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const btnSearchText = document.getElementById('btnSearchText');
+        const btnSearchSpinner = document.getElementById('btnSearchSpinner');
+
+        const stateInitial = document.getElementById('stateInitial');
+        const stateLoading = document.getElementById('stateLoading');
+        const stateFound = document.getElementById('stateFound');
+        const stateNotFound = document.getElementById('stateNotFound');
+        const stateInvalid = document.getElementById('stateInvalid');
+        const stateError = document.getElementById('stateError');
+        const notFoundMessage = document.getElementById('notFoundMessage');
+
+        // Toggle clear button on input
+        plateInput.addEventListener('input', function() {
+            if (this.value.trim().length > 0) {
+                clearBtn.classList.remove('d-none');
+            } else {
+                clearBtn.classList.add('d-none');
+            }
+        });
+
+        function clearInput() {
+            plateInput.value = '';
+            clearBtn.classList.add('d-none');
+            plateInput.focus();
+            showState('initial');
+        }
+
+        function setPlate(val) {
+            plateInput.value = val;
+            clearBtn.classList.remove('d-none');
+            doLookup(val);
+        }
+
+        function showState(name) {
+            stateInitial.classList.add('d-none');
+            stateLoading.classList.add('d-none');
+            stateFound.classList.add('d-none');
+            stateNotFound.classList.add('d-none');
+            stateInvalid.classList.add('d-none');
+            stateError.classList.add('d-none');
+
+            if (name === 'initial') stateInitial.classList.remove('d-none');
+            else if (name === 'loading') stateLoading.classList.remove('d-none');
+            else if (name === 'found') stateFound.classList.remove('d-none');
+            else if (name === 'notfound') stateNotFound.classList.remove('d-none');
+            else if (name === 'invalid') stateInvalid.classList.remove('d-none');
+            else if (name === 'error') stateError.classList.remove('d-none');
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                searchBtn.disabled = true;
+                btnSearchText.classList.add('d-none');
+                btnSearchSpinner.classList.remove('d-none');
+            } else {
+                searchBtn.disabled = false;
+                btnSearchText.classList.remove('d-none');
+                btnSearchSpinner.classList.add('d-none');
+            }
+        }
+
+        function handleSearch(e) {
+            if (e) e.preventDefault();
+            const plate = plateInput.value.trim();
+            if (!plate || plate.length < 3) {
+                showState('invalid');
+                return;
+            }
+            doLookup(plate);
+        }
+
+        async function doLookup(plate) {
+            showState('loading');
+            setLoading(true);
+
+            try {
+                const url = '/portal/api/lookup?plate=' + encodeURIComponent(plate);
+                const res = await fetch(url);
+                if (!res.ok) {
+                    if (res.status === 400) {
+                        showState('invalid');
+                    } else {
+                        showState('error');
+                    }
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.success && (data.dangGui || data.coVeThang)) {
+                    // Populate UI
+                    document.getElementById('resPlate').textContent = data.bienSoXe || plate.toUpperCase();
+                    document.getElementById('resLoaiXe').textContent = data.loaiXe || data.loaiXeVeThang || 'Phương tiện';
+
+                    const badgeContainer = document.getElementById('resStatusBadge');
+                    if (data.dangGui) {
+                        badgeContainer.innerHTML = '<span class="badge-status-active"><i class="fa-solid fa-circle-check"></i>ĐANG GỬI TRONG BÃI</span>';
+                    } else {
+                        badgeContainer.innerHTML = '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 text-xs fw-bold rounded-pill"><i class="fa-solid fa-id-card me-1"></i>CÓ VÉ THÁNG</span>';
+                    }
+
+                    document.getElementById('resThoiGianVao').textContent = data.thoiGianVao || (data.dangGui ? 'Hôm nay' : 'Không có lượt gửi hiện tại');
+                    document.getElementById('resThoiLuong').textContent = data.thoiLuong || (data.dangGui ? 'Đang tính...' : '—');
+                    document.getElementById('resViTri').textContent = data.viTri || 'Khu vực tự do';
+                    document.getElementById('resMaTicket').textContent = data.maQR || (data.coVeThang ? data.maThe : '—');
+
+                    // Monthly info block
+                    const monthlyBlock = document.getElementById('resMonthlyBlock');
+                    if (data.coVeThang) {
+                        monthlyBlock.classList.remove('d-none');
+                        document.getElementById('resMaThe').textContent = data.maThe || '—';
+                        document.getElementById('resChuXe').textContent = data.chuXe || 'Cư dân';
+                        document.getElementById('resNgayHetHan').textContent = data.ngayHetHan ? (data.conHan ? 'Còn hạn đến ' + data.ngayHetHan : 'Đã hết hạn ngày ' + data.ngayHetHan) : 'Còn hạn';
+                        document.getElementById('resNotePhi').textContent = 'Phương tiện đã đăng ký vé tháng. Miễn phí lượt gửi xe theo chính sách cư dân.';
+                    } else {
+                        monthlyBlock.classList.add('d-none');
+                        document.getElementById('resNotePhi').textContent = 'Áp dụng theo bảng giá niêm yết hiện hành của bãi xe khi làm thủ tục nhận xe tại cổng ra.';
+                    }
+
+                    showState('found');
+                } else {
+                    notFoundMessage.textContent = data.message || ('Không tìm thấy dữ liệu xe [' + (data.bienSoXe || plate.toUpperCase()) + '] đang gửi hoặc đã đăng ký vé tháng.');
+                    showState('notfound');
+                }
+            } catch (err) {
+                console.error('Lỗi tra cứu xe:', err);
+                showState('error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Auto lookup if plate parameter exists on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const initialPlate = plateInput.value.trim();
+            if (initialPlate && initialPlate.length >= 3) {
+                clearBtn.classList.remove('d-none');
+                doLookup(initialPlate);
+            }
+        });
+    </script>
+</body>
+</html>

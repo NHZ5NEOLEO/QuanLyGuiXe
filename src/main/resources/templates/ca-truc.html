@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bàn Giao Ca Trực - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printArea, #printArea * {
+                visibility: visible;
+            }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Shared Sidebar -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Shared Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-box">
+                    <h2>Quản lý và bàn giao ca trực</h2>
+                    <p>Theo dõi doanh thu thực thu trong ca, kiểm đếm tiền mặt và chốt biên bản bàn giao</p>
+                </div>
+                <button class="btn-pro btn-outline-pro" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> In biên bản bàn giao (A4)
+                </button>
+            </div>
+
+            <!-- Flash alerts -->
+            <div th:if="${successMessage}" class="alert-pro alert-success-pro" role="alert">
+                <i class="fa-solid fa-circle-check fs-5"></i>
+                <div class="flex-grow-1" th:text="${successMessage}">Thao tác thành công.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert-pro alert-error-pro" role="alert">
+                <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                <div class="flex-grow-1" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Print Area (Biên bản bàn giao ca trực và Báo cáo tài chính chuẩn A4) -->
+            <div id="printArea" class="card-pro mb-4">
+                <!-- Tiêu đề hành chính chuẩn chỉ xuất hiện khi in -->
+                <div class="d-none d-print-block mb-4 pb-2 border-bottom text-dark">
+                    <div class="row align-items-start">
+                        <div class="col-6 text-start">
+                            <h6 class="fw-bold mb-0 text-uppercase">HỆ THỐNG QUẢN LÝ BÃI XE PARKING</h6>
+                            <small class="d-block text-secondary">Bộ Phận Vận Hành và Giám Sát Cổng</small>
+                            <small class="d-block text-secondary">Số: BB-BG/2026/CT</small>
+                        </div>
+                        <div class="col-6 text-center">
+                            <h6 class="fw-bold mb-0 text-uppercase">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h6>
+                            <small class="fw-bold d-block">Độc lập - Tự do - Hạnh phúc</small>
+                            <div class="small text-muted">-------------------</div>
+                            <small class="fst-italic" th:text="${'Ngày ' + #temporals.format(currentShift.thoiGianBatDau, 'dd') + ' tháng ' + #temporals.format(currentShift.thoiGianBatDau, 'MM') + ' năm ' + #temporals.format(currentShift.thoiGianBatDau, 'yyyy')}">Ngày 10 tháng 10 năm 2026</small>
+                        </div>
+                    </div>
+                    <div class="text-center my-3">
+                        <h4 class="fw-bold mb-1 text-uppercase">BIÊN BẢN BÀN GIAO CA TRỰC VÀ BÁO CÁO DOANH THU</h4>
+                        <small class="text-secondary">(Ban hành kèm theo Quy chế Quản lý và Vận hành Bãi xe)</small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap gap-2">
+                    <div>
+                        <span class="badge-pro badge-success-pro fs-6 px-3 py-1 fw-bold">
+                            <i class="fa-solid fa-circle fa-beat me-1"></i> CA TRỰC ĐANG HOẠT ĐỘNG
+                        </span>
+                        <h4 class="fw-bold text-dark mt-2 mb-0" th:text="${currentShift.tenCa}">Ca Trực Hiện Tại</h4>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">Nhân viên phụ trách ca:</small>
+                        <strong class="fs-6 text-primary" th:text="${currentShift.nguoiTruc != null ? currentShift.nguoiTruc.hoTen : 'Nhân Viên Trực Cổng'}">Nguyễn Văn An</strong>
+                    </div>
+                </div>
+
+                <!-- KPI Ca trực hiện tại -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <span class="text-muted small fw-semibold">THỜI GIAN BẮT ĐẦU</span>
+                            <h6 class="fw-bold text-dark mt-1 mb-0" th:text="${#temporals.format(currentShift.thoiGianBatDau, 'HH:mm dd/MM/yyyy')}">08:00 10/10/2026</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <span class="text-muted small fw-semibold">LƯỢT XE VÀO / RA</span>
+                            <h6 class="fw-bold text-dark mt-1 mb-0">
+                                <span class="text-success" th:text="${currentShift.tongLuotVao}">0</span> vào / 
+                                <span class="text-danger" th:text="${currentShift.tongLuotRa}">0</span> ra
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <span class="text-muted small fw-semibold">TIỀN MẶT ĐÃ THU</span>
+                            <h5 class="fw-bold text-success mt-1 mb-0" th:text="${#numbers.formatDecimal(currentShift.tienMatThuDuoc, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <span class="text-muted small fw-semibold">VIETQR CHUYỂN KHOẢN</span>
+                            <h5 class="fw-bold text-primary mt-1 mb-0" th:text="${#numbers.formatDecimal(currentShift.chuyenKhoanThuDuoc, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3 bg-light d-flex justify-content-between align-items-center mb-4 border">
+                    <div>
+                        <span class="fw-bold text-primary fs-6">TỔNG DOANH THU THỰC THU TRONG CA:</span>
+                    </div>
+                    <div>
+                        <span class="fw-bold text-danger fs-4" th:text="${#numbers.formatDecimal(currentShift.tongDoanhThu, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</span>
+                    </div>
+                </div>
+
+                <!-- Bảng Cơ Cấu Doanh Thu Theo Loại Phương Tiện -->
+                <div class="mb-4" th:if="${revenueByVehicleType != null && !revenueByVehicleType.isEmpty()}">
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="fa-solid fa-chart-pie text-success me-2"></i>Bảng kê doanh thu theo từng loại phương tiện:
+                    </h6>
+                    <div class="table-responsive-pro">
+                        <table class="table-pro">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Loại Phương Tiện</th>
+                                    <th class="text-end">Doanh Thu Ghi Nhận (VNĐ)</th>
+                                    <th class="text-center">Đánh Giá Đóng Góp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry, iter : ${revenueByVehicleType}">
+                                    <td class="text-center" th:text="${iter.count}">1</td>
+                                    <td>
+                                        <i class="fa-solid fa-car-side text-primary me-2"></i>
+                                        <strong th:text="${entry.key}">Ô tô</strong>
+                                    </td>
+                                    <td class="text-end fw-bold text-success" th:text="${#numbers.formatDecimal(entry.value, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">
+                                        50.000 VNĐ
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge-pro badge-success-pro small">Nguồn thu chính</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Form Bàn Giao Ca Trực (Ẩn khi in ấn) -->
+                <form action="/shift/handover" method="post" class="border-top pt-3 d-print-none">
+                    <input type="hidden" name="shiftId" th:value="${currentShift.id}">
+                    <div class="mb-3">
+                        <label class="form-label-pro">Ghi chú bàn giao ca (Tình trạng bãi xe, số tiền mặt giao ca...):</label>
+                        <textarea class="form-control form-control-pro" name="ghiChuBanGiao" rows="2" placeholder="Ví dụ: Đã bàn giao đủ tiền mặt, bãi xe ổn định, không có sự cố phát sinh."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn-pro btn-outline-pro" onclick="window.print()">
+                            <i class="fa-solid fa-file-pdf"></i> Xuất biên bản PDF / In A4
+                        </button>
+                        <button type="submit" class="btn-pro btn-danger-pro" onclick="return confirm('Bạn có chắc chắn muốn chốt số liệu và bàn giao ca trực này không?')">
+                            <i class="fa-solid fa-handshake"></i> Chốt ca và bàn giao
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Chữ ký 3 bên khi in A4 -->
+                <div class="row mt-5 text-center d-none d-print-flex">
+                    <div class="col-4">
+                        <p class="fw-bold mb-5">NGƯỜI BÀN GIAO CA<br><small class="fw-normal text-muted">(Ký và ghi rõ họ tên)</small></p>
+                    </div>
+                    <div class="col-4">
+                        <p class="fw-bold mb-5">NGƯỜI NHẬN CA<br><small class="fw-normal text-muted">(Ký và ghi rõ họ tên)</small></p>
+                    </div>
+                    <div class="col-4">
+                        <p class="fw-bold mb-5">KẾ TOÁN / TRƯỞNG BAN<br><small class="fw-normal text-muted">(Ký, đóng dấu)</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng Lịch Sử Các Ca Trực Đã Bàn Giao -->
+            <div class="card-pro">
+                <div class="card-header-pro">
+                    <h3 class="card-title-pro">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử các ca trực trước đó
+                    </h3>
+                </div>
+                <div class="table-responsive-pro">
+                    <table class="table-pro">
+                        <thead>
+                            <tr>
+                                <th>Tên Ca</th>
+                                <th>Nhân Viên Trực</th>
+                                <th>Bắt Đầu</th>
+                                <th>Kết Thúc</th>
+                                <th>Lượt Vào/Ra</th>
+                                <th>Tiền Mặt</th>
+                                <th>Chuyển Khoản</th>
+                                <th>Tổng Doanh Thu</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(pastShifts)}">
+                                <td colspan="9" class="text-center py-4 text-muted">Chưa có ca trực nào được ghi nhận</td>
+                            </tr>
+                            <tr th:each="s : ${pastShifts}">
+                                <td class="fw-bold text-primary" th:text="${s.tenCa}">Ca Sáng</td>
+                                <td th:text="${s.nguoiTruc != null ? s.nguoiTruc.hoTen : 'Bảo vệ'}">Nguyễn Văn An</td>
+                                <td><small class="text-muted" th:text="${#temporals.format(s.thoiGianBatDau, 'HH:mm dd/MM/yyyy')}">08:00 10/10</small></td>
+                                <td>
+                                    <small class="text-muted" th:if="${s.thoiGianKetThuc != null}" th:text="${#temporals.format(s.thoiGianKetThuc, 'HH:mm dd/MM/yyyy')}">16:00 10/10</small>
+                                    <span th:unless="${s.thoiGianKetThuc != null}" class="badge-pro badge-success-pro">Đang trực</span>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-bold" th:text="${s.tongLuotVao}">0</span> / 
+                                    <span class="text-danger fw-bold" th:text="${s.tongLuotRa}">0</span>
+                                </td>
+                                <td class="fw-bold text-success" th:text="${#numbers.formatDecimal(s.tienMatThuDuoc, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</td>
+                                <td class="fw-bold text-primary" th:text="${#numbers.formatDecimal(s.chuyenKhoanThuDuoc, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</td>
+                                <td class="fw-bold text-danger" th:text="${#numbers.formatDecimal(s.tongDoanhThu, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</td>
+                                <td>
+                                    <span th:if="${s.trangThai == 'DA_BAN_GIAO'}" class="badge-pro badge-neutral-pro">Đã bàn giao</span>
+                                    <span th:if="${s.trangThai == 'DANG_TRUC'}" class="badge-pro badge-success-pro">Đang hoạt động</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+        <!-- Reusable Operational Footer -->
+        <div th:replace="~{fragments/footer :: app-footer}"></div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{fragments/navbar :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>

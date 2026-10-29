@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Fragment</title>
+</head>
+<body>
+<!-- SHARED PUBLIC HEADER -->
+<header th:fragment="header(activeNav)" class="portal-header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2.5">
+        <div class="container-xl px-3 px-sm-4">
+            <!-- Brand Logo & Name -->
+            <a class="navbar-brand portal-brand-link py-1 me-lg-4" th:href="@{/}">
+                <span class="portal-logo-icon">P</span>
+                <div class="portal-brand-text">
+                    <span class="portal-brand-name">QUẢN LÝ GỬI XE</span>
+                    <span class="portal-brand-sub">PHẦN MỀM QUẢN LÝ GỬI XE</span>
+                </div>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0 shadow-none px-2 py-1" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#portalNavbarNav" 
+                    aria-controls="portalNavbarNav" aria-expanded="false" aria-label="Mở menu điều hướng">
+                <i class="fa-solid fa-bars fs-5 text-dark"></i>
+            </button>
+
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="portalNavbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 py-2 py-lg-0 gap-1 gap-xl-2 align-items-lg-center me-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'home' ? 'active' : ''}" th:href="@{/}">
+                            <i class="fa-solid fa-house me-2 text-primary opacity-90"></i><span>Trang chủ</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'tra-cuu' ? 'active' : ''}" th:href="@{/tra-cuu}">
+                            <i class="fa-solid fa-magnifying-glass me-2 text-primary opacity-90"></i><span>Tra cứu xe</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'bang-gia' ? 'active' : ''}" th:href="@{/bang-gia-dich-vu}">
+                            <i class="fa-solid fa-tag me-2 text-primary opacity-90"></i><span>Bảng giá niêm yết</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 've-thang' ? 'active' : ''}" th:href="@{/dang-ky-ve-thang}">
+                            <i class="fa-solid fa-id-card me-2 text-primary opacity-90"></i><span>Đăng ký vé tháng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'danh-gia' ? 'active' : ''}" th:href="@{/danh-gia}">
+                            <i class="fa-solid fa-star me-2 text-primary opacity-90"></i><span>Đánh giá dịch vụ</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Action Button -->
+                <div class="d-flex align-items-center pt-2 pt-lg-0 ms-lg-2">
+                    <a th:href="@{/login}" class="btn btn-portal-login d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                        <span>Đăng nhập</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+</body>
+</html>

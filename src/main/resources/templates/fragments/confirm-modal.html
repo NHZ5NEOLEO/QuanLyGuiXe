@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận thao tác</title>
+</head>
+<body>
+
+<!-- Reusable Confirmation Modal Dialog Fragment -->
+<div th:fragment="confirm-modal(modalId, formId, title, message, confirmBtnText, confirmBtnClass)" 
+     class="modal fade" th:id="${modalId}" tabindex="-1" aria-hidden="true" aria-labelledby="${modalId + 'Title'}">
+    <div class="modal-dialog modal-dialog-centered confirm-modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center confirm-modal-icon">
+                        <i class="fa-solid fa-circle-question fs-5"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold text-dark" th:id="${modalId + 'Title'}" th:text="${title}">Xác nhận thao tác</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body px-4 py-3 text-secondary confirm-modal-body" th:text="${message}">
+                Bạn có chắc chắn muốn thực hiện thao tác này? Thao tác có thể ảnh hưởng đến dữ liệu hệ thống.
+            </div>
+            <div class="modal-footer border-top-0 pt-0 pb-4 px-4 gap-2">
+                <button type="button" class="btn-pro btn-outline-pro" data-bs-dismiss="modal">
+                    Hủy bỏ
+                </button>
+                <button type="button" class="btn-pro" th:classappend="${confirmBtnClass != null ? confirmBtnClass : 'btn-primary-pro'}"
+                        th:data-target="${formId}"
+                        onclick="document.getElementById(this.dataset.target).submit();"
+                        th:text="${confirmBtnText != null ? confirmBtnText : 'Xác nhận'}">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

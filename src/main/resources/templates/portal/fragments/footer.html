@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Fragment</title>
+</head>
+<body>
+<!-- SHARED PUBLIC FOOTER -->
+<footer th:fragment="footer" class="portal-footer pt-5 pb-4 mt-auto">
+    <div class="container-xl px-3 px-sm-4">
+        <div class="row g-4 pb-4 border-bottom border-secondary border-opacity-25">
+            <!-- Col 1: Brand & Overview -->
+            <div class="col-lg-5 col-md-6">
+                <div class="portal-brand-link mb-3">
+                    <span class="portal-logo-icon">P</span>
+                    <div class="portal-brand-text">
+                        <span class="portal-brand-name text-white">QUẢN LÝ GỬI XE</span>
+                        <span class="portal-brand-sub text-white-50">PHẦN MỀM QUẢN LÝ GỬI XE</span>
+                    </div>
+                </div>
+                <p class="text-white-50 small mb-3 lh-relaxed footer-desc-text">
+                    Nền tảng quản lý phương tiện và cấp vé điện tử hiện đại. Hỗ trợ tra cứu phương tiện, niêm yết biểu phí minh bạch và đăng ký vé tháng tiện lợi cho cư dân và khách gửi xe.
+                </p>
+                <div class="d-flex align-items-center gap-2 text-white-50 text-xs">
+                    <i class="fa-solid fa-shield-halved text-success"></i>
+                    <span>Hệ thống vận hành an toàn &bull; Đối soát dữ liệu chính xác</span>
+                </div>
+            </div>
+
+            <!-- Col 2: Navigation Links -->
+            <div class="col-lg-3 col-6">
+                <h6 class="text-white fw-bold text-uppercase fs-7 mb-3 letter-spacing-1">Dịch Vụ Trực Tuyến</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+                    <li><a th:href="@{/}" class="text-white-50 text-decoration-none hover-white transition-all"><i class="fa-solid fa-angle-right me-1.5 opacity-50"></i>Trang chủ</a></li>
+                    <li><a th:href="@{/tra-cuu}" class="text-white-50 text-decoration-none hover-white transition-all"><i class="fa-solid fa-angle-right me-1.5 opacity-50"></i>Tra cứu phương tiện</a></li>
+                    <li><a th:href="@{/bang-gia-dich-vu}" class="text-white-50 text-decoration-none hover-white transition-all"><i class="fa-solid fa-angle-right me-1.5 opacity-50"></i>Bảng giá niêm yết</a></li>
+                    <li><a th:href="@{/dang-ky-ve-thang}" class="text-white-50 text-decoration-none hover-white transition-all"><i class="fa-solid fa-angle-right me-1.5 opacity-50"></i>Đăng ký vé tháng</a></li>
+                    <li><a th:href="@{/danh-gia}" class="text-white-50 text-decoration-none hover-white transition-all"><i class="fa-solid fa-angle-right me-1.5 opacity-50"></i>Đánh giá &amp; góp ý</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 3: Operating Hours & Hotline -->
+            <div class="col-lg-4 col-md-6 col-12">
+                <h6 class="text-white fw-bold text-uppercase fs-7 mb-3 letter-spacing-1">Thời Gian &amp; Hỗ Trợ 24/7</h6>
+                <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 small text-white-50 mb-3">
+                    <div class="d-flex justify-content-between mb-1.5">
+                        <span>Ca ban ngày:</span>
+                        <strong class="text-white font-monospace">06:00 &ndash; 18:00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1.5">
+                        <span>Ca ban đêm:</span>
+                        <strong class="text-white font-monospace">18:00 &ndash; 06:00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Hỗ trợ trực cổng:</span>
+                        <strong class="text-success fw-bold">Liên tục 24/7</strong>
+                    </div>
+                </div>
+
+                <!-- Hotline Box -->
+                <div class="p-2.5 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10 d-flex align-items-center justify-content-between mb-0">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="bg-primary bg-opacity-25 text-primary rounded-circle d-flex align-items-center justify-content-center hotline-icon-box">
+                            <i class="fa-solid fa-phone text-warning"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xs text-white-50 text-uppercase fw-bold">Hotline Trực Ban 24/7</div>
+                            <a href="tel:19006868" class="text-white fw-bold font-monospace fs-6 text-decoration-none hover-white">1900 6868</a>
+                        </div>
+                    </div>
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 text-2xs">Miễn phí</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between pt-3 text-white-50 text-xs gap-2">
+            <div>
+                &copy; 2026 <strong>QUẢN LÝ GỬI XE</strong> &bull; Đồ án chuyên ngành Công nghệ thông tin.
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a th:href="@{/bang-gia-dich-vu}" class="text-white-50 text-decoration-none hover-white">Quy định gửi xe</a>
+                <span>&bull;</span>
+                <a th:href="@{/login}" class="text-white-50 text-decoration-none hover-white">Khu vực quản trị</a>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

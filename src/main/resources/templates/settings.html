@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài Đặt Hệ Thống - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Shared Sidebar -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Shared Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-box">
+                    <h2>Cài đặt hệ thống</h2>
+                    <p>Thiết lập thông tin bãi xe, cấu hình in vé QR và quản lý tài khoản cá nhân</p>
+                </div>
+            </div>
+
+            <!-- Flash Notifications -->
+            <div th:if="${successMessage}" class="alert-pro alert-success-pro" role="alert">
+                <i class="fa-solid fa-circle-check fs-5"></i>
+                <div class="flex-grow-1" th:text="${successMessage}">Thao tác thành công.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert-pro alert-error-pro" role="alert">
+                <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                <div class="flex-grow-1" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="row g-4">
+                <!-- Cột trái: Cài đặt chung & Cấu hình bãi xe -->
+                <div class="col-lg-7">
+                    <!-- Thông tin bãi xe -->
+                    <div class="card-pro mb-4">
+                        <div class="card-header-pro">
+                            <h3 class="card-title-pro">
+                                <i class="fa-solid fa-square-parking"></i> Thông tin cơ sở bãi xe
+                            </h3>
+                        </div>
+                        <form action="/settings/save-general" method="post">
+                            <div class="form-group-pro">
+                                <label class="form-label-pro" for="parkingName">Tên bãi đỗ xe <span class="required">*</span></label>
+                                <input type="text" id="parkingName" name="parkingName" class="form-control form-control-pro" 
+                                       value="BÃI XE TRUNG TÂM PARKING" placeholder="Tên bãi đỗ xe" 
+                                       title="Tên bãi đỗ xe" aria-label="Tên bãi đỗ xe" required>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-pro" for="hotline">Hotline hỗ trợ 24/7</label>
+                                    <input type="text" id="hotline" name="hotline" class="form-control form-control-pro" 
+                                           value="1900 6868" placeholder="Hotline hỗ trợ" 
+                                           title="Hotline hỗ trợ 24/7" aria-label="Hotline hỗ trợ 24/7">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-pro" for="totalSlots">Quy mô sức chứa bãi xe</label>
+                                    <input type="text" id="totalSlots" class="form-control form-control-pro bg-light" 
+                                           th:value="${totalSlots} + ' lượt xe'" placeholder="Quy mô bãi xe" 
+                                           title="Quy mô bãi xe" aria-label="Quy mô bãi xe" readonly>
+                                </div>
+                            </div>
+
+                            <div class="form-group-pro">
+                                <label class="form-label-pro" for="address">Địa chỉ bãi xe</label>
+                                <input type="text" id="address" name="address" class="form-control form-control-pro" 
+                                       value="Trung tâm Quản lý Bãi xe TP. Hồ Chí Minh" placeholder="Địa chỉ bãi xe" 
+                                       title="Địa chỉ bãi xe" aria-label="Địa chỉ bãi xe">
+                            </div>
+
+                            <div class="text-end pt-2">
+                                <button type="submit" class="btn-pro btn-primary-pro">
+                                    <i class="fa-solid fa-floppy-disk"></i> Lưu thông tin bãi xe
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Cấu hình vé QR & In hóa đơn -->
+                    <div class="card-pro">
+                        <div class="card-header-pro">
+                            <h3 class="card-title-pro">
+                                <i class="fa-solid fa-qrcode"></i> Cấu hình vé QR và Máy in
+                            </h3>
+                        </div>
+                        <div class="form-group-pro">
+                            <label class="form-label-pro" for="qrPrefix">Tiền tố mã QR vé xe</label>
+                            <input type="text" id="qrPrefix" class="form-control form-control-pro font-monospace" 
+                                   value="QR-" placeholder="Tiền tố mã QR" 
+                                   title="Tiền tố mã QR vé xe" aria-label="Tiền tố mã QR vé xe" readonly>
+                            <div class="form-help-text">Mã QR được sinh tự động theo quy tắc: QR-[YYMMDDHHmmss]-[UUID 4 ký tự]</div>
+                        </div>
+
+                        <div class="form-group-pro">
+                            <label class="form-label-pro" for="paperSize">Khổ giấy in hóa đơn / vé gửi</label>
+                            <select id="paperSize" class="form-select form-select-pro" title="Khổ giấy in hóa đơn / vé gửi" aria-label="Khổ giấy in hóa đơn / vé gửi">
+                                <option value="80mm" selected>Khổ giấy nhiệt chuẩn 80mm (POS Receipt)</option>
+                                <option value="58mm">Khổ giấy nhiệt 58mm</option>
+                                <option value="A4">Khổ giấy A4 (Báo cáo bàn giao ca)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group-pro mb-0">
+                            <label class="form-label-pro">Trạng thái Barie điện tử</label>
+                            <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-semibold text-dark">Mô phỏng Barie & Còi chuông</div>
+                                    <small class="text-muted">Tự động phát tín hiệu âm thanh và mở cần chắn khi check-in/out</small>
+                                </div>
+                                <span class="badge-pro badge-success-pro">Đang bật</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Đổi mật khẩu cá nhân -->
+                <div class="col-lg-5">
+                    <div class="card-pro mb-4">
+                        <div class="card-header-pro">
+                            <h3 class="card-title-pro">
+                                <i class="fa-solid fa-key"></i> Đổi mật khẩu tài khoản
+                            </h3>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar-circle" th:text="${session.userName != null ? #strings.substring(session.userName, 0, 1).toUpperCase() : 'A'}">
+                                    A
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark" th:text="${session.userName != null ? session.userName : 'Admin Quản Trị'}">Admin</div>
+                                    <div class="text-muted small">Vai trò: <span class="badge-pro badge-primary-pro" th:text="${session.userRole != null ? session.userRole : 'ADMIN'}">ADMIN</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form action="/settings/change-password" method="post">
+                            <div class="form-group-pro">
+                                <label class="form-label-pro">Mật khẩu hiện tại <span class="required">*</span></label>
+                                <input type="password" name="currentPassword" class="form-control form-control-pro" placeholder="Nhập mật khẩu hiện tại" required autocomplete="current-password">
+                            </div>
+
+                            <div class="form-group-pro">
+                                <label class="form-label-pro">Mật khẩu mới <span class="required">*</span></label>
+                                <input type="password" name="newPassword" class="form-control form-control-pro" placeholder="Nhập mật khẩu mới" required autocomplete="new-password">
+                            </div>
+
+                            <div class="form-group-pro">
+                                <label class="form-label-pro">Xác nhận mật khẩu mới <span class="required">*</span></label>
+                                <input type="password" name="confirmPassword" class="form-control form-control-pro" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
+                            </div>
+
+                            <div class="d-grid pt-2">
+                                <button type="submit" class="btn-pro btn-primary-pro">
+                                    <i class="fa-solid fa-lock"></i> Cập nhật mật khẩu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Thông tin phiên bản -->
+                    <div class="card-pro">
+                        <div class="card-header-pro">
+                            <h3 class="card-title-pro">
+                                <i class="fa-solid fa-circle-info"></i> Thông tin phần mềm
+                            </h3>
+                        </div>
+                        <div class="small">
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Tên giải pháp:</span>
+                                <span class="fw-bold text-primary">PARKING</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Phiên bản:</span>
+                                <span class="font-monospace">v2.4.0 (Enterprise SaaS)</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Nền tảng:</span>
+                                <span>Spring Boot 3 + SQL Server</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Cổng mạng:</span>
+                                <span class="badge-pro badge-success-pro">Port 80 (HTTP Chuẩn)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- Reusable Operational Footer -->
+        <div th:replace="~{fragments/footer :: app-footer}"></div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{fragments/navbar :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>

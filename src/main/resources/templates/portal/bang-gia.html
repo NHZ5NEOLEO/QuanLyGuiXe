@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Giá Niêm Yết — QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='bang-gia')}"></div>
+
+    <main class="flex-grow-1">
+        <!-- =================================================================
+             KHU VỰC A: TIÊU ĐỀ TRANG
+             ================================================================= -->
+        <section class="portal-page-header">
+            <div class="container-xl px-3 px-sm-4 text-center">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border text-xs fw-bold text-success mb-2">
+                    <i class="fa-solid fa-tag"></i>
+                    <span>BIỂU PHÍ CÔNG KHAI &bull; MINH BẠCH</span>
+                </div>
+                <h1 class="portal-page-title">BẢNG GIÁ NIÊM YẾT</h1>
+                <p class="portal-page-desc mx-auto mw-600">
+                    Tra cứu mức phí áp dụng theo loại phương tiện và thời gian gửi.
+                </p>
+            </div>
+        </section>
+
+        <!-- Main Pricing Content -->
+        <section class="pb-5">
+            <div class="container-xl px-3 px-sm-4">
+
+                <!-- Empty State if no pricing data in DB -->
+                <div th:if="${#lists.isEmpty(loaiXes)}" class="portal-card p-5 text-center my-4">
+                    <div class="stat-icon-wrapper stat-icon-amber mx-auto mb-3 avatar-56">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Chưa cập nhật bảng giá</h3>
+                    <p class="text-muted small mx-auto mb-0 mw-480">
+                        Hiện tại danh mục biểu phí chưa được cấu hình trong hệ thống cơ sở dữ liệu. Quý khách vui lòng liên hệ trực tiếp nhân viên trực cổng để được hỗ trợ.
+                    </p>
+                </div>
+
+                <!-- =================================================================
+                     KHU VỰC B: BẢNG GIÁ THEO CARD HIỆN ĐẠI (ĐỌC TỪ CƠ SỞ DỮ LIỆU THẬT)
+                     ================================================================= -->
+                <div th:unless="${#lists.isEmpty(loaiXes)}">
+                    <!-- Cards Grid -->
+                    <div class="row g-3 g-xl-4 align-items-stretch mb-5">
+                        <div class="col-12 col-md-6 col-xl-3" th:each="lx : ${loaiXes}">
+                            <div class="pricing-card" th:classappend="${#strings.containsIgnoreCase(lx.tenLoai, 'máy') or #strings.containsIgnoreCase(lx.tenLoai, 'may') ? 'featured' : ''}">
+                                <!-- Featured pill for Motorbike -->
+                                <span th:if="${#strings.containsIgnoreCase(lx.tenLoai, 'máy') or #strings.containsIgnoreCase(lx.tenLoai, 'may')}" 
+                                      class="pricing-featured-badge">
+                                    PHỔ BIẾN NHẤT
+                                </span>
+
+                                <!-- Card Header (Đồng bộ vị trí ngang bằng tuyệt đối) -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="stat-icon-wrapper" 
+                                         th:classappend="${#strings.containsIgnoreCase(lx.tenLoai, 'tô') or #strings.containsIgnoreCase(lx.tenLoai, 'car') ? 'stat-icon-amber' : (#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'stat-icon-blue' : 'stat-icon-green')}">
+                                        <i class="fa-solid" th:classappend="${lx.iconClass != null and !#strings.isEmpty(lx.iconClass) ? lx.iconClass : 'fa-car'}"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Vehicle Name & Description (Đồng bộ chiều cao chuẩn) -->
+                                <h3 class="pricing-card-title" th:text="${lx.tenLoai}">Xe máy</h3>
+                                <p class="pricing-card-desc" th:text="${lx.moTa != null and !#strings.isEmpty(lx.moTa) ? lx.moTa : 'Áp dụng cho mọi phương tiện cùng phân khúc quy chuẩn.'}">
+                                    Mô tả loại phương tiện
+                                </p>
+
+                                <!-- Price Breakdown List (Căn lề hoàn hảo, icon có khoảng cách chuẩn, không vỡ layout) -->
+                                <div class="pricing-rate-box">
+                                    <!-- Ban ngày -->
+                                    <div class="pricing-rate-row">
+                                        <div class="pricing-rate-left">
+                                            <div class="pricing-rate-title">
+                                                <i class="fa-solid fa-sun text-warning"></i>
+                                                <span>Ca ngày</span>
+                                            </div>
+                                            <div class="pricing-rate-hours">06:00 – 18:00</div>
+                                        </div>
+                                        <div class="pricing-rate-right">
+                                            <span class="pricing-rate-price" 
+                                                  th:text="${lx.giaBanNgay != null ? #numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ' : 'Chưa cập nhật'}">
+                                                4.000 đ
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ban đêm -->
+                                    <div class="pricing-rate-row">
+                                        <div class="pricing-rate-left">
+                                            <div class="pricing-rate-title">
+                                                <i class="fa-solid fa-moon text-primary"></i>
+                                                <span>Ca đêm</span>
+                                            </div>
+                                            <div class="pricing-rate-hours">18:00 – 06:00</div>
+                                        </div>
+                                        <div class="pricing-rate-right">
+                                            <span class="pricing-rate-price" 
+                                                  th:text="${lx.giaBanDem != null ? #numbers.formatDecimal(lx.giaBanDem, 0, 'POINT', 0, 'COMMA') + ' đ' : 'Chưa cập nhật'}">
+                                                6.000 đ
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vé tháng -->
+                                    <div class="pricing-rate-row pricing-rate-monthly">
+                                        <div class="pricing-rate-left">
+                                            <div class="pricing-rate-title">
+                                                <i class="fa-solid fa-id-card"></i>
+                                                <span>Vé tháng</span>
+                                            </div>
+                                        </div>
+                                        <div class="pricing-rate-right">
+                                            <span class="pricing-rate-price" 
+                                                  th:text="${lx.giaThang != null and lx.giaThang > 0 ? #numbers.formatDecimal(lx.giaThang, 0, 'POINT', 0, 'COMMA') + ' đ' : 'Không áp dụng'}">
+                                                90.000 đ
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action CTA -->
+                                <div class="mt-auto">
+                                    <a th:if="${lx.giaThang != null and lx.giaThang > 0}" 
+                                       th:href="@{/dang-ky-ve-thang(loaiXeId=${lx.id})}" 
+                                       class="btn w-100 fw-bold rounded-2 text-xs py-2.5 shadow-xs text-nowrap d-inline-flex align-items-center justify-content-center gap-2"
+                                       th:classappend="${#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'btn-primary' : 'btn-outline-primary'}">
+                                        <i class="fa-solid fa-file-pen"></i>
+                                        <span>Đăng ký vé tháng</span>
+                                    </a>
+                                    <span th:unless="${lx.giaThang != null and lx.giaThang > 0}" 
+                                          class="btn btn-light border text-muted w-100 fw-medium rounded-2 text-xs py-2.5 disabled text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+                                        <i class="fa-solid fa-ticket"></i>
+                                        <span>Chỉ nhận gửi vé lượt</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Table View -->
+                    <div class="portal-card mb-5 overflow-hidden">
+                        <div class="p-3.5 bg-light border-bottom d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-table-list text-primary fs-5"></i>
+                                <span class="fw-bold text-dark small text-uppercase">Bảng Tổng Hợp So Sánh Mức Phí</span>
+                            </div>
+                            <span class="badge bg-white text-muted border text-xs">Đơn vị: VND (đồng)</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-nowrap">
+                                <thead class="table-light text-muted small text-uppercase">
+                                    <tr>
+                                        <th class="ps-4">Loại Phương Tiện</th>
+                                        <th>Khung Giờ Áp Dụng</th>
+                                        <th class="text-end">Phí Ca Ngày (06:00 - 18:00)</th>
+                                        <th class="text-end">Phí Ca Đêm (18:00 - 06:00)</th>
+                                        <th class="text-end">Vé Tháng Cư Dân</th>
+                                        <th class="text-center pe-4">Đăng Ký Vé</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="lx : ${loaiXes}">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2.5">
+                                                <div class="stat-icon-wrapper stat-icon-34"
+                                                     th:classappend="${#strings.containsIgnoreCase(lx.tenLoai, 'tô') ? 'stat-icon-amber' : (#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'stat-icon-blue' : 'stat-icon-green')}">
+                                                    <i class="fa-solid" th:classappend="${lx.iconClass != null and !#strings.isEmpty(lx.iconClass) ? lx.iconClass : 'fa-car'}"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark" th:text="${lx.tenLoai}">Xe máy</div>
+                                                    <div class="text-2xs text-muted" th:text="${lx.moTa}">Gửi theo lượt / tháng</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border text-xs">Lượt vào / ra</span>
+                                        </td>
+                                        <td class="text-end font-monospace fw-bold text-dark" 
+                                            th:text="${lx.giaBanNgay != null ? #numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ' : '—'}">
+                                            4.000 đ
+                                        </td>
+                                        <td class="text-end font-monospace fw-bold text-dark" 
+                                            th:text="${lx.giaBanDem != null ? #numbers.formatDecimal(lx.giaBanDem, 0, 'POINT', 0, 'COMMA') + ' đ' : '—'}">
+                                            6.000 đ
+                                        </td>
+                                        <td class="text-end font-monospace fw-bold text-success fs-6" 
+                                            th:text="${lx.giaThang != null and lx.giaThang > 0 ? #numbers.formatDecimal(lx.giaThang, 0, 'POINT', 0, 'COMMA') + ' đ' : 'Không áp dụng'}">
+                                            90.000 đ
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <a th:if="${lx.giaThang != null and lx.giaThang > 0}" 
+                                               th:href="@{/dang-ky-ve-thang(loaiXeId=${lx.id})}" 
+                                               class="btn btn-sm btn-portal-primary py-1 px-3 text-xs fw-bold">
+                                                Đăng ký
+                                            </a>
+                                            <span th:unless="${lx.giaThang != null and lx.giaThang > 0}" class="text-muted text-xs">—</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================================================================
+                     KHU VỰC C: QUY ĐỊNH TÍNH PHÍ CHI TIẾT
+                     ================================================================= -->
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="portal-card p-4 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="stat-icon-wrapper stat-icon-blue stat-icon-38">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                                <h3 class="h6 fw-bold text-dark mb-0 text-uppercase">Khung Giờ Tính Cước Chuẩn Mực</h3>
+                            </div>
+                            <ul class="list-unstyled mb-0 d-flex flex-column gap-3 small">
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Ca ban ngày (06:00 đến 18:00):</strong>
+                                        <div class="text-muted">Áp dụng cho mọi lượt gửi có thời gian vào và ra hoàn toàn trong khoảng thời gian này.</div>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Ca ban đêm (18:00 đến 06:00 hôm sau):</strong>
+                                        <div class="text-muted">Áp dụng khi phương tiện gửi trong khung giờ đêm.</div>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Phương tiện gửi qua đêm (vượt ca):</strong>
+                                        <div class="text-muted">Hệ thống tính tổng phí lượt ngày cộng với phí lượt đêm tương ứng.</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="portal-card p-4 h-100">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="stat-icon-wrapper stat-icon-green stat-icon-38">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </div>
+                                <h3 class="h6 fw-bold text-dark mb-0 text-uppercase">Quy Định Vé Tháng Cư Dân</h3>
+                            </div>
+                            <ul class="list-unstyled mb-0 d-flex flex-column gap-3 small">
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Thời hạn hiệu lực:</strong>
+                                        <div class="text-muted">Tính tròn tháng từ ngày đăng ký đến ngày hết hạn tương ứng (1 tháng, 3 tháng, 6 tháng, 12 tháng).</div>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Không giới hạn lượt gửi:</strong>
+                                        <div class="text-muted">Phương tiện có vé tháng được quyền vào/ra bãi không giới hạn số lượt và không phát sinh phí lẻ.</div>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-start gap-2">
+                                    <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                    <div>
+                                        <strong>Đối soát biển số:</strong>
+                                        <div class="text-muted">Vé tháng gắn liền với biển số đã đăng ký, không chuyển nhượng hoặc sử dụng cho phương tiện khác.</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer -->
+    <div th:replace="~{portal/fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

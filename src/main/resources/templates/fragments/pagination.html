@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân trang dữ liệu</title>
+</head>
+<body>
+
+<!-- Reusable Accessible Pagination Fragment -->
+<div th:fragment="pagination-bar(currentPage, totalPages, totalItems, baseUrl)" class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 pt-3 mt-3 border-top">
+    <div class="small text-muted">
+        Hiển thị trang <b class="text-dark" th:text="${currentPage}">1</b> / <b class="text-dark" th:text="${totalPages > 0 ? totalPages : 1}">1</b> 
+        (Tổng số <b class="text-primary" th:text="${totalItems}">0</b> bản ghi)
+    </div>
+    
+    <nav th:if="${totalPages > 1}" aria-label="Điều hướng phân trang dữ liệu">
+        <ul class="pagination pagination-sm mb-0">
+            <!-- First Page -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=1)}" aria-label="Trang đầu">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+            </li>
+            <!-- Previous Page -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=${currentPage - 1})}" aria-label="Trang trước">
+                    <i class="fa-solid fa-angle-left"></i>
+                </a>
+            </li>
+
+            <!-- Current page indicator pill -->
+            <li class="page-item active" aria-current="page">
+                <span class="page-link" th:text="${currentPage}">1</span>
+            </li>
+
+            <!-- Next Page -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=${currentPage + 1})}" aria-label="Trang tiếp">
+                    <i class="fa-solid fa-angle-right"></i>
+                </a>
+            </li>
+            <!-- Last Page -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=${totalPages})}" aria-label="Trang cuối">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+</body>
+</html>

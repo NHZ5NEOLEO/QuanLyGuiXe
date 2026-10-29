@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUẢN LÝ GỬI XE — Phần Mềm Quản Lý Gửi Xe</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='home')}"></div>
+
+    <main class="flex-grow-1">
+        <!-- =================================================================
+             KHU VỰC A: HERO SECTION
+             ================================================================= -->
+        <section class="portal-hero">
+            <div class="container-xl px-3 px-sm-4 text-center">
+                <!-- Concise System Badge (No repetitive long text) -->
+                <div class="portal-hero-badge">
+                    <i class="fa-solid fa-shield-halved text-primary"></i>
+                    <span>PHẦN MỀM QUẢN LÝ GỬI XE</span>
+                </div>
+
+                <!-- Main Official Title -->
+                <h1 class="portal-hero-title">
+                    QUẢN LÝ GỬI XE
+                </h1>
+
+                <!-- Subtitle / Introduction -->
+                <p class="portal-hero-desc">
+                    Tra cứu phương tiện, theo dõi lượt gửi xe và đăng ký vé tháng thuận tiện trên một nền tảng duy nhất.
+                </p>
+
+                <!-- Two Primary Action Buttons -->
+                <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap mb-4">
+                    <a th:href="@{/tra-cuu}" class="btn-portal-primary">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Tra cứu xe</span>
+                    </a>
+                    <a th:href="@{/dang-ky-ve-thang}" class="btn-portal-outline">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span>Đăng ký vé tháng</span>
+                    </a>
+                </div>
+
+                <!-- Interactive Search Bar with Enter key, loading, & result handling -->
+                <div class="mx-auto mt-4 mw-620">
+                    <form id="heroSearchForm" onsubmit="handleHeroSearch(event)" class="p-2 bg-white rounded-3 border shadow-sm">
+                        <div class="input-group border-0 align-items-center">
+                            <span class="input-group-text bg-transparent border-0 text-muted ps-3">
+                                <i class="fa-solid fa-hashtag text-primary"></i>
+                            </span>
+                            <input type="text" id="heroPlateInput" class="form-control border-0 text-uppercase font-monospace fw-bold ps-2 fs-6" 
+                                   placeholder="Nhập biển số xe hoặc mã vé (VD: 30A-123.45)..." 
+                                   autocomplete="off" 
+                                   oninput="toggleHeroClear()">
+                            <button type="button" id="heroClearBtn" class="btn btn-link text-muted text-decoration-none border-0 px-2 d-none" onclick="clearHeroSearch()" title="Xóa">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            <button type="submit" id="heroSubmitBtn" class="btn btn-primary px-4 py-2 fw-bold rounded-2 text-nowrap flex-shrink-0">
+                                <span id="heroBtnText"><i class="fa-solid fa-magnifying-glass me-1"></i>Tra cứu</span>
+                                <span id="heroBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Transparent Format Guidelines (No fake active claim) -->
+                    <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap mt-2 text-xs text-muted">
+                        <span class="fw-semibold">Ví dụ định dạng tra cứu:</span>
+                        <button type="button" onclick="setHeroSearch('30A-123.45')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2">30A-123.45 (Ô tô)</button>
+                        <button type="button" onclick="setHeroSearch('29-B1 123.45')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2">29-B1 123.45 (Xe máy)</button>
+                        <button type="button" onclick="setHeroSearch('33M2-5678')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2">33M2-5678</button>
+                    </div>
+
+                    <!-- Instant Search Result Card (Inline) -->
+                    <div id="heroResultFound" class="hero-search-card mt-3 d-none">
+                        <!-- Top Row: Plate, Vehicle Type & Status Badge -->
+                        <div class="hero-search-card-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="hero-search-plate-badge" id="heroResPlate">30A-123.45</span>
+                                <span class="hero-search-type-badge" id="heroResLoaiXe">Ô tô</span>
+                            </div>
+                            <span id="heroResStatusBadge" class="badge-status-active">
+                                <i class="fa-solid fa-circle-check"></i>Đang gửi trong bãi
+                            </span>
+                        </div>
+
+                        <!-- Middle Row: 2 Equal Symmetrical Info Boxes (100% Căn đều, không lồi lõm) -->
+                        <div class="hero-search-grid">
+                            <div class="hero-search-stat-box">
+                                <div class="hero-search-stat-label">
+                                    <i class="fa-solid fa-clock text-primary"></i>
+                                    <span>Thời gian vào bãi:</span>
+                                </div>
+                                <div class="hero-search-stat-value" id="heroResTimeIn">--</div>
+                            </div>
+                            <div class="hero-search-stat-box">
+                                <div class="hero-search-stat-label">
+                                    <i class="fa-solid fa-hourglass-half text-warning"></i>
+                                    <span>Thời lượng gửi xe:</span>
+                                </div>
+                                <div class="hero-search-stat-value text-primary" id="heroResDuration">--</div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Row: Ticket Code & CTA Link Button -->
+                        <div class="hero-search-card-footer">
+                            <div class="hero-search-ticket">
+                                <i class="fa-solid fa-qrcode text-secondary"></i>
+                                <span>Mã vé:</span>
+                                <code id="heroResTicket">--</code>
+                            </div>
+                            <a id="heroResLink" th:href="@{/tra-cuu}" class="btn btn-sm btn-primary fw-semibold px-3 py-1.5 rounded-2 d-inline-flex align-items-center gap-1.5 text-xs text-decoration-none shadow-sm">
+                                <span>Xem chi tiết</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Instant Search Alert (Not Found) -->
+                    <div id="heroResultNotFound" class="alert alert-warning border-warning text-xs text-start mt-3 mb-0 d-none" role="alert">
+                        <i class="fa-solid fa-circle-exclamation me-1 text-warning"></i>
+                        <span id="heroNotFoundMsg">Không tìm thấy dữ liệu phương tiện. Vui lòng kiểm tra lại biển số hoặc mã vé.</span>
+                    </div>
+
+                    <!-- Instant Search Alert (Error) -->
+                    <div id="heroResultError" class="alert alert-danger border-danger text-xs text-start mt-3 mb-0 d-none" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>
+                        <span>Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC BỔ SUNG: LỐI TẮT CHỨC NĂNG (NGAY DƯỚI HERO SECTION)
+             ================================================================= -->
+        <section class="py-5 bg-white border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="text-center mb-4 pb-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                        DỊCH VỤ TRỰC TUYẾN
+                    </span>
+                    <h2 class="h3 fw-bold text-dark mb-1">Lối Tắt Chức Năng Dành Cho Người Dùng</h2>
+                    <p class="text-muted mx-auto small mw-600">
+                        Truy cập nhanh các phân hệ dịch vụ: tra cứu thông tin lượt gửi, bảng giá niêm yết, đăng ký vé tháng và gửi đánh giá chất lượng.
+                    </p>
+                </div>
+
+                <div class="row g-3 g-lg-4 align-items-stretch">
+                    <!-- Thẻ 1: Tra cứu phương tiện -->
+                    <div class="col-md-6 col-lg-3">
+                        <a th:href="@{/tra-cuu}" class="shortcut-card">
+                            <div class="shortcut-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </div>
+                            <h3 class="shortcut-title">Tra cứu phương tiện</h3>
+                            <p class="shortcut-desc">
+                                Tra cứu nhanh trạng thái xe đang gửi, thời gian vào bãi, thời lượng đỗ và mã vé điện tử đối soát.
+                            </p>
+                            <span class="shortcut-cta mt-auto text-primary">
+                                Tra cứu ngay <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+
+                    <!-- Thẻ 2: Bảng giá niêm yết -->
+                    <div class="col-md-6 col-lg-3">
+                        <a th:href="@{/bang-gia-dich-vu}" class="shortcut-card">
+                            <div class="shortcut-icon bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-tag"></i>
+                            </div>
+                            <h3 class="shortcut-title">Bảng giá niêm yết</h3>
+                            <p class="shortcut-desc">
+                                Công khai biểu phí gửi xe ca ngày, ca đêm và chính sách gói vé tháng ưu đãi theo từng loại xe.
+                            </p>
+                            <span class="shortcut-cta mt-auto text-success">
+                                Xem biểu phí <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+
+                    <!-- Thẻ 3: Đăng ký vé tháng -->
+                    <div class="col-md-6 col-lg-3">
+                        <a th:href="@{/dang-ky-ve-thang}" class="shortcut-card">
+                            <div class="shortcut-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                            <h3 class="shortcut-title">Đăng ký vé tháng</h3>
+                            <p class="shortcut-desc">
+                                Đăng ký trực tuyến dành cho cư dân và khách gửi thường xuyên với mức cước tiết kiệm và linh hoạt.
+                            </p>
+                            <span class="shortcut-cta mt-auto text-dark">
+                                Đăng ký vé <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+
+                    <!-- Thẻ 4: Đánh giá dịch vụ -->
+                    <div class="col-md-6 col-lg-3">
+                        <a th:href="@{/danh-gia}" class="shortcut-card">
+                            <div class="shortcut-icon bg-info bg-opacity-10 text-info">
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <h3 class="shortcut-title">Đánh giá dịch vụ</h3>
+                            <p class="shortcut-desc">
+                                Đóng góp ý kiến và phản hồi chất lượng phục vụ, thời gian xử lý và an ninh bãi xe để cải tiến dịch vụ.
+                            </p>
+                            <span class="shortcut-cta mt-auto text-info">
+                                Gửi đánh giá <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC THÔNG TIN BÃI XE (BENTO OPERATIONAL STATS TỪ CSDL THẬT)
+             ================================================================= -->
+        <section class="py-5 bg-light border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 text-xs fw-bold">
+                                DỮ LIỆU VẬN HÀNH
+                            </span>
+                            <span class="text-xs text-muted">Trích xuất trực tiếp từ Microsoft SQL Server</span>
+                        </div>
+                        <h2 class="h4 fw-bold text-dark mt-1 mb-0">Tình Trạng Sức Chứa &amp; Lưu Lượng Phương Tiện</h2>
+                    </div>
+                </div>
+
+                <!-- 4 Bento Cards Grid -->
+                <div class="row g-3 g-lg-4">
+                    <!-- Thẻ 1: Số xe đang trong bãi -->
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="bento-stat-card card-blue">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Xe đang trong bãi</span>
+                                <div class="stat-icon-wrapper stat-icon-blue">
+                                    <i class="fa-solid fa-car"></i>
+                                </div>
+                            </div>
+                            <div class="my-2">
+                                <div class="stat-value text-primary" th:text="${stats != null and stats['xeDangTrongBai'] != null ? stats['xeDangTrongBai'] : 0}">
+                                    0
+                                </div>
+                                <div class="small text-muted mt-1">Phương tiện đang gửi trong bãi</div>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-xs text-muted">
+                                <span>Kiểm soát ra vào:</span>
+                                <span class="text-primary fw-semibold"><i class="fa-solid fa-shield-halved me-1"></i>Tự động</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ 2: Tình trạng bãi chứa -->
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="bento-stat-card card-green">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Tình trạng bãi chứa</span>
+                                <div class="stat-icon-wrapper stat-icon-green">
+                                    <i class="fa-solid fa-square-parking"></i>
+                                </div>
+                            </div>
+                            <div class="my-2">
+                                <div class="stat-value text-success">
+                                    <span th:if="${stats != null and stats['choTrong'] != null and stats['choTrong'] > 0}">Còn chỗ</span>
+                                    <span th:unless="${stats != null and stats['choTrong'] != null and stats['choTrong'] > 0}">Đã đầy</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <span th:if="${stats != null and stats['choTrong'] != null and stats['choTrong'] > 0}">
+                                        Sẵn sàng tiếp nhận xe
+                                    </span>
+                                    <span th:unless="${stats != null and stats['choTrong'] != null and stats['choTrong'] > 0}">
+                                        Tạm thời hết chỗ đỗ
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-xs">
+                                <span class="text-muted">Trạng thái:</span>
+                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-0.5">
+                                    <i class="fa-solid fa-circle-check me-1"></i>Sẵn sàng
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ 3: Số lượt xe vào trong ngày -->
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="bento-stat-card card-slate">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Lượt vào trong ngày</span>
+                                <div class="stat-icon-wrapper stat-icon-slate">
+                                    <i class="fa-solid fa-arrow-down-left"></i>
+                                </div>
+                            </div>
+                            <div class="my-2">
+                                <div class="stat-value text-dark">
+                                    <span th:if="${stats != null and stats['luotVaoHomNay'] != null}" th:text="${stats['luotVaoHomNay']}">0</span>
+                                    <span th:unless="${stats != null and stats['luotVaoHomNay'] != null}" class="fs-5 text-muted">Chưa có dữ liệu</span>
+                                </div>
+                                <div class="small text-muted mt-1">Lượt tiếp nhận hôm nay</div>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-xs text-muted">
+                                <span>Từ 00:00 hôm nay:</span>
+                                <i class="fa-solid fa-clock opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ 4: Số lượt xe ra trong ngày -->
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="bento-stat-card card-amber">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Lượt ra trong ngày</span>
+                                <div class="stat-icon-wrapper stat-icon-amber">
+                                    <i class="fa-solid fa-arrow-up-right"></i>
+                                </div>
+                            </div>
+                            <div class="my-2">
+                                <div class="stat-value text-dark">
+                                    <span th:if="${stats != null and stats['luotRaHomNay'] != null}" th:text="${stats['luotRaHomNay']}">0</span>
+                                    <span th:unless="${stats != null and stats['luotRaHomNay'] != null}" class="fs-5 text-muted">Chưa có dữ liệu</span>
+                                </div>
+                                <div class="small text-muted mt-1">Lượt xuất bãi hoàn tất</div>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-xs text-muted">
+                                <span>Đối soát ra cổng:</span>
+                                <i class="fa-solid fa-circle-check text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phân bổ phương tiện thực tế -->
+                <div class="mt-4 p-3 rounded-3 bg-white border d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-primary fs-5"></i>
+                        <span class="small fw-bold text-dark">Phân bổ xe đang gửi trong bãi:</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-4 flex-wrap text-sm">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-motorcycle text-primary"></i>
+                            <span class="text-muted">Xe máy:</span>
+                            <strong class="font-monospace text-dark" th:text="${stats != null and stats['countXeMay'] != null ? stats['countXeMay'] : 0}">0</strong>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-car text-info"></i>
+                            <span class="text-muted">Ô tô:</span>
+                            <strong class="font-monospace text-dark" th:text="${stats != null and stats['countOTo'] != null ? stats['countOTo'] : 0}">0</strong>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-bicycle text-success"></i>
+                            <span class="text-muted">Xe đạp / Xe điện:</span>
+                            <strong class="font-monospace text-dark" th:text="${stats != null and stats['countXeDapDien'] != null ? stats['countXeDapDien'] : 0}">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC HƯỚNG DẪN QUY TRÌNH (4 BƯỚC)
+             ================================================================= -->
+        <section class="py-5 bg-white border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="text-center mb-5">
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                        QUY TRÌNH VẬN HÀNH
+                    </span>
+                    <h2 class="h3 fw-bold text-dark mb-2">Quy Trình Gửi Xe &amp; Nhận Xe</h2>
+                    <p class="text-muted mx-auto small mw-640">
+                        Quy trình nghiệp vụ 4 bước chuẩn mực từ lúc tiếp nhận phương tiện, lưu trữ thông tin, tra cứu vé đối soát cho đến khi tính phí xuất bãi.
+                    </p>
+                </div>
+
+                <div class="row g-4 align-items-stretch">
+                    <!-- Bước 1 -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="step-card">
+                            <div class="step-number">01</div>
+                            <div class="text-primary fs-3 mb-2">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            </div>
+                            <h4 class="step-title">Tiếp nhận phương tiện</h4>
+                            <p class="step-desc">
+                                Khách đưa phương tiện đến cổng bãi đỗ. Nhân viên kiểm tra và tiếp nhận phương tiện vào khu vực làn xe.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Bước 2 -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="step-card">
+                            <div class="step-number">02</div>
+                            <div class="text-success fs-3 mb-2">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                            </div>
+                            <h4 class="step-title">Ghi nhận thông tin lượt gửi</h4>
+                            <p class="step-desc">
+                                Ghi nhận biển số xe, loại phương tiện, thời gian vào bãi và cấp mã vé điện tử định danh cho lượt gửi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Bước 3 -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="step-card">
+                            <div class="step-number">03</div>
+                            <div class="text-warning fs-3 mb-2">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </div>
+                            <h4 class="step-title">Tra cứu vé khi nhận xe</h4>
+                            <p class="step-desc">
+                                Khi nhận xe, khách hàng xuất trình mã vé hoặc cung cấp biển số để nhân viên đối soát dữ liệu trên hệ thống.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Bước 4 -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="step-card">
+                            <div class="step-number">04</div>
+                            <div class="text-info fs-3 mb-2">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <h4 class="step-title">Tính phí theo quy định</h4>
+                            <p class="step-desc">
+                                Hệ thống xác định tổng thời gian gửi, áp biểu phí niêm yết ban ngày/ban đêm hoặc áp dụng thẻ vé tháng hợp lệ.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC C: BẢNG GIÁ NIÊM YẾT THAM KHẢO NHANH
+             ================================================================= -->
+        <section class="py-5 bg-light border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between mb-4 pb-2 gap-3">
+                    <div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                            BIỂU PHÍ CÔNG KHAI
+                        </span>
+                        <h2 class="h3 fw-bold text-dark mb-1">Bảng Giá Dịch Vụ Niêm Yết Minh Bạch</h2>
+                        <p class="text-muted small mb-0 mw-600">
+                            Biểu phí được quy định rõ ràng theo lượt gửi ngày, đêm và gói vé tháng tiết kiệm, hỗ trợ thanh toán linh hoạt.
+                        </p>
+                    </div>
+                    <a th:href="@{/bang-gia-dich-vu}" class="btn btn-outline-primary fw-bold text-nowrap rounded-2 text-xs py-2 px-3">
+                        Xem chi tiết bảng giá <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                <div class="row g-4 align-items-stretch">
+                    <!-- Thẻ 1: Xe máy -->
+                    <div class="col-md-4">
+                        <div class="pricing-preview-card">
+                            <div class="pricing-preview-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fa-solid fa-motorcycle"></i>
+                            </div>
+                            <h3 class="pricing-preview-title">Xe Máy &amp; Xe Số / Tay Ga</h3>
+                            <p class="text-muted small mb-3">Phương tiện phổ thông của cư dân và khách gửi hàng ngày.</p>
+                            
+                            <div class="pricing-preview-price-box">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca ngày (06h - 22h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">3.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca đêm (22h - 06h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">5.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="fw-bold text-primary small">Vé tháng trọn gói:</span>
+                                    <strong class="text-primary font-monospace fs-6 text-nowrap">70.000 đ/tháng</strong>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Camera AI đối soát biển số tự động</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Khu vực đỗ có mái che kiên cố</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Hỗ trợ quẹt thẻ từ &amp; mã QR</span>
+                                </li>
+                            </ul>
+
+                            <a th:href="@{/dang-ky-ve-thang}" class="btn btn-outline-primary w-100 fw-bold mt-auto py-2">
+                                Đăng ký vé tháng <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ 2: Ô tô (Featured) -->
+                    <div class="col-md-4">
+                        <div class="pricing-preview-card featured">
+                            <span class="pricing-preview-badge">PHỔ BIẾN NHẤT</span>
+                            <div class="pricing-preview-icon bg-blue text-white bg-gradient-blue">
+                                <i class="fa-solid fa-car-side"></i>
+                            </div>
+                            <h3 class="pricing-preview-title">Ô Tô (4 - 7 Chỗ)</h3>
+                            <p class="text-muted small mb-3">Làn đỗ rộng tiêu chuẩn, kiểm soát an toàn tối ưu 24/7.</p>
+                            
+                            <div class="pricing-preview-price-box border-primary border-opacity-25 bg-white">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca ngày (06h - 22h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">20.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca đêm (22h - 06h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">40.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="fw-bold text-primary small">Vé tháng trọn gói:</span>
+                                    <strong class="text-primary font-monospace fs-6 text-nowrap">1.000.000 đ/tháng</strong>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Vị trí đỗ cố định kẻ vạch phản quang</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Hệ thống cảm biến và barie mở tự động</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Bảo hiểm trách nhiệm phương tiện</span>
+                                </li>
+                            </ul>
+
+                            <a th:href="@{/dang-ky-ve-thang}" class="btn btn-primary w-100 fw-bold mt-auto py-2 shadow-sm">
+                                Đăng ký ngay <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ 3: Xe đạp / Xe điện -->
+                    <div class="col-md-4">
+                        <div class="pricing-preview-card">
+                            <div class="pricing-preview-icon bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-bicycle"></i>
+                            </div>
+                            <h3 class="pricing-preview-title">Xe Đạp &amp; Xe Máy Điện</h3>
+                            <p class="text-muted small mb-3">Mức phí tiết kiệm dành cho học sinh, sinh viên và cư dân.</p>
+                            
+                            <div class="pricing-preview-price-box">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca ngày (06h - 22h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">2.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Ca đêm (22h - 06h):</span>
+                                    <strong class="text-dark font-monospace text-nowrap">3.000 đ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="fw-bold text-success small">Vé tháng trọn gói:</span>
+                                    <strong class="text-success font-monospace fs-6 text-nowrap">30.000 đ/tháng</strong>
+                                </div>
+                            </div>
+
+                            <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Có trụ sạc điện tự ngắt thông minh</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Cửa kiểm soát chống dắt nhầm xe</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-success"></i>
+                                    <span>Ưu đãi dài hạn cho học sinh sinh viên</span>
+                                </li>
+                            </ul>
+
+                            <a th:href="@{/dang-ky-ve-thang}" class="btn btn-outline-success w-100 fw-bold mt-auto py-2">
+                                Đăng ký vé tháng <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC D: TÍNH NĂNG CÔNG NGHỆ 4.0 VƯỢT TRỘI
+             ================================================================= -->
+        <section class="py-5 bg-white border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="text-center mb-5">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                        CÔNG NGHỆ 4.0
+                    </span>
+                    <h2 class="h3 fw-bold text-dark mb-2">Giải Pháp Quản Lý Gửi Xe Hiện Đại</h2>
+                    <p class="text-muted mx-auto small mw-640">
+                        Quy trình cấp vé mã QR, nhận diện phương tiện và thanh toán minh bạch, mang đến trải nghiệm gửi xe văn minh, nhanh chóng và an toàn.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Feature 1: ALPR Camera -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Nhận Diện Biển Số Tự Động (ALPR)</h4>
+                            <p class="feature-preview-desc">
+                                Camera độ phân giải cao quét và đọc biển số trong 0.5 giây. Tự động lưu trữ ảnh chụp lúc vào để đối soát chính xác tuyệt đối khi xe ra bãi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2: Barie tự động -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Kiểm Soát Barie &amp; Cảm Biến Từ</h4>
+                            <p class="feature-preview-desc">
+                                Cảm biến vòng từ phát hiện phương tiện tiếp cận, barie nâng hạ nhịp nhàng và tích hợp cơ chế chống va đập an toàn cho người và xe.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3: Vé điện tử QR -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-info bg-opacity-10 text-info">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Cấp Vé Điện Tử &amp; Mã QR</h4>
+                            <p class="feature-preview-desc">
+                                Loại bỏ vé giấy truyền thống dễ rách và thất lạc. Khách hàng nhận mã vé điện tử định danh, có thể tra cứu tức thì trên điện thoại di động.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 4: Thanh toán VietQR -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Thanh Toán Không Tiền Mặt</h4>
+                            <p class="feature-preview-desc">
+                                Hỗ trợ quét mã VietQR chuẩn Napas 24/7 và ví điện tử MoMo. Tự động cập nhật trạng thái thanh toán và mở barie không cần tiền lẻ.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 5: An ninh 24/7 -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-danger bg-opacity-10 text-danger">
+                                <i class="fa-solid fa-video"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Giám Sát An Ninh 24/7</h4>
+                            <p class="feature-preview-desc">
+                                Hệ thống camera hồng ngoại bao phủ toàn bộ các làn xe và bãi đỗ. Đội ngũ kỹ thuật túc trực liên tục đảm bảo an toàn tài sản tuyệt đối.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 6: Dữ liệu SQL Server -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-preview-card">
+                            <div class="feature-preview-icon bg-secondary bg-opacity-10 text-dark">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <h4 class="feature-preview-title">Cơ Sở Dữ Liệu Tập Trung</h4>
+                            <p class="feature-preview-desc">
+                                Dữ liệu lượt gửi được lưu trữ bền vững trên Microsoft SQL Server. Báo cáo doanh thu, lưu lượng và lịch sử ra vào minh bạch, tức thời.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- =================================================================
+             KHU VỰC F: CẢM NHẬN & ĐÁNH GIÁ TỪ KHÁCH HÀNG
+             ================================================================= -->
+        <section class="py-5 bg-white border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between mb-4 pb-2 gap-3">
+                    <div>
+                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                            TRẢI NGHIỆM DỊCH VỤ
+                        </span>
+                        <h2 class="h3 fw-bold text-dark mb-1">Khách Hàng Nói Gì Về Chúng Tôi</h2>
+                        <p class="text-muted small mb-0">
+                            Phản hồi chân thực từ những khách hàng và cư dân đang sử dụng dịch vụ gửi xe hàng ngày.
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-end d-none d-sm-block">
+                            <div class="fw-bold text-dark fs-6">4.9 / 5.0</div>
+                            <div class="text-warning text-xs">★★★★★ (Hài lòng)</div>
+                        </div>
+                        <a th:href="@{/danh-gia}" class="btn btn-outline-primary fw-bold text-xs py-2 px-3 rounded-2 text-nowrap">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>Gửi đánh giá
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Review 1 -->
+                    <div class="col-md-4">
+                        <div class="testimonial-preview-card">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="testimonial-avatar">H</div>
+                                    <div>
+                                        <h5 class="h6 fw-bold mb-0 text-dark">Hoàng Văn Long</h5>
+                                        <span class="text-2xs text-muted">Cư dân Tòa A &bull; Vé tháng Ô tô</span>
+                                    </div>
+                                </div>
+                                <div class="text-warning text-xs">★★★★★</div>
+                            </div>
+                            <p class="text-muted small mb-3 flex-grow-1 lh-relaxed">
+                                "Hệ thống barie nhận diện biển số rất nhanh, đi làm giờ cao điểm không còn cảnh xếp hàng chờ đợi như trước. Đăng ký vé tháng online thanh toán VietQR quét cái là xong ngay!"
+                            </p>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-2xs text-muted">
+                                <span><i class="fa-solid fa-tag text-primary me-1"></i>Tốc độ xử lý</span>
+                                <span>2 ngày trước</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 2 -->
+                    <div class="col-md-4">
+                        <div class="testimonial-preview-card">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="testimonial-avatar avatar-gradient-emerald">M</div>
+                                    <div>
+                                        <h5 class="h6 fw-bold mb-0 text-dark">Nguyễn Thị Mai</h5>
+                                        <span class="text-2xs text-muted">Khách vãng lai &bull; Xe máy</span>
+                                    </div>
+                                </div>
+                                <div class="text-warning text-xs">★★★★★</div>
+                            </div>
+                            <p class="text-muted small mb-3 flex-grow-1 lh-relaxed">
+                                "Tính năng tra cứu xe trên website rất tiện, mình tra mã vé là biết ngay xe đang ở trạng thái nào và tổng tiền phải trả. Nhân viên bảo vệ trực ca cũng rất lịch sự, nhiệt tình."
+                            </p>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-2xs text-muted">
+                                <span><i class="fa-solid fa-tag text-success me-1"></i>Thái độ phục vụ</span>
+                                <span>Hôm qua</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 3 -->
+                    <div class="col-md-4">
+                        <div class="testimonial-preview-card">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="testimonial-avatar avatar-gradient-amber">T</div>
+                                    <div>
+                                        <h5 class="h6 fw-bold mb-0 text-dark">Trần Quốc Tuấn</h5>
+                                        <span class="text-2xs text-muted">Cư dân Tòa B &bull; Vé tháng Xe điện</span>
+                                    </div>
+                                </div>
+                                <div class="text-warning text-xs">★★★★★</div>
+                            </div>
+                            <p class="text-muted small mb-3 flex-grow-1 lh-relaxed">
+                                "Bãi đỗ xe có trạm sạc xe máy điện tự ngắt rất an tâm, không lo rủi ro chập cháy pin. Biểu phí niêm yết rõ ràng, không có tình trạng tự ý nâng giá ca đêm."
+                            </p>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between text-2xs text-muted">
+                                <span><i class="fa-solid fa-tag text-warning me-1"></i>An ninh &amp; Tiện ích</span>
+                                <span>3 ngày trước</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             KHU VỰC G: CÂU HỎI THƯỜNG GẶP (FAQ ACCORDION)
+             ================================================================= -->
+        <section class="py-5 bg-light border-bottom">
+            <div class="container-xl px-3 px-sm-4">
+                <div class="text-center mb-4 pb-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-xs mb-2">
+                        GIẢI ĐÁP THẮC MẮC
+                    </span>
+                    <h2 class="h3 fw-bold text-dark mb-2">Các Câu Hỏi Thường Gặp</h2>
+                    <p class="text-muted mx-auto small mw-620">
+                        Những thắc mắc phổ biến của khách hàng về cách thức tra cứu, đăng ký vé tháng và quy định gửi xe.
+                    </p>
+                </div>
+
+                <div class="mx-auto mw-820">
+                    <div class="accordion portal-accordion" id="portalFaqAccordion">
+                        <!-- FAQ 1 -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faqHeadingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseOne" aria-expanded="true" aria-controls="faqCollapseOne">
+                                    <i class="fa-solid fa-circle-question text-primary me-2"></i> Làm thế nào để tra cứu thông tin xe đang gửi trong bãi?
+                                </button>
+                            </h3>
+                            <div id="faqCollapseOne" class="accordion-collapse collapse show" aria-labelledby="faqHeadingOne" data-bs-parent="#portalFaqAccordion">
+                                <div class="accordion-body">
+                                    Bạn có thể nhập biển số xe (VD: <code>30A-123.45</code> hoặc <code>29-B1 123.45</code>) hoặc mã vé vào thanh tra cứu trực tuyến ngay trên trang chủ hoặc trang <strong>Tra cứu phương tiện</strong>. Hệ thống sẽ hiển thị ngay trạng thái xe đang gửi, thời gian vào bãi, thời lượng đỗ và chi tiết đối soát.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faqHeadingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseTwo" aria-expanded="false" aria-controls="faqCollapseTwo">
+                                    <i class="fa-solid fa-circle-question text-primary me-2"></i> Thời gian tính cước ca ngày và ca đêm được quy định ra sao?
+                                </button>
+                            </h3>
+                            <div id="faqCollapseTwo" class="accordion-collapse collapse" aria-labelledby="faqHeadingTwo" data-bs-parent="#portalFaqAccordion">
+                                <div class="accordion-body">
+                                    Theo quy định niêm yết:
+                                    <ul class="mb-1 mt-2 ps-3 small">
+                                        <li><strong>Ca ngày:</strong> Tính từ 06:00 sáng đến 22:00 cùng ngày.</li>
+                                        <li><strong>Ca đêm:</strong> Tính từ 22:00 đêm đến 06:00 sáng hôm sau.</li>
+                                        <li>Trường hợp gửi xuyên ca (gửi qua đêm), hệ thống sẽ tự động cộng dồn cước phí minh bạch theo bảng giá công khai.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faqHeadingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseThree" aria-expanded="false" aria-controls="faqCollapseThree">
+                                    <i class="fa-solid fa-circle-question text-primary me-2"></i> Thủ tục đăng ký và kích hoạt vé tháng trực tuyến mất bao lâu?
+                                </button>
+                            </h3>
+                            <div id="faqCollapseThree" class="accordion-collapse collapse" aria-labelledby="faqHeadingThree" data-bs-parent="#portalFaqAccordion">
+                                <div class="accordion-body">
+                                    Quy trình đăng ký vé tháng hoàn toàn tự động chỉ mất từ 1 - 2 phút. Sau khi điền thông tin và thanh toán quét mã VietQR, hệ thống sẽ tự động ghi nhận hồ sơ và kích hoạt thẻ vé tháng trong cơ sở dữ liệu. Bạn có thể sử dụng mã vé để qua cổng ngay lập tức.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faqHeadingFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseFour" aria-expanded="false" aria-controls="faqCollapseFour">
+                                    <i class="fa-solid fa-circle-question text-primary me-2"></i> Trường hợp tôi quên mã vé hoặc mất thẻ xe thì phải xử lý thế nào?
+                                </button>
+                            </h3>
+                            <div id="faqCollapseFour" class="accordion-collapse collapse" aria-labelledby="faqHeadingFour" data-bs-parent="#portalFaqAccordion">
+                                <div class="accordion-body">
+                                    Bạn vui lòng liên hệ ngay với nhân viên bảo vệ tại bốt điều khiển hoặc gọi hotline khẩn cấp <strong>1900 6868</strong>. Nhân viên kỹ thuật sẽ tra cứu lịch sử hình ảnh camera nhận diện biển số lúc xe vào bãi và đối chiếu giấy đăng ký xe (hoặc CCCD) để hỗ trợ bạn xuất bãi an toàn.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 5 -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faqHeadingFive">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseFive" aria-expanded="false" aria-controls="faqCollapseFive">
+                                    <i class="fa-solid fa-circle-question text-primary me-2"></i> Bãi xe hỗ trợ những hình thức thanh toán cước phí nào?
+                                </button>
+                            </h3>
+                            <div id="faqCollapseFive" class="accordion-collapse collapse" aria-labelledby="faqHeadingFive" data-bs-parent="#portalFaqAccordion">
+                                <div class="accordion-body">
+                                    Chúng tôi hỗ trợ đa dạng phương thức thanh toán thuận tiện nhất:
+                                    <span class="d-block mt-1">1. Quét mã VietQR chuyển khoản nhanh bằng tất cả ứng dụng ngân hàng.</span>
+                                    <span class="d-block">2. Ví điện tử MoMo / Viettel Money.</span>
+                                    <span class="d-block">3. Tiền mặt trực tiếp tại bốt trực cổng ra.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Shared Footer -->
+    <div th:replace="~{portal/fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Hero Interactive Lookup Script -->
+    <script>
+        const heroPlateInput = document.getElementById('heroPlateInput');
+        const heroClearBtn = document.getElementById('heroClearBtn');
+        const heroSubmitBtn = document.getElementById('heroSubmitBtn');
+        const heroBtnText = document.getElementById('heroBtnText');
+        const heroBtnSpinner = document.getElementById('heroBtnSpinner');
+
+        const heroResultFound = document.getElementById('heroResultFound');
+        const heroResultNotFound = document.getElementById('heroResultNotFound');
+        const heroResultError = document.getElementById('heroResultError');
+        const heroNotFoundMsg = document.getElementById('heroNotFoundMsg');
+
+        function toggleHeroClear() {
+            if (heroPlateInput.value.trim().length > 0) {
+                heroClearBtn.classList.remove('d-none');
+            } else {
+                heroClearBtn.classList.add('d-none');
+            }
+        }
+
+        function clearHeroSearch() {
+            heroPlateInput.value = '';
+            heroClearBtn.classList.add('d-none');
+            heroResultFound.classList.add('d-none');
+            heroResultNotFound.classList.add('d-none');
+            heroResultError.classList.add('d-none');
+            heroPlateInput.focus();
+        }
+
+        function setHeroSearch(val) {
+            heroPlateInput.value = val;
+            toggleHeroClear();
+            executeHeroLookup(val);
+        }
+
+        function handleHeroSearch(e) {
+            e.preventDefault();
+            const val = heroPlateInput.value.trim();
+            if (!val || val.length < 3) {
+                heroResultNotFound.classList.remove('d-none');
+                heroNotFoundMsg.textContent = 'Vui lòng nhập biển số xe hoặc mã vé hợp lệ (tối thiểu 3 ký tự).';
+                return;
+            }
+            executeHeroLookup(val);
+        }
+
+        async function executeHeroLookup(query) {
+            // Hide previous states
+            heroResultFound.classList.add('d-none');
+            heroResultNotFound.classList.add('d-none');
+            heroResultError.classList.add('d-none');
+
+            // Set loading
+            heroSubmitBtn.disabled = true;
+            heroBtnText.classList.add('d-none');
+            heroBtnSpinner.classList.remove('d-none');
+
+            try {
+                const res = await fetch('/portal/api/lookup?plate=' + encodeURIComponent(query));
+                if (!res.ok) {
+                    heroResultNotFound.classList.remove('d-none');
+                    heroNotFoundMsg.textContent = 'Không tìm thấy dữ liệu phương tiện cho thông tin [' + query.toUpperCase() + '].';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.success && (data.dangGui || data.coVeThang)) {
+                    document.getElementById('heroResPlate').textContent = data.bienSoXe || query.toUpperCase();
+                    document.getElementById('heroResLoaiXe').textContent = data.loaiXe || data.loaiXeVeThang || 'Phương tiện';
+                    
+                    const statusBadge = document.getElementById('heroResStatusBadge');
+                    if (data.dangGui) {
+                        statusBadge.className = 'badge-status-active';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i>Đang gửi trong bãi';
+                    } else {
+                        statusBadge.className = 'badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 text-xs fw-bold rounded-pill';
+                        statusBadge.innerHTML = '<i class="fa-solid fa-id-card me-1"></i>Có vé tháng';
+                    }
+
+                    document.getElementById('heroResTimeIn').textContent = data.thoiGianVao || (data.dangGui ? 'Hôm nay' : 'Không có lượt gửi');
+                    document.getElementById('heroResDuration').textContent = data.thoiLuong || (data.dangGui ? 'Đang tính...' : '—');
+                    document.getElementById('heroResTicket').textContent = data.maQR || (data.coVeThang ? data.maThe : '—');
+                    document.getElementById('heroResLink').href = '/tra-cuu?plate=' + encodeURIComponent(data.bienSoXe || query);
+
+                    heroResultFound.classList.remove('d-none');
+                } else {
+                    heroResultNotFound.classList.remove('d-none');
+                    heroNotFoundMsg.textContent = data.message || ('Không tìm thấy dữ liệu lượt gửi của biển số hoặc mã vé [' + (data.bienSoXe || query.toUpperCase()) + '].');
+                }
+            } catch (err) {
+                console.error('Lỗi tra cứu hero:', err);
+                heroResultError.classList.remove('d-none');
+            } finally {
+                heroSubmitBtn.disabled = false;
+                heroBtnText.classList.remove('d-none');
+                heroBtnSpinner.classList.add('d-none');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Lỗi Máy Chủ Nội Bộ - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--bg-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .error-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            max-width: 520px;
+            width: 100%;
+            padding: 40px 32px;
+            text-align: center;
+        }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--error);
+            line-height: 1;
+            letter-spacing: -1px;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+
+<div class="error-card">
+    <div class="mb-3">
+        <span class="badge bg-danger text-white px-3 py-1 fw-bold">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> SỰ CỐ MÁY CHỦ HỆ THỐNG
+        </span>
+    </div>
+
+    <div class="error-code my-2">500</div>
+    <h1 class="h4 fw-bold text-dark mb-2">Đã Xảy Ra Lỗi Xử Lý (500)</h1>
+    <p class="text-muted small mb-4">
+        Máy chủ đã ghi nhận sự cố trong quá trình thực thi yêu cầu của bạn. Đội ngũ kỹ thuật đang kiểm tra và khắc phục. Vui lòng thử lại sau giây lát.
+    </p>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mb-4">
+        <button type="button" class="btn-pro btn-outline-pro" onclick="window.location.reload()">
+            <i class="fa-solid fa-rotate-right"></i> Thử Lại
+        </button>
+        <a href="/gate" class="btn-pro btn-primary-pro">
+            <i class="fa-solid fa-house"></i> Về Bàn Trực Cổng
+        </a>
+    </div>
+
+    <div class="pt-3 border-top text-muted small d-flex justify-content-between align-items-center">
+        <span>Hotline hỗ trợ: <b>1900 6868</b></span>
+        <a href="/" class="text-decoration-none text-muted">Trang chủ</a>
+    </div>
+</div>
+
+</body>
+</html>

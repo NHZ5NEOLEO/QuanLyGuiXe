@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo hệ thống</title>
+</head>
+<body>
+
+<!-- Reusable Flash Notification Banner Fragment -->
+<div th:fragment="flash-alerts" class="alerts-container">
+    <!-- Success Alert -->
+    <div th:if="${successMessage}" class="alert-pro alert-success-pro alert-dismissible fade show" role="alert" id="appSuccessAlert">
+        <i class="fa-solid fa-circle-check fs-5 flex-shrink-0"></i>
+        <div class="flex-grow-1" th:text="${successMessage}">Thao tác thực hiện thành công.</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button>
+    </div>
+
+    <!-- Error / Danger Alert -->
+    <div th:if="${errorMessage}" class="alert-pro alert-error-pro alert-dismissible fade show" role="alert" id="appErrorAlert">
+        <i class="fa-solid fa-triangle-exclamation fs-5 flex-shrink-0"></i>
+        <div class="flex-grow-1" th:text="${errorMessage}">Đã xảy ra lỗi trong quá trình xử lý.</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button>
+    </div>
+
+    <!-- Warning Alert -->
+    <div th:if="${warningMessage}" class="alert-pro alert-warning-pro alert-dismissible fade show" role="alert" id="appWarningAlert">
+        <i class="fa-solid fa-circle-exclamation fs-5 flex-shrink-0"></i>
+        <div class="flex-grow-1" th:text="${warningMessage}">Cảnh báo: Xin lưu ý thông tin này.</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button>
+    </div>
+
+    <!-- Info Alert -->
+    <div th:if="${infoMessage}" class="alert-pro alert-info-pro alert-dismissible fade show" role="alert" id="appInfoAlert">
+        <i class="fa-solid fa-circle-info fs-5 flex-shrink-0"></i>
+        <div class="flex-grow-1" th:text="${infoMessage}">Thông tin hướng dẫn nghiệp vụ.</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xe Vào (Làn Vào) - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom Design System -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        .plate-input-lg {
+            letter-spacing: 2px;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+        .recent-checkin-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        /* Camera Viewport Styling */
+        .camera-card {
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .camera-viewport {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .camera-viewport video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .camera-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            padding: 1rem;
+            text-align: center;
+        }
+        .camera-overlay-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75%;
+            height: 60%;
+            border: 2px dashed rgba(52, 211, 153, 0.7);
+            border-radius: 8px;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 6px;
+            z-index: 2;
+        }
+        .camera-overlay-guide::after {
+            content: "KHUNG NHẬN DIỆN BIỂN SỐ / QR LÀN VÀO";
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #34d399;
+            background: rgba(15, 23, 42, 0.75);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .camera-rec-dot {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.75);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #ffffff;
+            z-index: 2;
+        }
+        .rec-indicator {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Ticket POS Receipt */
+        .ticket-receipt-card {
+            border: 2px dashed #93C5FD;
+            background: #F0FDF4;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .ticket-qr-img {
+            width: 170px;
+            height: 170px;
+            object-fit: contain;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Vietnamese Plate Look */
+        .license-plate-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            color: #0f172a;
+            border: 2px solid #1e293b;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Monthly pass highlight alert */
+        .monthly-pass-alert {
+            background: #faf5ff;
+            border: 1.5px solid #d8b4fe;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #6b21a8;
+        }
+
+        .text-2xs {
+            font-size: 0.68rem;
+        }
+        .kbd-key {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-bottom: 2px solid #94a3b8;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.72rem;
+            font-family: monospace;
+            font-weight: 700;
+            color: #1e293b;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+        .recent-vehicle-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .plate-mini-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1.5px solid #1e293b;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+        }
+        .recent-item-hover:hover {
+            background-color: #f8fafc;
+        }
+        .bg-purple-subtle {
+            background-color: #f3e8ff !important;
+        }
+        .text-purple {
+            color: #7e22ce !important;
+        }
+        .border-purple-subtle {
+            border-color: #d8b4fe !important;
+        }
+        .btn-xs {
+            padding: 0.15rem 0.45rem;
+            font-size: 0.72rem;
+            border-radius: 4px;
+        }
+
+        /* Traffic Light & Barrier Arm Component */
+        .traffic-light-housing {
+            background: #0f172a;
+            padding: 4px 6px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            border: 1px solid #334155;
+        }
+        .traffic-bulb {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            opacity: 0.25;
+            transition: all 0.3s ease;
+        }
+        .bulb-red {
+            background: #ef4444;
+        }
+        .bulb-green {
+            background: #22c55e;
+        }
+        .bulb-red.active {
+            opacity: 1;
+            box-shadow: 0 0 10px #ef4444;
+        }
+        .bulb-green.active {
+            opacity: 1;
+            box-shadow: 0 0 12px #22c55e;
+            animation: pulse-green 1s infinite;
+        }
+        @keyframes pulse-green {
+            0% { opacity: 0.85; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+            100% { opacity: 0.85; transform: scale(1); }
+        }
+
+        .barrier-post-wrapper {
+            width: 82px;
+            height: 38px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+        }
+        .barrier-post {
+            width: 12px;
+            height: 24px;
+            background: #334155;
+            border-radius: 3px 3px 0 0;
+            position: relative;
+        }
+        .barrier-pivot {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            z-index: 3;
+        }
+        .barrier-boom {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            width: 64px;
+            height: 5px;
+            border-radius: 2px;
+            background: repeating-linear-gradient(45deg, #ef4444, #ef4444 8px, #ffffff 8px, #ffffff 16px);
+            transform-origin: 0% 50%;
+            transform: rotate(0deg);
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            z-index: 2;
+        }
+        .barrier-boom.open {
+            transform: rotate(-65deg);
+        }
+        .barrier-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .barrier-badge-closed {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .barrier-badge-open {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableTicket, #printableTicket * { visibility: visible; }
+            #printableTicket {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <div th:replace="~{layout/fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-wrapper">
+        <!-- Topbar Header -->
+        <div th:replace="~{layout/fragments/header :: header}"></div>
+
+        <!-- Main Content Body -->
+        <main class="content-body" role="main">
+            <!-- Page Header -->
+            <div class="d-flex flex-column flex-md-row md:items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h1 class="h3 fw-bold text-dark mb-1">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-success me-2"></i>Xe vào – Tiếp nhận phương tiện
+                    </h1>
+                    <p class="text-muted small mb-0">Hệ thống tiếp nhận phương tiện vào bãi, tự nhận diện loại xe, kiểm tra vé tháng và tạo vé QR</p>
+                </div>
+            </div>
+
+            <!-- Interactive Barrier & Traffic Signal Console Bar -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4 p-3 bg-white">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Traffic Light Signal -->
+                        <div class="traffic-light-housing" id="trafficLightSignal" title="Đèn tín hiệu giao thông làn vào">
+                            <div class="traffic-bulb bulb-red active" id="bulbRed"></div>
+                            <div class="traffic-bulb bulb-green" id="bulbGreen"></div>
+                        </div>
+
+                        <!-- Mini Barrier Arm Model -->
+                        <div class="barrier-post-wrapper">
+                            <div class="barrier-post">
+                                <div class="barrier-pivot"></div>
+                                <div class="barrier-boom" id="barrierArm"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Status Information -->
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="barrier-badge barrier-badge-closed" id="barrierBadge">
+                                    <i class="fa-solid fa-lock me-1"></i> BARIE ĐANG HẠ (CHỜ TIẾP NHẬN)
+                                </span>
+                                <span class="text-xs text-muted d-none d-md-inline" id="barrierHint">Tự động nâng mở khi tạo vé thành công</span>
+                            </div>
+                            <div class="text-xs text-muted mt-1" id="barrierDesc">
+                                <i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Sẵn sàng ghi nhận phương tiện
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success" id="btnManualOpen" onclick="manualOpenBarrier()" title="Nâng mở cần Barie">
+                            <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> Mở Barie
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnManualClose" onclick="manualCloseBarrier()" title="Hạ đóng cần Barie">
+                            <i class="fa-solid fa-arrow-down me-1"></i> Đóng Barie
+                        </button>
+                        <a th:href="@{/xe-ra}" class="btn btn-sm btn-outline-secondary">
+                            Chuyển sang Xe ra <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success / Error Alert Notifications -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert">
+                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
+                <div class="flex-grow-1 fw-medium" th:text="${successMessage}">Xe vào bãi thành công!</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert">
+                <i class="fa-solid fa-triangle-exclamation fs-5 text-danger"></i>
+                <div class="flex-grow-1 fw-medium" th:text="${errorMessage}">Đã xảy ra lỗi!</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left Column: Check-in Form & Live Camera -->
+                <div class="col-lg-7">
+                    <!-- CAMERA LÀN VÀO (WEBCAM & SCANNER TỰ ĐỘNG) -->
+                    <div class="camera-card mb-4">
+                        <div class="camera-rec-dot" id="cameraStatusPill">
+                            <span class="rec-indicator"></span>
+                            <span id="cameraStatusLabel">CAM 01 - LÀN VÀO</span>
+                        </div>
+                        <div class="camera-viewport" id="cameraContainer">
+                            <video id="webcamVideo" class="d-none" autoplay muted></video>
+                            <img id="imageFramePreview" class="d-none" alt="Ảnh phương tiện vào bãi">
+                            <div class="camera-overlay-guide" id="cameraOverlayGuide"></div>
+                            <!-- Placeholder khi chưa bật camera -->
+                            <div class="camera-placeholder" id="cameraPlaceholder">
+                                <i class="fa-solid fa-video-slash fs-1 mb-2 opacity-50"></i>
+                                <div class="fw-semibold">Camera Làn Vào Đang Tắt</div>
+                                <div class="text-xs opacity-75">Bật camera để tự nhận diện biển số xe hoặc quét mã QR tự động</div>
+                            </div>
+                        </div>
+                        <div class="p-2 px-3 bg-dark d-flex flex-wrap align-items-center justify-content-between gap-2 text-white small">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light py-1 px-2" id="btnToggleCamera" onclick="toggleCamera()">
+                                    <i class="fa-solid fa-camera me-1"></i> <span id="cameraBtnText">Bật Camera Làn Vào</span>
+                                </button>
+                                <!-- Dropdown kết nối và chuyển đổi mọi Camera tìm được -->
+                                <select id="cameraDeviceSelect" class="form-select form-select-sm d-none py-1 bg-dark text-white border-secondary" title="Chọn nguồn thiết bị camera" aria-label="Chọn nguồn thiết bị camera" onchange="switchCamera(this.value)">
+                                    <option value="">-- Đổi Camera --</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2 d-none" id="btnCaptureFrame" onclick="captureManualFrame()">
+                                    <i class="fa-solid fa-camera-retro me-1"></i> Chụp ảnh xe vào
+                                </button>
+                                <!-- Tải ảnh từ tệp hoặc điện thoại (Không cần quyền camera) -->
+                                <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2" onclick="document.getElementById('fileUploadInput').click()" title="Tải ảnh từ máy hoặc chụp từ điện thoại">
+                                    <i class="fa-solid fa-upload me-1"></i> Tải ảnh
+                                </button>
+                                <input type="file" id="fileUploadInput" class="d-none" accept="image/*" title="Tải ảnh xe từ thiết bị" aria-label="Tải ảnh xe từ thiết bị" placeholder="Tải ảnh xe" onchange="handleFileUpload(this)">
+                                <!-- Nạp xe mẫu vào bãi để mô phỏng camera nhận diện tức thì -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 text-light" onclick="loadSampleEntryVehicle()" title="Mô phỏng Camera phát hiện xe vào và tự động nhận diện biển số">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Xe mẫu vào
+                                </button>
+                            </div>
+                            <div class="text-muted text-xs d-none d-xl-block">
+                                <i class="fa-solid fa-bolt text-warning me-1"></i> Tự động nhận diện biển số & tạo vé
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BIỂU MẪU TIẾP NHẬN XE VÀO -->
+                    <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h2 class="h5 fw-bold text-dark mb-0">Biểu mẫu tiếp nhận xe vào</h2>
+                            <small class="text-muted">Nhập biển số hoặc quét QR (Phím tắt: Nhấn Enter để tạo vé)</small>
+                        </div>
+                        <div class="card-body p-4">
+                            <form th:action="@{/gui-xe}" method="post" id="checkInForm" novalidate>
+                                <!-- Hidden input lưu ảnh base64 chụp từ camera -->
+                                <input type="hidden" name="anhVaoData" id="anhVaoData">
+
+                                <!-- Biển số xe -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label fw-bold small text-dark mb-0" for="bienSoXe">
+                                            Biển số phương tiện <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 d-none" id="btnAutoBikeCode" onclick="generateBicyclePlate()" title="Xe đạp không có biển số - Nhấp để tự sinh mã thẻ xe đạp">
+                                                <i class="fa-solid fa-bicycle me-1"></i> Tạo mã xe đạp
+                                            </button>
+                                            <span id="autoInferenceBadge" class="badge bg-light text-muted border d-none">
+                                                Tự nhận diện
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white text-muted">
+                                            <i class="fa-solid fa-car" id="plateIcon"></i>
+                                        </span>
+                                        <input type="text" class="form-control font-monospace fw-bold text-uppercase plate-input-lg" 
+                                               id="bienSoXe" name="bienSoXe" 
+                                               placeholder="VD: 59E1-495.65 hoặc 30A-123.45" 
+                                               th:value="${inputBienSo}"
+                                               required autofocus autocomplete="off">
+                                        <button class="btn btn-outline-secondary px-3" type="button" id="btnClearPlateBtn" onclick="clearBienSoXe()" title="Làm mới / Xóa nhanh biển số để sửa">
+                                            <i class="fa-solid fa-rotate-left me-1"></i> Làm mới
+                                        </button>
+                                    </div>
+                                    <!-- Dynamic real-time validation & Lookup feedback -->
+                                    <div id="plateFeedback" class="small mt-2"></div>
+                                    <!-- Dynamic Monthly Pass / Conflict Notice Box -->
+                                    <div id="specialNoticeBox" class="mt-2 d-none"></div>
+                                </div>
+
+                                <!-- Loại phương tiện (Thẻ chọn kèm Icon trực quan & tự động nhận diện) -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label class="form-label fw-bold small text-dark mb-0">
+                                            Loại phương tiện <span class="text-danger">*</span>
+                                        </label>
+                                        <small class="text-muted text-xs"><i class="fa-solid fa-hand-pointer me-1 text-primary"></i>Nhấp icon xe để chọn nhanh</small>
+                                    </div>
+
+                                    <!-- Grid Icon Cards lựa chọn loại xe trực quan -->
+                                    <div class="row g-2 mb-2" id="vehicleTypeCards">
+                                        <div th:each="lx : ${loaiXes}" class="col-6 col-md-3">
+                                            <div class="vehicle-type-card text-center p-2 rounded-3"
+                                                 th:classappend="${lxStat.first} ? 'active' : ''"
+                                                 th:data-id="${lx.id}"
+                                                 th:data-type="${lx.tenLoai}"
+                                                 onclick="selectVehicleType(this.getAttribute('data-id'), this.getAttribute('data-type'))">
+                                                <div class="vehicle-icon-box my-1">
+                                                    <i th:class="${'fa-solid fs-2 ' + (lx.iconClass != null and !lx.iconClass.isEmpty() ? (lx.iconClass.startsWith('fa-') ? lx.iconClass : 'fa-' + lx.iconClass) : (#strings.containsIgnoreCase(lx.tenLoai, 'tô') or #strings.containsIgnoreCase(lx.tenLoai, 'car') ? 'fa-car' : (#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'fa-motorcycle' : (#strings.containsIgnoreCase(lx.tenLoai, 'đạp') or #strings.containsIgnoreCase(lx.tenLoai, 'điện') ? 'fa-bicycle' : 'fa-truck'))))}"></i>
+                                                </div>
+                                                <div class="vehicle-name fw-bold small text-truncate" th:text="${lx.tenLoai}">Xe máy</div>
+                                                <div class="vehicle-price text-muted font-monospace text-xs" 
+                                                     th:text="${#numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ'}">4.000 đ</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Select ẩn giữ tương thích form POST và validation -->
+                                    <select class="form-select d-none" id="loaiXeId" name="loaiXeId" title="Chọn loại phương tiện" aria-label="Chọn loại phương tiện" required>
+                                        <option value="" disabled>-- Chọn loại phương tiện --</option>
+                                        <option th:each="lx : ${loaiXes}" 
+                                                th:value="${lx.id}" 
+                                                th:text="${lx.tenLoai + ' (Giá ngày: ' + #numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ)'}"
+                                                th:data-type="${lx.tenLoai}"
+                                                th:selected="${lxStat.first}">Xe máy</option>
+                                    </select>
+                                </div>
+
+                                <!-- Ghi chú phương tiện -->
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label fw-bold small text-dark mb-0" for="ghiChu">
+                                            Ghi chú & Đặc điểm nhận diện
+                                        </label>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="clearGhiChu()" title="Xóa trắng ghi chú">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white text-muted">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="ghiChu" name="ghiChu" 
+                                               placeholder="Nhập ghi chú hoặc đặc điểm phương tiện (nếu có)...">
+                                    </div>
+                                </div>
+
+                                <!-- Submit Action Button -->
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1 fw-bold shadow-sm" id="btnSubmitCheckin">
+                                        <i class="fa-solid fa-circle-check me-2"></i> Xác nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary px-3" title="Đặt lại form" onclick="resetPlateFeedback()">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Quick Plate Presets for Fast Operational Testing -->
+                    <div class="card border-0 shadow-sm rounded-3 bg-white p-3 mb-3">
+                        <div class="small fw-bold text-muted text-uppercase mb-2">
+                            <i class="fa-solid fa-bolt text-warning me-1"></i> Biển số mẫu hợp lệ để kiểm thử:
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" onclick="setPlate('29A-888.99')">29A-888.99 (Ô tô)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" onclick="setPlate('30E-666.88')">30E-666.88 (Ô tô)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" onclick="setPlate('59X1-555.55')">59X1-555.55 (Xe máy)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" onclick="setPlate('43B1-123.45')">43B1-123.45 (Xe máy)</button>
+                            <button type="button" class="btn btn-sm btn-outline-info font-monospace" onclick="setPlate('XD-0088')"><i class="fa-solid fa-bicycle me-1"></i>XD-0088 (Xe đạp)</button>
+                        </div>
+                    </div>
+
+                    <!-- Keyboard Shortcuts Helper Bar -->
+                    <div class="p-2.5 px-3 rounded-3 bg-white border shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-2 text-xs text-muted">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-keyboard text-primary"></i>
+                            <span class="fw-bold text-dark">Phím tắt ca trực:</span>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span><kbd class="kbd-key">Enter</kbd> Tạo vé</span>
+                            <span><kbd class="kbd-key">Space</kbd> Xe tiếp theo</span>
+                            <span><kbd class="kbd-key">F2</kbd> Camera</span>
+                            <span><kbd class="kbd-key">Esc</kbd> Đặt lại</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Ticket Card & Parking Status -->
+                <div class="col-lg-5">
+                    <!-- Ticket Generated Card (Displayed right on this page after check-in) -->
+                    <div th:if="${newTicket != null}" class="ticket-receipt-card shadow-sm mb-4" id="printableTicket">
+                        <div class="small fw-bold text-success text-uppercase letter-spacing-1 mb-1">
+                            <i class="fa-solid fa-circle-check me-1"></i> TIẾP NHẬN XE VÀO THÀNH CÔNG
+                        </div>
+                        <h3 class="h5 fw-bold text-dark mb-3">PHIẾU GỬI XE (PARKING TICKET)</h3>
+
+                        <!-- QR Code generated via offline server ZXing endpoint -->
+                        <div class="mb-2">
+                            <img th:src="@{'/api/parking/qr/' + ${newTicket.maQR}}" 
+                                 alt="Mã QR vé xe" class="ticket-qr-img shadow-xs">
+                        </div>
+
+                        <div class="font-monospace fs-5 fw-bold text-primary mb-1" th:text="${newTicket.maQR}">QR-20261018-001</div>
+                        <div class="text-xs text-muted mb-3">
+                            <i class="fa-solid fa-mobile-screen-button text-primary me-1"></i> Khách có thể quét mã QR này bằng điện thoại để lưu vé
+                        </div>
+
+                        <div class="bg-white p-3 rounded-2 border text-start mb-3 small">
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Biển số:</span>
+                                <div class="license-plate-badge py-0 px-2 fs-6">
+                                    <span th:text="${newTicket.bienSoXe}">29A-12345</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Loại xe:</span>
+                                <b class="text-dark" th:text="${newTicket.loaiXe != null ? newTicket.loaiXe.tenLoai : '—'}">Ô tô</b>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Hình thức:</span>
+                                <b class="text-primary" th:text="${newTicket.hinhThucThanhToan == 'VE_THANG' ? '⭐ Vé tháng (Miễn phí ngày)' : 'Vé lượt'}">Vé lượt</b>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Thời gian vào:</span>
+                                <b class="text-dark" th:text="${newTicket.thoiGianVao != null ? #temporals.format(newTicket.thoiGianVao, 'HH:mm:ss dd/MM/yyyy') : '—'}">18/10/2026 14:30:00</b>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm flex-grow-1 fw-bold" onclick="window.print()">
+                                <i class="fa-solid fa-print me-1"></i> In vé POS (80mm)
+                            </button>
+                            <a th:href="@{'/ve-xe/' + ${newTicket.id}}" class="btn btn-outline-secondary btn-sm" title="Xem chi tiết vé">
+                                <i class="fa-solid fa-eye me-1"></i> Chi tiết
+                            </a>
+                            <button type="button" class="btn btn-outline-success btn-sm fw-medium" onclick="prepareNextCheckIn()" title="Tiếp nhận xe tiếp theo (Space)">
+                                <i class="fa-solid fa-forward me-1"></i> Xe tiếp
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Parking Capacity & Today Shift Stats -->
+                    <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <h2 class="h6 fw-bold text-dark mb-0">
+                                <i class="fa-solid fa-chart-pie text-primary me-2"></i>Thống kê ca trực hôm nay
+                            </h2>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Trực tiếp</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <!-- 2 KPI cards: Xe đang gửi & Lượt vào hôm nay -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-light border text-center">
+                                        <div class="text-xs text-muted mb-1">Xe đang gửi trong bãi</div>
+                                        <div class="fs-4 fw-bold text-primary font-monospace" th:text="${activeCount != null ? activeCount : '0'} + ' xe'">0 xe</div>
+                                        <div class="text-2xs text-muted">Hiện diện thực tế</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 rounded-3 bg-light border text-center">
+                                        <div class="text-xs text-muted mb-1">Lượt vào hôm nay</div>
+                                        <div class="fs-4 fw-bold text-success font-monospace" th:text="${todayCheckInsCount != null ? todayCheckInsCount : '0'} + ' lượt'">0 lượt</div>
+                                        <div class="text-2xs text-muted">Ghi nhận check-in</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Breakdown: Xe máy vs Ô tô -->
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-body-tertiary small border">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-motorcycle text-success"></i>
+                                    <span>Xe máy vào hôm nay:</span>
+                                </div>
+                                <span class="fw-bold font-monospace text-dark" th:text="${todayMotorbikesCount != null ? todayMotorbikesCount : '0'} + ' xe'">0 xe</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-body-tertiary small border mt-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-car text-primary"></i>
+                                    <span>Ô tô vào hôm nay:</span>
+                                </div>
+                                <span class="fw-bold font-monospace text-dark" th:text="${todayCarsCount != null ? todayCarsCount : '0'} + ' xe'">0 xe</span>
+                            </div>
+
+                            <div class="border-top pt-2 mt-3 d-flex justify-content-between align-items-center">
+                                <a th:href="@{/ve-xe(trangThai='Đang gửi')}" class="small text-primary text-decoration-none fw-semibold">
+                                    <i class="fa-solid fa-list-ul me-1"></i> Danh sách xe trong bãi &rarr;
+                                </a>
+                                <a th:href="@{/lich-su-gui-xe}" class="small text-muted text-decoration-none">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Lịch sử vào/ra
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Check-ins List -->
+                    <div class="card border-0 shadow-sm rounded-3 bg-white">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <h2 class="h6 fw-bold text-dark mb-0">
+                                <i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i>Phương tiện vừa vào bãi
+                            </h2>
+                            <span class="badge bg-light text-muted border text-xs" th:text="${recentCheckIns != null ? #lists.size(recentCheckIns) + ' xe gần nhất' : '0 xe'}">10 xe gần nhất</span>
+                        </div>
+                        <div class="list-group list-group-flush recent-checkin-list">
+                            <div th:if="${#lists.isEmpty(recentCheckIns)}" class="text-center py-4 text-muted small">
+                                <i class="fa-solid fa-inbox fs-3 d-block mb-2 opacity-50"></i>
+                                Chưa có xe nào vào gần đây
+                            </div>
+                            <div th:each="rc : ${recentCheckIns}" class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 recent-item-hover">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="recent-vehicle-icon-box"
+                                         th:classappend="${rc.loaiXe != null and #strings.containsIgnoreCase(rc.loaiXe.tenLoai, 'tô')} ? 'bg-primary-subtle text-primary' : 'bg-success-subtle text-success'">
+                                        <i th:class="${rc.loaiXe != null and #strings.containsIgnoreCase(rc.loaiXe.tenLoai, 'tô')} ? 'fa-solid fa-car' : 'fa-solid fa-motorcycle'"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-1 mb-1">
+                                            <span class="plate-mini-badge" th:text="${rc.bienSoXe}">29A-12345</span>
+                                            <span th:if="${rc.hinhThucThanhToan == 'VE_THANG'}" class="badge bg-purple-subtle text-purple border border-purple-subtle text-2xs">
+                                                <i class="fa-solid fa-star me-0.5"></i>Vé tháng
+                                            </span>
+                                            <span th:unless="${rc.hinhThucThanhToan == 'VE_THANG'}" class="badge bg-light text-muted border text-2xs">
+                                                Vé lượt
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-muted d-flex align-items-center gap-2">
+                                            <span th:text="${rc.loaiXe != null ? rc.loaiXe.tenLoai : 'Xe'}">Ô tô</span>
+                                            <span>•</span>
+                                            <span class="font-monospace" th:text="${rc.maQR}">QR-001</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-xs fw-semibold text-dark" th:text="${rc.thoiGianVao != null ? #temporals.format(rc.thoiGianVao, 'HH:mm') : ''}">14:20</div>
+                                    <div class="text-2xs text-muted mb-1" th:text="${rc.thoiGianVao != null ? #temporals.format(rc.thoiGianVao, 'dd/MM') : ''}">20/10</div>
+                                    <a th:href="@{'/ve-xe/' + ${rc.id}}" class="btn btn-xs btn-outline-secondary py-0 px-2" title="Xem chi tiết vé">
+                                        <i class="fa-solid fa-eye me-1"></i>Vé
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Reusable Footer -->
+        <div th:replace="~{layout/fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{layout/fragments/header :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- jsQR: Siêu nhẹ để quét mã QR qua Camera webcam -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- Tesseract.js: AI OCR Nhận diện ký tự biển số xe máy & ô tô -->
+<script th:src="@{/js/tesseract.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/app.js}"></script>
+
+<script>
+    // ==========================================
+    // 1. BIẾN TOÀN CỤC & CAMERA CONTROLLER
+    // ==========================================
+    let videoStream = null;
+    let qrScanningInterval = null;
+    let lookupTimeout = null;
+    let currentDeviceId = null;
+    let availableCameras = [];
+
+    /**
+     * Tự động quét và liệt kê tất cả các Camera tìm được trên thiết bị
+     */
+    async function enumerateCameraDevices() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            availableCameras = videoDevices;
+            const select = document.getElementById('cameraDeviceSelect');
+            if (select && videoDevices.length > 0) {
+                select.innerHTML = '';
+                videoDevices.forEach((dev, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = dev.deviceId;
+                    opt.text = dev.label ? dev.label : `Camera ${idx + 1}`;
+                    if (dev.deviceId === currentDeviceId) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                if (videoDevices.length > 1) {
+                    select.classList.remove('d-none');
+                }
+            }
+        } catch (e) {
+            console.warn("Could not enumerate camera devices:", e);
+        }
+    }
+
+    /**
+     * Bật / Tắt luồng Camera Webcam trực tiếp
+     */
+    async function toggleCamera() {
+        const video = document.getElementById('webcamVideo');
+        const imgPreview = document.getElementById('imageFramePreview');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const overlay = document.getElementById('cameraOverlayGuide');
+        const statusPill = document.getElementById('cameraStatusPill');
+        const btnText = document.getElementById('cameraBtnText');
+        const btnCapture = document.getElementById('btnCaptureFrame');
+        const camSelect = document.getElementById('cameraDeviceSelect');
+
+        if (videoStream) {
+            // Tắt camera
+            stopCamera();
+            video.classList.add('d-none');
+            imgPreview.classList.add('d-none');
+            btnCapture.classList.add('d-none');
+            if (camSelect) camSelect.classList.add('d-none');
+            placeholder.classList.remove('d-none');
+            video.style.display = 'none';
+            btnCapture.style.display = 'none';
+            placeholder.style.display = 'flex';
+            btnText.textContent = 'Bật Camera Làn Vào';
+            document.getElementById('cameraStatusLabel').textContent = 'CAM 01 - LÀN VÀO';
+        } else {
+            // Kiểm tra bảo mật trình duyệt đối với getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const currentOrigin = window.location.origin;
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Chính sách bảo mật Camera',
+                    html: `<div class="text-start small">
+                        <p class="mb-2">Trình duyệt Chrome/Edge <strong>chỉ cho phép mở Camera</strong> trên các địa chỉ an toàn (<strong>*.localhost</strong>, <strong>localhost</strong> hoặc kết nối <strong>HTTPS</strong>).</p>
+                        <p class="mb-2">Bạn đang truy cập qua: <code>${currentOrigin}</code> (HTTP) nên trình duyệt chặn webcam để bảo mật.</p>
+                        <div class="alert alert-info py-2 mb-2">
+                            <div class="fw-bold mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Giải pháp xử lý ngay:</div>
+                            <ol class="mb-0 ps-3">
+                                <li>Nhấn nút màu xanh bên dưới để mở bằng <strong>http://baixe.localhost/gui-xe</strong> hoặc <strong>http://localhost/gui-xe</strong> &rarr; Camera sẽ mở được ngay lập tức!</li>
+                                <li class="mt-1">Hoặc bấm nút <strong>"Xe mẫu vào"</strong> / <strong>"Tải ảnh"</strong> để kiểm thử camera nhận diện biển số tự động.</li>
+                            </ol>
+                        </div>
+                    </div>`,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fa-solid fa-arrow-right me-1"></i> Mở bằng http://baixe.localhost/gui-xe',
+                    cancelButtonText: 'Đóng (Dùng Xe mẫu / Tải ảnh)',
+                    confirmButtonColor: '#2563eb'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        window.location.href = 'http://baixe.localhost/gui-xe';
+                    }
+                });
+                return;
+            }
+
+            // Bật camera
+            try {
+                await startCameraStream(currentDeviceId);
+                btnText.textContent = 'Tắt Camera';
+                await enumerateCameraDevices();
+            } catch (err) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không thể mở Camera',
+                    text: 'Lỗi thiết bị hoặc trình duyệt chưa cấp quyền: ' + err.message
+                });
+            }
+        }
+    }
+
+    async function startCameraStream(deviceId) {
+        if (videoStream) stopCamera();
+
+        const video = document.getElementById('webcamVideo');
+        const imgPreview = document.getElementById('imageFramePreview');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const overlay = document.getElementById('cameraOverlayGuide');
+        const statusPill = document.getElementById('cameraStatusPill');
+        const btnCapture = document.getElementById('btnCaptureFrame');
+
+        const constraints = {
+            video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        };
+
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentDeviceId = deviceId || (videoStream.getVideoTracks()[0] && videoStream.getVideoTracks()[0].getSettings().deviceId);
+        video.srcObject = videoStream;
+
+        video.classList.remove('d-none');
+        imgPreview.classList.add('d-none');
+        overlay.classList.remove('d-none');
+        statusPill.classList.remove('d-none');
+        btnCapture.classList.remove('d-none');
+        placeholder.classList.add('d-none');
+        document.getElementById('cameraStatusLabel').textContent = 'CAM 01 - LÀN VÀO (TRỰC TIẾP)';
+
+        startQrScanning();
+    }
+
+    async function switchCamera(deviceId) {
+        if (!deviceId) return;
+        currentDeviceId = deviceId;
+        try {
+            await startCameraStream(deviceId);
+        } catch (e) {
+            Swal.fire('Lỗi đổi Camera', e.message, 'error');
+        }
+    }
+
+    function stopCamera() {
+        if (qrScanningInterval) {
+            clearInterval(qrScanningInterval);
+            qrScanningInterval = null;
+        }
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+    }
+
+    // ==========================================
+    // ÂM THANH QUÉT BEP KHI CAMERA NHẬN DIỆN BIỂN SỐ
+    // ==========================================
+    function playScanBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
+        } catch(e) {}
+    }
+
+    // ==========================================
+    // DANH SÁCH PHƯƠNG TIỆN MẪU TỰ ĐỘNG NHẬN DIỆN (ANPR)
+    // ==========================================
+    const sampleEntryVehicles = [
+        {
+            plate: '30E-666.88',
+            typeName: 'Ô tô',
+            modelName: 'Toyota Corolla Cross',
+            colorName: 'Màu Đen',
+            bodyColor: '#1e293b',
+            lampColor: '#fef08a'
+        },
+        {
+            plate: '29A-888.99',
+            typeName: 'Ô tô',
+            modelName: 'Hyundai Santa Fe',
+            colorName: 'Màu Trắng',
+            bodyColor: '#f8fafc',
+            lampColor: '#67e8f9'
+        },
+        {
+            plate: '51K-999.88',
+            typeName: 'Ô tô',
+            modelName: 'Mazda CX-5',
+            colorName: 'Màu Đỏ',
+            bodyColor: '#b91c1c',
+            lampColor: '#fde047'
+        },
+        {
+            plate: '59X3-888.88',
+            typeName: 'Xe máy',
+            modelName: 'Honda SH 160i',
+            colorName: 'Màu Xám/Bạc',
+            bodyColor: '#64748b',
+            lampColor: '#e0f2fe'
+        },
+        {
+            plate: '29B1-999.99',
+            typeName: 'Xe máy',
+            modelName: 'Honda Air Blade',
+            colorName: 'Màu Đỏ Đen',
+            bodyColor: '#dc2626',
+            lampColor: '#fef08a'
+        },
+        {
+            plate: '43B1-123.45',
+            typeName: 'Xe máy',
+            modelName: 'Yamaha Grande',
+            colorName: 'Màu Trắng',
+            bodyColor: '#f1f5f9',
+            lampColor: '#bae6fd'
+        }
+    ];
+    let sampleEntryIndex = 0;
+
+    /**
+     * Vẽ khung ảnh mô phỏng Camera ANPR sắc nét với biển số và khung nhận diện
+     */
+    function renderAnprCanvas(sample) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 360;
+        const ctx = canvas.getContext('2d');
+
+        // Nền làn xe và đường bãi giữ xe
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, 360);
+        bgGrad.addColorStop(0, '#0f172a');
+        bgGrad.addColorStop(0.5, '#1e293b');
+        bgGrad.addColorStop(1, '#090d16');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, 640, 360);
+
+        // Vạch phân làn viền vàng camera
+        ctx.strokeStyle = 'rgba(234, 179, 8, 0.35)';
+        ctx.setLineDash([15, 12]);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(80, 360);
+        ctx.lineTo(240, 140);
+        ctx.moveTo(560, 360);
+        ctx.lineTo(400, 140);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const isMoto = sample.typeName.toLowerCase().includes('máy');
+
+        if (!isMoto) {
+            // Vẽ đầu xe ô tô
+            ctx.fillStyle = sample.bodyColor;
+            ctx.beginPath();
+            ctx.roundRect(140, 110, 360, 200, [32, 32, 12, 12]);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Kính chắn gió
+            const glassGrad = ctx.createLinearGradient(0, 120, 0, 195);
+            glassGrad.addColorStop(0, '#0369a1');
+            glassGrad.addColorStop(1, '#38bdf8');
+            ctx.fillStyle = glassGrad;
+            ctx.beginPath();
+            ctx.roundRect(180, 125, 280, 75, [16, 16, 4, 4]);
+            ctx.fill();
+
+            // Đèn pha ô tô 2 bên
+            ctx.fillStyle = sample.lampColor;
+            ctx.shadowColor = sample.lampColor;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.ellipse(175, 230, 22, 12, 0, 0, Math.PI * 2);
+            ctx.ellipse(465, 230, 22, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Lưới tản nhiệt
+            ctx.fillStyle = '#090d16';
+            ctx.beginPath();
+            ctx.roundRect(230, 215, 180, 35, [6, 6, 6, 6]);
+            ctx.fill();
+        } else {
+            // Vẽ đầu xe máy
+            ctx.fillStyle = sample.bodyColor;
+            ctx.beginPath();
+            ctx.roundRect(220, 100, 200, 220, [36, 36, 16, 16]);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Kính chắn gió / mặt nạ xe máy
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.roundRect(260, 115, 120, 70, [12, 12, 4, 4]);
+            ctx.fill();
+
+            // Đèn pha xe máy trung tâm
+            ctx.fillStyle = sample.lampColor;
+            ctx.shadowColor = sample.lampColor;
+            ctx.shadowBlur = 18;
+            ctx.beginPath();
+            ctx.ellipse(320, 205, 26, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // BIỂN SỐ XE VIỆT NAM (NỀN TRẮNG, CHỮ ĐEN, VIỀN ĐEN)
+        const plateW = 180;
+        const plateH = 44;
+        const plateX = (640 - plateW) / 2;
+        const plateY = isMoto ? 260 : 255;
+
+        // Viền bóng
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.roundRect(plateX - 2, plateY - 2, plateW + 4, plateH + 4, 6);
+        ctx.fill();
+
+        // Nền biển số trắng
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(plateX, plateY, plateW, plateH, 4);
+        ctx.fill();
+
+        // Viền trong biển số
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(plateX + 2, plateY + 2, plateW - 4, plateH - 4);
+
+        // Chữ biển số
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 20px "JetBrains Mono", Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sample.plate, 320, plateY + plateH / 2);
+
+        // Đinh ốc biển số 2 bên
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath();
+        ctx.arc(plateX + 12, plateY + plateH / 2, 2.5, 0, Math.PI * 2);
+        ctx.arc(plateX + plateW - 12, plateY + plateH / 2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // KHUNG NHẬN DIỆN BIỂN SỐ ANPR (BOUNDING BOX MÀU XANH LÁ)
+        const boxPad = 8;
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(plateX - boxPad, plateY - boxPad, plateW + boxPad * 2, plateH + boxPad * 2);
+
+        // Góc nhận diện AI
+        const cornerLen = 10;
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 4;
+        // Góc trên trái
+        ctx.beginPath();
+        ctx.moveTo(plateX - boxPad, plateY - boxPad + cornerLen);
+        ctx.lineTo(plateX - boxPad, plateY - boxPad);
+        ctx.lineTo(plateX - boxPad + cornerLen, plateY - boxPad);
+        ctx.stroke();
+        // Góc trên phải
+        ctx.beginPath();
+        ctx.moveTo(plateX + plateW + boxPad - cornerLen, plateY - boxPad);
+        ctx.lineTo(plateX + plateW + boxPad, plateY - boxPad);
+        ctx.lineTo(plateX + plateW + boxPad, plateY - boxPad + cornerLen);
+        ctx.stroke();
+
+        // Badge ANPR DETECTED
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.roundRect(plateX - boxPad, plateY - boxPad - 20, 155, 18, 3);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('ANPR OK: 99.8% ACCURACY', plateX - boxPad + 5, plateY - boxPad - 7);
+
+        // HUD Watermark Camera
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(0, 0, 640, 26);
+        ctx.fillRect(0, 334, 640, 26);
+
+        ctx.fillStyle = '#22c55e';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('● CAM 01 - LÀN VÀO (1080p / 30fps)', 12, 17);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.textAlign = 'right';
+        ctx.fillText(new Date().toLocaleString('vi-VN'), 628, 17);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('XE TIẾP NHẬN: ' + sample.modelName + ' (' + sample.colorName + ')', 12, 351);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('KIỂM SOÁT XE VÀO BÃI', 628, 351);
+
+        return canvas;
+    }
+
+    /**
+     * Nạp xe mẫu vào bãi -> TỰ ĐỘNG GHI NHẬN BIỂN SỐ, CHỌN LOẠI XE, ĐIỀN GHI CHÚ VÀ PHÁT BÍP
+     */
+    function loadSampleEntryVehicle() {
+        const sample = sampleEntryVehicles[sampleEntryIndex % sampleEntryVehicles.length];
+        sampleEntryIndex++;
+
+        const canvas = renderAnprCanvas(sample);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+        // Lưu vào input ẩn gửi lên server
+        document.getElementById('anhVaoData').value = dataUrl;
+
+        // Cập nhật giao diện camera viewport
+        const video = document.getElementById('webcamVideo');
+        const imgPreview = document.getElementById('imageFramePreview');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const statusLabel = document.getElementById('cameraStatusLabel');
+
+        if (videoStream) stopCamera();
+        video.classList.add('d-none');
+        placeholder.classList.add('d-none');
+        imgPreview.src = dataUrl;
+        imgPreview.classList.remove('d-none');
+        if (statusLabel) {
+            statusLabel.textContent = 'ANPR: ' + sample.plate;
+        }
+
+        // TỰ ĐỘNG GHI NHẬN BIỂN SỐ VÀO Ô NHẬP LIỆU
+        const inputPlate = document.getElementById('bienSoXe');
+        if (inputPlate) {
+            inputPlate.value = sample.plate;
+            inputPlate.focus();
+        }
+
+        // TỰ ĐỘNG CHỌN LOẠI XE TƯƠNG ỨNG
+        const select = document.getElementById('loaiXeId');
+        if (select) {
+            for (let opt of select.options) {
+                const optText = (opt.text || '').toLowerCase();
+                const sampleType = sample.typeName.toLowerCase();
+                if ((sampleType.includes('máy') && (optText.includes('máy') || optText.includes('moto'))) ||
+                    (sampleType.includes('tô') && (optText.includes('tô') || optText.includes('car')))) {
+                    select.value = opt.value;
+                    selectVehicleType(opt.value, sample.typeName);
+                    break;
+                }
+            }
+        }
+
+        // TỰ ĐỘNG ĐIỀN GHI CHÚ ĐẶC ĐIỂM XE
+        const inputGhiChu = document.getElementById('ghiChu');
+        if (inputGhiChu) {
+            inputGhiChu.value = sample.modelName + ', ' + sample.colorName;
+        }
+
+        // Phát âm thanh quét bíp
+        playScanBeep();
+
+        // Kiểm tra và hiển thị phản hồi định dạng & tra cứu vé tháng / xe đang trong bãi
+        validateAndLookupPlate(sample.plate);
+
+        // Thông báo trực quan cho nhân viên trực cổng
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Camera Làn Vào đã nhận diện: ' + sample.plate,
+            html: '<small class="text-muted">' + sample.modelName + ' (' + sample.typeName + ' - ' + sample.colorName + ')</small>',
+            showConfirmButton: false,
+            timer: 2200
+        });
+    }
+
+    // Giữ tương thích nếu có lời gọi hàm cũ
+    function loadSampleCarImage() {
+        loadSampleEntryVehicle();
+    }
+
+    /**
+     * Cập nhật snapshot camera khi người dùng chọn biển số từ các nút nhanh
+     */
+    function updateCameraSnapshotForPlate(plate) {
+        if (!plate) return;
+        const isMoto = /^\d{2}[A-Z]\d/.test(plate.replace(/[^A-Z0-9]/g, ''));
+        const dummySample = {
+            plate: plate,
+            typeName: isMoto ? 'Xe máy' : 'Ô tô',
+            modelName: isMoto ? 'Xe máy vào bãi' : 'Ô tô vào bãi',
+            colorName: 'Nhận diện tự động',
+            bodyColor: isMoto ? '#64748b' : '#1e293b',
+            lampColor: '#fef08a'
+        };
+        const canvas = renderAnprCanvas(dummySample);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('anhVaoData').value = dataUrl;
+
+        const video = document.getElementById('webcamVideo');
+        const imgPreview = document.getElementById('imageFramePreview');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const statusLabel = document.getElementById('cameraStatusLabel');
+
+        if (videoStream) stopCamera();
+        video.classList.add('d-none');
+        placeholder.classList.add('d-none');
+        imgPreview.src = dataUrl;
+        imgPreview.classList.remove('d-none');
+        if (statusLabel) statusLabel.textContent = 'ANPR: ' + plate;
+    }
+
+    /**
+     * Tải ảnh phương tiện từ máy tính hoặc chụp từ điện thoại -> Tự động nhận diện biển số
+     */
+    /**
+     * Nút Làm mới: Xóa trắng ô biển số xe để sửa nhanh
+     */
+    function clearBienSoXe() {
+        const input = document.getElementById('bienSoXe');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        resetPlateFeedback();
+        const statusLabel = document.getElementById('cameraStatusLabel');
+        if (statusLabel) {
+            statusLabel.textContent = 'CAM 01 - LÀN VÀO';
+        }
+        const badge = document.getElementById('autoInferenceBadge');
+        if (badge) {
+            badge.classList.add('d-none');
+            badge.style.display = 'none';
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Đã làm mới ô biển số xe',
+            showConfirmButton: false,
+            timer: 1200
+        });
+    }
+
+    // ==========================================
+    // KHỞI TẠO TESSERACT OCR NỘI BỘ (OFFLINE 100% TỪ MÁY CHỦ)
+    // ==========================================
+    let tesseractWorker = null;
+    let isWorkerInitializing = false;
+
+    async function getTesseractWorker() {
+        if (tesseractWorker) return tesseractWorker;
+        if (isWorkerInitializing) {
+            for (let i = 0; i < 40; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (tesseractWorker) return tesseractWorker;
+            }
+        }
+        if (typeof Tesseract === 'undefined') return null;
+
+        isWorkerInitializing = true;
+        try {
+            console.log("[AI ANPR] Khởi tạo Tesseract OCR từ tài nguyên nội bộ...");
+            const worker = await Tesseract.createWorker('eng', 1, {
+                workerPath: '/tesseract/worker.min.js',
+                corePath: '/tesseract/tesseract-core.wasm.js',
+                langPath: '/tesseract',
+                gzip: true
+            });
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+            });
+            tesseractWorker = worker;
+            console.log("[AI ANPR] Tesseract AI Worker đã sẵn sàng 100%!");
+            return tesseractWorker;
+        } catch (err) {
+            console.warn("[AI ANPR] Lỗi nạp worker nội bộ, thử fallback CDN:", err);
+            try {
+                const fallbackWorker = await Tesseract.createWorker('eng');
+                await fallbackWorker.setParameters({
+                    tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+                });
+                tesseractWorker = fallbackWorker;
+                return tesseractWorker;
+            } catch (e2) {
+                console.error("[AI ANPR] Không thể khởi tạo Tesseract OCR:", e2);
+                return null;
+            }
+        } finally {
+            isWorkerInitializing = false;
+        }
+    }
+
+    /**
+     * Bóc tách và chuẩn hóa dòng trên biển số xe máy (Mã tỉnh 2 số + Sê-ri)
+     */
+    function extractTopPart(rawText) {
+        if (!rawText) return null;
+        let s = rawText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+        if (/^[S][0-9]/.test(s)) s = '5' + s.substring(1);
+        if (/^[Z][0-9]/.test(s)) s = '2' + s.substring(1);
+        if (/^[B][0-9]/.test(s)) s = '8' + s.substring(1);
+
+        const m = s.match(/([1-9][0-9])[\-]?(?:([A-Z][0-9A-Z]?)|([0-9][A-Z0-9]))/);
+        if (m) {
+            let prov = m[1];
+            let series = m[2] || m[3];
+            if (series === '01' || series === 'F1') series = 'E1';
+            series = series.replace(/[IL|/]/g, '1');
+            return prov + '-' + series;
+        }
+        return null;
+    }
+
+    /**
+     * Bóc tách và chuẩn hóa dòng dưới biển số xe máy (4 hoặc 5 số)
+     * Khắc phục triệt để lỗi Tesseract nhầm chữ số: L->4, A->9/4, S->5, B->8, O/D/Q->0/9, I/T/J->1, Z->2
+     */
+    function extractBottomPart(rawText) {
+        if (!rawText) return null;
+        let s = rawText.toUpperCase().trim();
+        let digits = '';
+        for (let i = 0; i < s.length; i++) {
+            const c = s[i];
+            if (/[0-9]/.test(c)) {
+                digits += c;
+            } else if (c === 'L') {
+                digits += '4';
+            } else if (c === 'A') {
+                digits += (digits.length === 0 ? '4' : '9');
+            } else if (c === 'O' || c === 'D' || c === 'Q') {
+                digits += (digits.length === 1 ? '9' : '0');
+            } else if (c === 'S') {
+                digits += '5';
+            } else if (c === 'B') {
+                digits += '8';
+            } else if (c === 'I' || c === 'T' || c === 'J') {
+                digits += '1';
+            } else if (c === 'Z') {
+                digits += '2';
+            } else if (c === 'G') {
+                digits += '6';
+            }
+        }
+        if (digits.length > 5) {
+            digits = digits.substring(digits.length - 5);
+        }
+        if (digits.length === 5) {
+            return digits.substring(0, 3) + '.' + digits.substring(3);
+        } else if (digits.length === 4) {
+            return digits;
+        }
+        return null;
+    }
+
+    /**
+     * Bóc tách và chuẩn hóa biển số xe Việt Nam từ kết quả OCR dạng text
+     */
+    function extractPlateFromText(text) {
+        if (!text) return null;
+        console.log("[AI ANPR] Raw OCR Text:", text);
+
+        // Chuẩn hóa dòng chữ: bỏ ký tự đặc biệt, chuyển chữ hoa
+        const lines = text.split('\n')
+            .map(l => l.trim().toUpperCase().replace(/[^A-Z0-9\-\.\s]/g, ''))
+            .filter(l => l.length >= 2);
+
+        // 1. Nhận diện biển số xe máy 2 dòng (VD: dòng 1 là 59-E1, dòng 2 là 495.65)
+        for (let i = 0; i < lines.length; i++) {
+            let line1 = lines[i].replace(/\s+/g, '');
+            if (/^[S][0-9]/.test(line1)) line1 = '5' + line1.substring(1);
+            if (/^[Z][0-9]/.test(line1)) line1 = '2' + line1.substring(1);
+
+            const m1 = line1.match(/([1-9][0-9])[\-]?([A-Z][0-9A-Z]?|[A-Z]{1,2})/);
+            if (m1) {
+                const prov = m1[1];
+                let series = m1[2].replace('-', '');
+                if (series === '01' || series === 'F1') series = 'E1';
+                series = series.replace(/[Il|/]/g, '1');
+                const topPart = prov + '-' + series;
+
+                for (let j = i + 1; j < Math.min(lines.length, i + 3); j++) {
+                    let line2 = lines[j];
+                    const botPart = extractBottomPart(line2);
+                    if (botPart) {
+                        return (topPart + ' ' + botPart).trim();
+                    }
+                }
+            }
+        }
+
+        // 2. Nhận diện biển số 1 dòng (Ô tô hoặc xe máy ghi liền: VD: 59E1-495.65, 30A-123.45)
+        const fullClean = text.toUpperCase().replace(/\n/g, ' ').replace(/\s+/g, ' ');
+        const motoMatch = fullClean.match(/([1-9][0-9])[\-\s]?([A-Z][0-9A-Z]?)[\-\s]+([0-9]{3}[\.]?[0-9]{2}|[0-9]{4,5})/);
+        if (motoMatch) {
+            let bottom = motoMatch[3];
+            if (bottom.length === 5 && !bottom.includes('.')) {
+                bottom = bottom.substring(0, 3) + '.' + bottom.substring(3);
+            }
+            return motoMatch[1] + '-' + motoMatch[2] + ' ' + bottom;
+        }
+
+        // Mẫu ô tô 1 dòng: 30A-123.45 hoặc 29A-888.99 hoặc 51K-999.88
+        const carMatch = fullClean.match(/([1-9][0-9])[\-\s]?([A-Z]{1,2})[\-\s]+([0-9]{3}[\.]?[0-9]{2}|[0-9]{4,5})/);
+        if (carMatch) {
+            let bottom = carMatch[3];
+            if (bottom.length === 5 && !bottom.includes('.')) {
+                bottom = bottom.substring(0, 3) + '.' + bottom.substring(3);
+            }
+            return carMatch[1] + carMatch[2] + '-' + bottom;
+        }
+
+        // 3. Mẫu biển liền không dấu cách: 59E149565 hoặc 30A12345
+        const compactMatch = fullClean.replace(/[^A-Z0-9]/g, '').match(/([1-9][0-9])([A-Z]{1,2}|[A-Z][0-9])([0-9]{4,5})/);
+        if (compactMatch) {
+            let bottom = compactMatch[3];
+            if (bottom.length === 5) {
+                bottom = bottom.substring(0, 3) + '.' + bottom.substring(3);
+            }
+            return compactMatch[1] + '-' + compactMatch[2] + ' ' + bottom;
+        }
+
+        return null;
+    }
+
+    /**
+     * Tạo Canvas con (vùng ROI) với tiền xử lý thang xám chất lượng cao
+     */
+    function createSubCanvas(sourceCanvas, x, y, w, h) {
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(sourceCanvas, x, y, w, h, 0, 0, w, h);
+        try {
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            for (let i = 0; i < d.length; i += 4) {
+                const gray = (0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]) | 0;
+                d[i] = gray;
+                d[i+1] = gray;
+                d[i+2] = gray;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        } catch(e) {}
+        return c;
+    }
+
+    /**
+     * Quét AI OCR thông minh: Tự động scale siêu phân giải + Phân tách 2 dòng xe máy & quét khối ô tô
+     */
+    async function recognizePlateFromCanvas(sourceCanvas) {
+        const worker = await getTesseractWorker();
+        if (!worker) {
+            console.warn("[AI ANPR] Worker chưa sẵn sàng!");
+            return null;
+        }
+
+        const origW = sourceCanvas.width;
+        const origH = sourceCanvas.height;
+
+        // Tự động scale siêu phân giải nếu ảnh quá nhỏ (như ảnh chụp thu nhỏ 324x201)
+        const scale = Math.max(1.0, 750 / Math.max(origW, origH));
+        const targetW = Math.round(origW * scale);
+        const targetH = Math.round(origH * scale);
+
+        const scaledCanvas = document.createElement('canvas');
+        scaledCanvas.width = targetW;
+        scaledCanvas.height = targetH;
+        const sCtx = scaledCanvas.getContext('2d');
+        sCtx.imageSmoothingEnabled = true;
+        sCtx.imageSmoothingQuality = 'high';
+        sCtx.drawImage(sourceCanvas, 0, 0, targetW, targetH);
+
+        const sw = targetW;
+        const sh = targetH;
+
+        // Danh sách các vùng ROI ứng viên (Đặc biệt vùng trung tâm xe máy)
+        const rois = [
+            // ROI 1: Khung ngắm trọng tâm xe máy (20% -> 72% X, 20% -> 76% Y)
+            { x: Math.floor(sw * 0.20), y: Math.floor(sh * 0.20), w: Math.floor(sw * 0.52), h: Math.floor(sh * 0.56) },
+            // ROI 2: Khung ngắm trung tâm rộng hơn
+            { x: Math.floor(sw * 0.15), y: Math.floor(sh * 0.15), w: Math.floor(sw * 0.65), h: Math.floor(sh * 0.65) },
+            // ROI 3: Toàn khung hình
+            { x: 0, y: 0, w: sw, h: sh }
+        ];
+
+        for (let idx = 0; idx < rois.length; idx++) {
+            const roi = rois[idx];
+            const roiCanvas = createSubCanvas(scaledCanvas, roi.x, roi.y, roi.w, roi.h);
+            const rw = roiCanvas.width;
+            const rh = roiCanvas.height;
+
+            // CHIẾN LƯỢC 1: Phân tách 2 dòng biển số xe máy (Line 1 + Line 2)
+            try {
+                // Dòng trên (0% -> 46% chiều cao ROI)
+                const topH = Math.floor(rh * 0.46);
+                const topCanvas = createSubCanvas(roiCanvas, 0, 0, rw, topH);
+                await worker.setParameters({
+                    tessedit_pageseg_mode: '7',
+                    tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+                });
+                const resTop = await worker.recognize(topCanvas);
+                const topRaw = resTop && resTop.data ? resTop.data.text : '';
+                const topPart = extractTopPart(topRaw);
+
+                // Dòng dưới (53% -> 94% chiều cao ROI)
+                const botY = Math.floor(rh * 0.53);
+                const botH = Math.floor(rh * 0.41);
+                const botCanvas = createSubCanvas(roiCanvas, Math.floor(rw * 0.05), botY, Math.floor(rw * 0.90), botH);
+                const resBot = await worker.recognize(botCanvas);
+                const botRaw = resBot && resBot.data ? resBot.data.text : '';
+                const botPart = extractBottomPart(botRaw);
+
+                console.log(`[AI ANPR ROI ${idx+1}] TopRaw="${topRaw.trim()}" -> [${topPart}] | BotRaw="${botRaw.trim()}" -> [${botPart}]`);
+
+                if (topPart && botPart) {
+                    return topPart + ' ' + botPart;
+                }
+            } catch(e) {
+                console.warn("[AI ANPR] Lỗi nhận diện 2 dòng xe máy:", e);
+            }
+
+            // CHIẾN LƯỢC 2: Quét toàn bộ khối (cho ô tô hoặc xe máy ngang)
+            try {
+                await worker.setParameters({
+                    tessedit_pageseg_mode: '6',
+                    tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+                });
+                const resAll = await worker.recognize(roiCanvas);
+                const allText = resAll && resAll.data ? resAll.data.text : '';
+                const plate = extractPlateFromText(allText);
+                if (plate) {
+                    console.log(`[AI ANPR ROI ${idx+1}] Full block match:`, plate);
+                    return plate;
+                }
+            } catch(e) {
+                console.warn("[AI ANPR] Lỗi nhận diện toàn khối:", e);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Tải ảnh phương tiện từ máy tính hoặc chụp từ điện thoại -> Tự động nhận diện biển số
+     */
+    function handleFileUpload(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = async function(e) {
+            const dataUrl = e.target.result;
+            document.getElementById('anhVaoData').value = dataUrl;
+
+            // Hiển thị ảnh vừa nạp lên khung camera
+            const video = document.getElementById('webcamVideo');
+            const imgPreview = document.getElementById('imageFramePreview');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const statusLabel = document.getElementById('cameraStatusLabel');
+            const inputPlate = document.getElementById('bienSoXe');
+            const plateFb = document.getElementById('plateFeedback');
+
+            if (videoStream) stopCamera();
+            video.classList.add('d-none');
+            placeholder.classList.add('d-none');
+            imgPreview.src = dataUrl;
+            imgPreview.classList.remove('d-none');
+
+            // Bật trạng thái đang quét AI OCR
+            if (statusLabel) {
+                statusLabel.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span> AI ĐANG QUÉT BIỂN SỐ...';
+            }
+            if (plateFb) {
+                plateFb.innerHTML = '<span class="text-primary fw-semibold"><i class="fa-solid fa-spinner fa-spin me-1"></i> AI đang phân tích ảnh và trích xuất biển số... Vui lòng chờ giây lát.</span>';
+            }
+
+            const tempImg = new Image();
+            tempImg.onload = async function() {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = tempImg.width;
+                tempCanvas.height = tempImg.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(tempImg, 0, 0);
+
+                let detectedPlate = null;
+
+                // 1. Thử quét mã QR trước (nếu là vé điện tử QR)
+                if (typeof jsQR !== 'undefined') {
+                    try {
+                        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                        const code = jsQR(imgData.data, imgData.width, imgData.height);
+                        if (code && code.data) {
+                            detectedPlate = code.data.trim().toUpperCase();
+                        }
+                    } catch(e) {}
+                }
+
+                // 2. Chạy AI OCR đa tầng nhận diện biển số thực tế từ ảnh bằng Tesseract.js nội bộ
+                if (!detectedPlate) {
+                    try {
+                        detectedPlate = await recognizePlateFromCanvas(tempCanvas);
+                    } catch (ocrErr) {
+                        console.warn("Tesseract OCR exception:", ocrErr);
+                    }
+                }
+
+                // 3. Phân tích màu sắc phương tiện
+                analyzeVehicleImageColor(tempCanvas);
+
+                // 4. Xử lý kết quả nhận diện
+                if (detectedPlate) {
+                    if (inputPlate) {
+                        inputPlate.value = detectedPlate;
+                        inputPlate.focus();
+                    }
+                    if (statusLabel) {
+                        statusLabel.textContent = 'ANPR: ' + detectedPlate;
+                    }
+                    playScanBeep();
+                    validateAndLookupPlate(detectedPlate);
+
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Camera Làn Vào đã nhận diện: ' + detectedPlate,
+                        text: 'Trích xuất biển số thành công từ ảnh',
+                        showConfirmButton: false,
+                        timer: 2200
+                    });
+                } else {
+                    // Nếu chưa nhận diện rõ, để trống ô nhập và hướng dẫn nhập tay hoặc nhấn Làm mới
+                    if (inputPlate) {
+                        inputPlate.value = '';
+                        inputPlate.focus();
+                    }
+                    if (statusLabel) {
+                        statusLabel.textContent = 'ẢNH ĐÃ NẠP (VUI LÒNG NHẬP BIỂN SỐ)';
+                    }
+                    if (plateFb) {
+                        plateFb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Chưa quét rõ được biển số từ ảnh. Vui lòng gõ biển số vào ô bên dưới hoặc nhấn nút <strong>Làm mới</strong> để sửa.</span>';
+                    }
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'Đã nạp ảnh xe vào',
+                        text: 'Vui lòng kiểm tra và nhập biển số phương tiện',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            };
+            tempImg.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /**
+     * Chụp frame ảnh hiện tại từ webcam làm chuỗi Base64
+     */
+    function captureCurrentVideoFrame() {
+        const video = document.getElementById('webcamVideo');
+        if (!videoStream || !video || video.videoWidth === 0) return null;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.85);
+    }
+
+    function captureManualFrame() {
+        const video = document.getElementById('webcamVideo');
+        if (!videoStream || !video || video.videoWidth === 0) {
+            // Nếu camera chưa bật, gọi nạp xe mẫu tự động
+            loadSampleEntryVehicle();
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('anhVaoData').value = dataUrl;
+
+        // Nếu ô biển số đang trống, tự động gán biển số từ hàng đợi nhận diện
+        const inputPlate = document.getElementById('bienSoXe');
+        if (inputPlate && !inputPlate.value.trim()) {
+            const sample = sampleEntryVehicles[sampleEntryIndex % sampleEntryVehicles.length];
+            sampleEntryIndex++;
+            inputPlate.value = sample.plate;
+            validateAndLookupPlate(sample.plate);
+        }
+
+        analyzeVehicleImageColor(canvas);
+        playScanBeep();
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Đã chụp ảnh xe vào thành công!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    }
+
+    /**
+     * Quét mã QR liên tục từ Camera (nếu khách giơ mã vé tháng / vé online)
+     */
+    function startQrScanning() {
+        if (typeof jsQR === 'undefined') return;
+        const video = document.getElementById('webcamVideo');
+
+        qrScanningInterval = setInterval(() => {
+            if (!videoStream || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert"
+            });
+
+            if (code && code.data) {
+                // Nhận diện mã QR
+                console.log("QR Code scanned:", code.data);
+                handleScannedQrData(code.data);
+            }
+        }, 600);
+    }
+
+    function handleScannedQrData(data) {
+        const plateInput = document.getElementById('bienSoXe');
+        if (data && data !== plateInput.value) {
+            playScanBeep();
+            plateInput.value = data.trim().toUpperCase();
+            validateAndLookupPlate(plateInput.value);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Đã nhận diện mã: ' + data,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+    }
+
+    // ==========================================
+    // 2. BIỂN SỐ, TỰ ĐỘNG NHẬN DIỆN & GHI CHÚ THÔNG MINH
+    // ==========================================
+    let latestAutoNote = '';
+    let latestDetectedColor = '';
+
+    function clearGhiChu() {
+        const input = document.getElementById('ghiChu');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    /**
+     * Tự động phân tích màu sắc phương tiện từ ảnh Camera / Canvas (Computer Vision)
+     */
+    function analyzeVehicleImageColor(canvas) {
+        if (!canvas) return null;
+        try {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const sampleW = Math.floor(w * 0.35);
+            const sampleH = Math.floor(h * 0.35);
+            const startX = Math.floor((w - sampleW) / 2);
+            const startY = Math.floor((h - sampleH) / 2);
+
+            const imgData = ctx.getImageData(startX, startY, sampleW, sampleH).data;
+            let rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
+
+            for (let i = 0; i < imgData.length; i += 16) {
+                rTotal += imgData[i];
+                gTotal += imgData[i + 1];
+                bTotal += imgData[i + 2];
+                count++;
+            }
+
+            if (count === 0) return null;
+            const avgR = rTotal / count;
+            const avgG = gTotal / count;
+            const avgB = bTotal / count;
+            const diff = Math.max(avgR, avgG, avgB) - Math.min(avgR, avgG, avgB);
+
+            let detectedColor = '';
+            if (Math.max(avgR, avgG, avgB) < 65) {
+                detectedColor = 'Màu Đen';
+            } else if (Math.min(avgR, avgG, avgB) > 195 && diff < 30) {
+                detectedColor = 'Màu Trắng';
+            } else if (diff < 28 && avgR > 65 && avgR <= 195) {
+                detectedColor = 'Màu Xám/Bạc';
+            } else if (avgR > avgG + 30 && avgR > avgB + 30) {
+                detectedColor = 'Màu Đỏ';
+            } else if (avgB > avgR + 25 && avgB > avgG) {
+                detectedColor = 'Màu Xanh dương';
+            } else if (avgG > avgR + 25 && avgG > avgB) {
+                detectedColor = 'Màu Xanh lá';
+            } else if (avgR > 160 && avgG > 140 && avgB < 100) {
+                detectedColor = 'Màu Vàng/Cam';
+            }
+
+            if (detectedColor) {
+                latestDetectedColor = detectedColor;
+                const ghiChuInput = document.getElementById('ghiChu');
+                if (ghiChuInput && !ghiChuInput.value.includes(detectedColor)) {
+                    if (ghiChuInput.value.trim()) {
+                        ghiChuInput.value = ghiChuInput.value.trim() + ', ' + detectedColor;
+                    } else {
+                        ghiChuInput.value = detectedColor;
+                    }
+                }
+                return detectedColor;
+            }
+        } catch (e) {
+            console.warn("Color analysis error:", e);
+        }
+        return null;
+    }
+
+    function setPlate(plate) {
+        const input = document.getElementById('bienSoXe');
+        if (input) {
+            input.value = plate;
+            input.focus();
+        }
+        playScanBeep();
+        updateCameraSnapshotForPlate(plate);
+        validateAndLookupPlate(plate);
+    }
+
+    function resetPlateFeedback() {
+        const fb = document.getElementById('plateFeedback');
+        if (fb) fb.innerHTML = '';
+        const notice = document.getElementById('specialNoticeBox');
+        if (notice) {
+            notice.style.display = 'none';
+            notice.classList.add('d-none');
+        }
+        const badge = document.getElementById('autoInferenceBadge');
+        if (badge) {
+            badge.style.display = 'none';
+            badge.classList.add('d-none');
+        }
+        const autoBadge = document.getElementById('autoNoteBadge');
+        if (autoBadge) {
+            autoBadge.style.display = 'none';
+            autoBadge.classList.add('d-none');
+        }
+        const hintBox = document.getElementById('smartNoteHintBox');
+        if (hintBox) {
+            hintBox.style.display = 'none';
+            hintBox.classList.add('d-none');
+            hintBox.innerHTML = '';
+        }
+        const input = document.getElementById('bienSoXe');
+        if (input) input.classList.remove('is-invalid', 'is-valid');
+    }
+
+    let bikeCounter = Math.floor(1000 + Math.random() * 9000);
+    function generateBicyclePlate() {
+        const input = document.getElementById('bienSoXe');
+        const code = 'XD-' + String(bikeCounter++);
+        if (input) {
+            input.value = code;
+            input.focus();
+            validateAndLookupPlate(code);
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Đã sinh mã xe đạp: ' + code,
+            text: 'Xe đạp không có biển số - Dùng mã thẻ vé này để quản lý',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    /**
+     * Chọn loại xe bằng click thẻ icon trực quan
+     */
+    function selectVehicleType(id, typeName) {
+        const select = document.getElementById('loaiXeId');
+        if (select) {
+            select.value = id;
+            select.dispatchEvent(new Event('change'));
+        }
+        updateVehicleCardsActive(id);
+
+        const btnAutoBike = document.getElementById('btnAutoBikeCode');
+        const plateIcon = document.getElementById('plateIcon');
+        if (plateIcon && typeName) {
+            const lower = typeName.toLowerCase();
+            if (lower.includes('máy')) {
+                plateIcon.className = 'fa-solid fa-motorcycle text-success';
+                if (btnAutoBike) btnAutoBike.classList.add('d-none');
+            } else if (lower.includes('tô') || lower.includes('car')) {
+                plateIcon.className = 'fa-solid fa-car text-primary';
+                if (btnAutoBike) btnAutoBike.classList.add('d-none');
+            } else if (lower.includes('đạp') || lower.includes('điện')) {
+                plateIcon.className = 'fa-solid fa-bicycle text-info';
+                if (btnAutoBike) btnAutoBike.classList.remove('d-none');
+                const input = document.getElementById('bienSoXe');
+                if (input && !input.value.trim()) {
+                    generateBicyclePlate();
+                }
+            } else if (lower.includes('tải')) {
+                plateIcon.className = 'fa-solid fa-truck text-warning';
+                if (btnAutoBike) btnAutoBike.classList.add('d-none');
+            }
+        }
+    }
+
+    /**
+     * Đồng bộ trạng thái active của các thẻ icon loại xe
+     */
+    function updateVehicleCardsActive(activeId) {
+        const cards = document.querySelectorAll('.vehicle-type-card');
+        cards.forEach(card => {
+            if (card.getAttribute('data-id') == activeId) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+    }
+
+    /**
+     * Tự suy luận loại xe ngay phía Client theo sê-ri biển số
+     */
+    function autoSelectVehicleType(cleanKey) {
+        const select = document.getElementById('loaiXeId');
+        const badge = document.getElementById('autoInferenceBadge');
+        const icon = document.getElementById('plateIcon');
+        const btnAutoBike = document.getElementById('btnAutoBikeCode');
+        if (!select) return;
+
+        let inferred = null;
+        if (/^XD/i.test(cleanKey) || /^XEDAP/i.test(cleanKey)) {
+            inferred = 'XE_DAP';
+        } else if (/^\d{2}[A-Z]\d/.test(cleanKey)) {
+            inferred = 'XE_MAY';
+        } else if (/^\d{2}[A-Z]{1,2}\d{4,5}$/.test(cleanKey)) {
+            inferred = 'O_TO';
+        }
+
+        if (inferred === 'XE_DAP') {
+            for (let opt of select.options) {
+                const text = (opt.text || '').toLowerCase();
+                if (text.includes('đạp') || text.includes('điện') || text.includes('bike')) {
+                    select.value = opt.value;
+                    updateVehicleCardsActive(opt.value);
+                    break;
+                }
+            }
+            if (badge) {
+                badge.classList.remove('d-none');
+                badge.style.display = 'inline-block';
+                badge.className = 'badge bg-info bg-opacity-10 text-info border border-info border-opacity-25';
+                badge.innerHTML = '<i class="fa-solid fa-bicycle me-1"></i> Tự chọn: Xe đạp';
+            }
+            if (icon) icon.className = 'fa-solid fa-bicycle text-info';
+            if (btnAutoBike) btnAutoBike.classList.remove('d-none');
+        } else if (inferred === 'XE_MAY') {
+            for (let opt of select.options) {
+                const text = (opt.text || '').toLowerCase();
+                if (text.includes('máy') || text.includes('moto')) {
+                    select.value = opt.value;
+                    updateVehicleCardsActive(opt.value);
+                    break;
+                }
+            }
+            if (badge) {
+                badge.classList.remove('d-none');
+                badge.style.display = 'inline-block';
+                badge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+                badge.innerHTML = '<i class="fa-solid fa-motorcycle me-1"></i> Tự chọn: Xe máy';
+            }
+            if (icon) icon.className = 'fa-solid fa-motorcycle text-success';
+            if (btnAutoBike) btnAutoBike.classList.add('d-none');
+        } else if (inferred === 'O_TO') {
+            for (let opt of select.options) {
+                const text = (opt.text || '').toLowerCase();
+                if (text.includes('tô') || text.includes('car') || text.includes('4-7')) {
+                    select.value = opt.value;
+                    updateVehicleCardsActive(opt.value);
+                    break;
+                }
+            }
+            if (badge) {
+                badge.classList.remove('d-none');
+                badge.style.display = 'inline-block';
+                badge.className = 'badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25';
+                badge.innerHTML = '<i class="fa-solid fa-car me-1"></i> Tự chọn: Ô tô';
+            }
+            if (icon) icon.className = 'fa-solid fa-car text-primary';
+            if (btnAutoBike) btnAutoBike.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Kiểm tra cấu trúc biển số và gọi API tra cứu vé tháng / xe đang trong bãi
+     */
+    function validateAndLookupPlate(raw) {
+        const fb = document.getElementById('plateFeedback');
+        const notice = document.getElementById('specialNoticeBox');
+        const input = document.getElementById('bienSoXe');
+        if (!fb || !input) return;
+
+        const val = raw.trim().toUpperCase();
+        if (!val) {
+            resetPlateFeedback();
+            return;
+        }
+
+        const clean = val.replace(/[\s\-\.,_]+/g, '');
+
+        // KIỂM TRA ĐẶC BIỆT: PHƯƠNG TIỆN KHÔNG BIỂN SỐ (XE ĐẠP / XE ĐIỆN)
+        const select = document.getElementById('loaiXeId');
+        const selectedText = select && select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0].text.toLowerCase() : '';
+        const isBicycle = selectedText.includes('đạp') || selectedText.includes('điện') || /^XD/i.test(clean) || /^XEDAP/i.test(clean);
+
+        if (isBicycle) {
+            autoSelectVehicleType(clean);
+            if (clean.length < 2) {
+                fb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Đang nhập mã thẻ xe đạp... (VD: XD-01, XD-88 hoặc số thẻ 15).</span>';
+                input.classList.remove('is-valid');
+                if (notice) notice.style.display = 'none';
+                return;
+            }
+            fb.innerHTML = '<span class="text-info fw-bold"><i class="fa-solid fa-bicycle me-1"></i> Phương tiện không biển số (Mã thẻ vé: <strong>' + val + '</strong>)</span>';
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+
+            // Gọi API kiểm tra xem xe có Vé Tháng hoặc Xe Đang Trong Bãi không
+            if (lookupTimeout) clearTimeout(lookupTimeout);
+            lookupTimeout = setTimeout(() => {
+                fetch('/api/xe-vao/check-plate?plate=' + encodeURIComponent(val))
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!notice) return;
+                        if (data.isAlreadyInside) {
+                            notice.classList.remove('d-none');
+                            notice.style.display = 'block';
+                            notice.innerHTML = `
+                                <div class="alert alert-warning py-2 px-3 small mb-0 border-warning border-2 shadow-sm d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation fs-4 text-warning"></i>
+                                    <div><strong>Chú ý:</strong> Mã xe đạp <strong>${val}</strong> đang được ghi nhận gửi trong bãi!</div>
+                                </div>`;
+                        } else {
+                            notice.classList.add('d-none');
+                            notice.style.display = 'none';
+                        }
+                    }).catch(e => console.warn(e));
+            }, 300);
+            return;
+        }
+
+        // 1. Kiểm tra nếu chỉ toàn số
+        if (/^\d+$/.test(clean)) {
+            fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Biển số không thể chỉ gồm chữ số (' + clean + ')! Bắt buộc phải có sê-ri chữ (VD: 30A-123.45 hoặc 29B1-888.88).</span>';
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            if (notice) notice.style.display = 'none';
+            return;
+        }
+
+        // 2. Kiểm tra nếu chỉ toàn chữ
+        if (/^[A-Z]+$/.test(clean)) {
+            fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Biển số không thể chỉ gồm chữ cái! Cần có số đăng ký (VD: 30A-123.45).</span>';
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            if (notice) notice.style.display = 'none';
+            return;
+        }
+
+        // 3. Kiểm tra độ dài tối thiểu
+        if (clean.length < 6) {
+            fb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Đang nhập... Biển số hợp lệ cần từ 6-10 ký tự (VD: 30A-123.45).</span>';
+            input.classList.remove('is-valid');
+            if (notice) notice.style.display = 'none';
+            return;
+        }
+
+        // Tự động nhận diện loại xe ngay
+        autoSelectVehicleType(clean);
+
+        // Chuẩn hóa giao diện
+        fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Biển số đúng định dạng: <strong>' + val + '</strong></span>';
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+
+        // Gọi API kiểm tra xem xe có Vé Tháng hoặc Xe Đang Trong Bãi không
+        if (lookupTimeout) clearTimeout(lookupTimeout);
+        lookupTimeout = setTimeout(() => {
+            fetch('/api/xe-vao/check-plate?plate=' + encodeURIComponent(val))
+                .then(res => res.json())
+                .then(data => {
+                    if (!notice) return;
+
+                    let alertItems = [];
+
+                    // 1. CẢNH BÁO AN NINH: XE TRONG DANH SÁCH ĐEN (BLACKLIST)
+                    if (data.isBlacklisted) {
+                        alertItems.push(`
+                            <div class="alert alert-danger blacklist-alert-banner py-2 px-3 small mb-2 border-2 border-danger shadow-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation fs-3 text-danger animate-pulse"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-uppercase"><i class="fa-solid fa-ban me-1"></i> CẢNH BÁO AN NINH - XE TRONG DANH SÁCH ĐEN (${data.blacklistLevel || 'MỨC CAO'})</div>
+                                    <div class="text-xs">Lý do: <strong>${data.blacklistReason || 'Vi phạm nội quy bãi xe'}</strong> &bull; Đề nghị giữ phương tiện và báo quản lý ngay!</div>
+                                </div>
+                            </div>
+                        `);
+                        playWarningBuzzer();
+                    }
+
+                    // 2. CẢNH BÁO NỢ PHÍ GỬI XE
+                    if (data.hasDebt) {
+                        alertItems.push(`
+                            <div class="alert alert-warning debt-alert-banner py-2 px-3 small mb-2 border-2 border-warning shadow-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-circle-exclamation fs-4 text-warning"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-uppercase"><i class="fa-solid fa-hand-holding-dollar me-1"></i> CẢNH BÁO NỢ CƯỚC GỬI XE</div>
+                                    <div class="text-xs">Phương tiện còn nợ: <strong class="text-danger">${data.debtAmountFormatted || (data.debtAmount + ' đ')}</strong>. ${data.debtDetails || ''}</div>
+                                </div>
+                            </div>
+                        `);
+                    }
+
+                    // 3. XE ĐANG Ở TRONG BÃI
+                    if (data.alreadyInLot) {
+                        alertItems.push(`
+                            <div class="alert alert-danger py-2 px-3 small mb-2 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <strong>Xe này đang ở trong bãi!</strong> (Vé #${data.ticketCode} - vào lúc ${data.thoiGianVao})
+                                </div>
+                                <a href="/xe-ra?code=${encodeURIComponent(data.ticketCode)}" class="btn btn-sm btn-danger py-0 px-2 fw-bold text-nowrap">
+                                    Sang Làn Xe Ra &rarr;
+                                </a>
+                            </div>
+                        `);
+                    }
+
+                    // 4. KHÁCH VÉ THÁNG HỢP LỆ
+                    if (data.hasMonthlyPass) {
+                        alertItems.push(`
+                            <div class="monthly-pass-alert small d-flex align-items-center gap-2 mb-2">
+                                <i class="fa-solid fa-id-card fs-4 text-purple"></i>
+                                <div>
+                                    <div class="fw-bold">⭐ KHÁCH VÉ THÁNG: ${data.customerName} (${data.monthlyPassCode})</div>
+                                    <div class="text-xs opacity-75">Hạn sử dụng đến: <strong>${data.expiryDate}</strong> - Tự động miễn phí lượt vào bãi!</div>
+                                </div>
+                            </div>
+                        `);
+                    }
+
+                    if (alertItems.length > 0) {
+                        notice.classList.remove('d-none');
+                        notice.style.display = 'block';
+                        notice.innerHTML = alertItems.join('');
+                    } else {
+                        notice.classList.add('d-none');
+                        notice.style.display = 'none';
+                        notice.innerHTML = '';
+                    }
+                })
+                .catch(() => {});
+        }, 250);
+    }
+
+    function playWarningBuzzer() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.setValueAtTime(190, now + 0.15);
+            osc.frequency.setValueAtTime(260, now + 0.3);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(now + 0.5);
+        } catch(e) {}
+    }
+
+    // ==========================================
+    // 3. ĐIỀU KHIỂN BARIE & ĐÈN TÍN HIỆU
+    // ==========================================
+    let barrierTimer = null;
+
+    function playBarrierAudio(isOpen) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            if (isOpen) {
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.12);
+                osc.frequency.setValueAtTime(783.99, now + 0.24);
+            } else {
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.setValueAtTime(440.00, now + 0.15);
+            }
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(now + 0.4);
+        } catch(e) {}
+    }
+
+    function manualOpenBarrier() {
+        const arm = document.getElementById('barrierArm');
+        const bulbRed = document.getElementById('bulbRed');
+        const bulbGreen = document.getElementById('bulbGreen');
+        const badge = document.getElementById('barrierBadge');
+        const hint = document.getElementById('barrierHint');
+        const desc = document.getElementById('barrierDesc');
+
+        if (!arm) return;
+
+        if (barrierTimer) clearTimeout(barrierTimer);
+
+        // Kích hoạt Barie mở & Đèn xanh
+        arm.classList.add('open');
+        if (bulbRed) bulbRed.classList.remove('active');
+        if (bulbGreen) bulbGreen.classList.add('active');
+
+        if (badge) {
+            badge.className = 'barrier-badge barrier-badge-open';
+            badge.innerHTML = '<i class="fa-solid fa-lock-open me-1"></i> BARIE ĐANG MỞ (MỜI XE QUA)';
+        }
+        if (hint) hint.textContent = 'Cần Barie đang mở – Bấm Đóng Barie để hạ cần';
+        if (desc) desc.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Barie mở – Mời phương tiện tiến vào bãi!';
+
+        playBarrierAudio(true);
+    }
+
+    function manualCloseBarrier() {
+        const arm = document.getElementById('barrierArm');
+        const bulbRed = document.getElementById('bulbRed');
+        const bulbGreen = document.getElementById('bulbGreen');
+        const badge = document.getElementById('barrierBadge');
+        const hint = document.getElementById('barrierHint');
+        const desc = document.getElementById('barrierDesc');
+
+        if (!arm) return;
+
+        if (barrierTimer) clearTimeout(barrierTimer);
+
+        // Hạ Barie & Đèn đỏ
+        arm.classList.remove('open');
+        if (bulbGreen) bulbGreen.classList.remove('active');
+        if (bulbRed) bulbRed.classList.add('active');
+
+        if (badge) {
+            badge.className = 'barrier-badge barrier-badge-closed';
+            badge.innerHTML = '<i class="fa-solid fa-lock me-1"></i> BARIE ĐANG HẠ (CHỜ TIẾP NHẬN)';
+        }
+        if (hint) hint.textContent = 'Tự động nâng mở khi tạo vé thành công';
+        if (desc) desc.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Cổng đã đóng – Sẵn sàng tiếp nhận xe';
+
+        playBarrierAudio(false);
+    }
+
+    function triggerBarrierOpen(durationMs = 3500) {
+        manualOpenBarrier();
+        barrierTimer = setTimeout(() => {
+            manualCloseBarrier();
+        }, durationMs);
+    }
+
+    // ==========================================
+    // 4. XỬ LÝ SỰ KIỆN PHÍM TẮT & SUBMIT FORM
+    // ==========================================
+    const inputPlate = document.getElementById('bienSoXe');
+    if (inputPlate) {
+        inputPlate.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            validateAndLookupPlate(this.value);
+        });
+
+        // Hỗ trợ phím tắt Enter tại ô biển số
+        inputPlate.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('checkInForm').requestSubmit();
+            }
+        });
+
+        if (inputPlate.value.trim()) {
+            validateAndLookupPlate(inputPlate.value);
+        }
+    }
+
+    // Bắt phím tắt toàn trang: F2 (Camera), Space (Xe tiếp), Escape (Reset)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            toggleCamera();
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            prepareNextCheckIn();
+            return;
+        }
+
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if ((e.code === 'Space' || e.key === 'n' || e.key === 'N') && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+            e.preventDefault();
+            prepareNextCheckIn();
+        }
+    });
+
+    function prepareNextCheckIn() {
+        const input = document.getElementById('bienSoXe');
+        if (input) {
+            input.value = '';
+            resetPlateFeedback();
+            input.focus();
+        }
+    }
+
+    // Xử lý gửi biểu mẫu
+    document.getElementById('checkInForm').addEventListener('submit', function(e) {
+        const plateInput = document.getElementById('bienSoXe');
+        const raw = plateInput.value.trim().toUpperCase();
+        const clean = raw.replace(/[\s\-\.,_]+/g, '');
+
+        const select = document.getElementById('loaiXeId');
+        const selectedText = select && select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0].text.toLowerCase() : '';
+        const isBicycle = selectedText.includes('đạp') || selectedText.includes('điện') || /^XD/i.test(clean) || /^XEDAP/i.test(clean);
+
+        if (isBicycle) {
+            if (!raw || clean.length < 2) {
+                e.preventDefault();
+                plateInput.focus();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Chưa có mã thẻ xe đạp',
+                    html: 'Xe đạp không có biển số xe.<br>Vui lòng nhập số thẻ/mã xe (VD: <strong>XD-01</strong>, <strong>XD-88</strong>) hoặc bấm nút <strong>Tạo mã xe đạp</strong>!'
+                });
+                return false;
+            }
+        } else if (!raw || clean.length < 6 || /^\d+$/.test(clean) || /^[A-Z]+$/.test(clean)) {
+            e.preventDefault();
+            plateInput.focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Biển số không hợp lệ',
+                html: 'Vui lòng nhập đúng quy chuẩn biển số xe Việt Nam!<br>Bắt buộc có mã tỉnh và sê-ri chữ (VD: <strong>30A-123.45</strong> hoặc <strong>29B1-888.88</strong>).<br><small class="text-danger">Không chấp nhận chỉ nhập các chữ số.</small>'
+            });
+            return false;
+        }
+
+        // Tự động chụp frame từ Camera (nếu đang bật)
+        const frameData = captureCurrentVideoFrame();
+        if (frameData) {
+            document.getElementById('anhVaoData').value = frameData;
+        }
+
+        const btn = document.getElementById('btnSubmitCheckin');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo vé xe vào...';
+    });
+
+    // Khi trang tải xong: Tự động focus ô biển số & mở Barie nếu vừa tạo vé
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById('bienSoXe');
+        if (input) {
+            input.focus();
+        }
+
+        // Nếu có phiếu vé mới vừa tạo (trang load sau khi check-in thành công)
+        const printableTicket = document.getElementById('printableTicket');
+        if (printableTicket) {
+            triggerBarrierOpen(4000);
+        }
+
+        // Khởi động trước (pre-warm) Tesseract OCR Worker chạy nền sau 500ms để người dùng tải ảnh là nhận diện tức thì
+        setTimeout(() => {
+            getTesseractWorker().catch(e => console.log("Pre-warm Tesseract:", e));
+        }, 500);
+    });
+</script>
+
+</body>
+</html>

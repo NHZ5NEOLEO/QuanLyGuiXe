@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - QUẢN LÝ GỬI XE'">Mã QR Cổng - QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, a, label, li, td, th {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        div:not([class*="fa-"]), span:not([class*="fa-"]) {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .fa, .fas, .fa-solid {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 900 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .far, .fa-regular {
+            font-family: "Font Awesome 6 Free" !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .fab, .fa-brands {
+            font-family: "Font Awesome 6 Brands" !important;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            display: inline-block;
+        }
+        .fa::before, .fas::before, .fa-solid::before,
+        .far::before, .fa-regular::before,
+        .fab::before, .fa-brands::before,
+        [class*="fa-"]::before, [class^="fa-"]::before {
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            font-style: inherit !important;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background-color: var(--bg-main, #f8fafc);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .qr-gate-poster {
+            background: #ffffff;
+            border: 2px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-lg, 12px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 480px;
+            width: 100%;
+            padding: 36px 32px;
+            text-align: center;
+        }
+        .qr-image-wrapper {
+            background: #ffffff;
+            padding: 16px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        .qr-image-wrapper img {
+            width: 240px;
+            height: 240px;
+            display: block;
+        }
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .qr-gate-poster {
+                border: 2px solid #000000 !important;
+                box-shadow: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 20mm !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="qr-gate-poster">
+    <div class="mb-2">
+        <span class="badge bg-primary px-3 py-2 text-uppercase fs-6" th:text="${gateType}">CỔNG KIỂM SOÁT</span>
+    </div>
+    <h2 class="fw-bold text-dark mb-1">PARKING</h2>
+    <p class="text-secondary small mb-3">Hệ thống Quản lý Bãi xe</p>
+
+    <div class="alert alert-info py-2 px-3 small rounded-3 mb-2">
+        <i class="fa-solid fa-mobile-screen-button me-1"></i>
+        <span th:if="${gateType == 'CỔNG VÀO'}">Quét mã QR để đăng ký gửi xe vào bãi</span>
+        <span th:if="${gateType == 'CỔNG RA'}">Quét mã QR để tra cứu và đối soát nhận xe</span>
+        <span th:if="${gateType != 'CỔNG VÀO' && gateType != 'CỔNG RA'}">Dùng điện thoại quét mã QR bên dưới</span>
+    </div>
+
+    <div class="qr-image-wrapper">
+        <img th:src="${qrImage}" alt="Mã QR Cổng">
+    </div>
+
+    <div class="font-monospace small text-muted mb-4 text-break" th:text="${targetUrl}">
+        http://localhost/khach-gui-xe
+    </div>
+
+    <div class="d-flex gap-2 justify-content-center no-print">
+        <button type="button" class="btn btn-primary fw-semibold px-4" onclick="window.print()">
+            <i class="fa-solid fa-print me-1"></i> In Biển Bạt / Standee
+        </button>
+        <a href="/gate" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
