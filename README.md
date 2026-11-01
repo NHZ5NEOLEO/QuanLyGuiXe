@@ -1,4 +1,4 @@
-# Hệ Thống Quản Lý Bãi Giữ Xe Thông Minh (Smart Parking Management System)
+# Hệ Thống Quản Lý Gửi Xe (Parking Management System)
 
 Dự án phần mềm hoàn chỉnh phục vụ tự động hóa quản lý bãi đỗ xe ô tô, xe máy và xe đạp thông minh: nhận diện biển số xe (OCR), quét mã QR vé xe, thanh toán không dùng tiền mặt (VietQR), sơ đồ ô đỗ trực quan và báo cáo doanh thu ca trực.
 
