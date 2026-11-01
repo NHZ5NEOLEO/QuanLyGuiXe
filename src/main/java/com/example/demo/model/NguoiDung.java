@@ -25,6 +25,9 @@ public class NguoiDung {
     @Column(length = 20)
     private String soDienThoai;
 
+    @Column(length = 120)
+    private String email;
+
     private Boolean trangThai = true;
 
     public NguoiDung() {
@@ -36,6 +39,16 @@ public class NguoiDung {
         this.hoTen = hoTen;
         this.vaiTro = vaiTro;
         this.soDienThoai = soDienThoai;
+        this.trangThai = true;
+    }
+
+    public NguoiDung(String tenDangNhap, String matKhau, String hoTen, String vaiTro, String soDienThoai, String email) {
+        this.tenDangNhap = tenDangNhap;
+        this.matKhau = matKhau;
+        this.hoTen = hoTen;
+        this.vaiTro = vaiTro;
+        this.soDienThoai = soDienThoai;
+        this.email = email;
         this.trangThai = true;
     }
 
@@ -85,6 +98,14 @@ public class NguoiDung {
 
     public void setSoDienThoai(String soDienThoai) {
         this.soDienThoai = soDienThoai;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Boolean getTrangThai() {

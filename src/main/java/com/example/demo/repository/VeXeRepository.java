@@ -14,18 +14,26 @@ public interface VeXeRepository extends JpaRepository<VeXe, Integer> {
 
     Optional<VeXe> findFirstByBienSoXeAndTrangThaiOrderByThoiGianVaoDesc(String bienSoXe, String trangThai);
 
+    Optional<VeXe> findFirstByBienSoCleanAndTrangThai(String bienSoClean, String trangThai);
+
+    boolean existsByBienSoCleanAndTrangThai(String bienSoClean, String trangThai);
+
     List<VeXe> findByTrangThaiOrderByThoiGianVaoDesc(String trangThai);
 
     List<VeXe> findByBienSoXeOrderByThoiGianVaoDesc(String bienSoXe);
+
+    List<VeXe> findByBienSoCleanOrderByThoiGianVaoDesc(String bienSoClean);
 
     List<VeXe> findTop10ByOrderByThoiGianVaoDesc();
 
     long countByTrangThai(String trangThai);
 
+    long countByTrangThaiAndLoaiXeId(String trangThai, Long loaiXeId);
+
     @Query("SELECT COUNT(v) FROM VeXe v WHERE v.thoiGianRa IS NULL OR v.trangThai LIKE '%gửi%' OR v.trangThai LIKE '%gui%'")
     long countActiveVehicles();
 
-    @Query("SELECT v FROM VeXe v WHERE (v.thoiGianRa IS NULL OR v.trangThai LIKE '%gửi%') AND (LOWER(v.bienSoXe) = LOWER(:plate) OR LOWER(v.bienSoXe) = LOWER(:cleanKey))")
+    @Query("SELECT v FROM VeXe v WHERE (v.thoiGianRa IS NULL OR v.trangThai LIKE '%gửi%') AND (LOWER(v.bienSoXe) = LOWER(:plate) OR LOWER(v.bienSoClean) = LOWER(:cleanKey))")
     List<VeXe> findActiveByPlateList(@Param("plate") String plate, @Param("cleanKey") String cleanKey);
 
     long countByThoiGianVaoBetween(LocalDateTime start, LocalDateTime end);
@@ -53,13 +61,21 @@ public interface VeXeRepository extends JpaRepository<VeXe, Integer> {
         return calculateRevenueBetweenAndStatus(start, end, "Đã ra");
     }
 
+    @Query("SELECT COALESCE(SUM(v.chiPhi), 0.0) FROM VeXe v WHERE v.thoiGianRa BETWEEN :start AND :end AND v.trangThai = 'Đã ra' AND v.loaiXe.id = :loaiXeId")
+    Double calculateRevenueBetweenAndLoaiXe(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("loaiXeId") Long loaiXeId);
+
+    @Query("SELECT COUNT(v) FROM VeXe v WHERE v.thoiGianRa BETWEEN :start AND :end AND v.trangThai = 'Đã ra' AND v.loaiXe.id = :loaiXeId")
+    long countExitedBetweenAndLoaiXe(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("loaiXeId") Long loaiXeId);
+
     @Query("SELECT v FROM VeXe v WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(v.bienSoXe) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.maQR) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR v.trangThai = :trangThai) AND " +
            "(:loaiXeId IS NULL OR (v.loaiXe IS NOT NULL AND v.loaiXe.id = :loaiXeId)) AND " +
-           "(:startDate IS NULL OR v.thoiGianVao >= :startDate) AND " +
-           "(:endDate IS NULL OR v.thoiGianVao <= :endDate) " +
-           "ORDER BY v.thoiGianVao DESC")
+           "(:startDate IS NULL OR " +
+           "  (CASE WHEN v.trangThai = 'Đã ra' THEN v.thoiGianRa ELSE v.thoiGianVao END) >= :startDate) AND " +
+           "(:endDate IS NULL OR " +
+           "  (CASE WHEN v.trangThai = 'Đã ra' THEN v.thoiGianRa ELSE v.thoiGianVao END) <= :endDate) " +
+           "ORDER BY (CASE WHEN v.trangThai = 'Đã ra' THEN v.thoiGianRa ELSE v.thoiGianVao END) DESC")
     List<VeXe> searchHistory(
             @Param("keyword") String keyword,
             @Param("trangThai") String trangThai,

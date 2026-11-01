@@ -105,7 +105,24 @@ public class GateController {
         }
 
         String raw = plate.trim();
-        var vResult = BienSoXeHelper.validate(raw);
+        String targetPlate = raw;
+        if (raw.toUpperCase().startsWith("VT-")) {
+            var cardOpt = monthlyTicketService.timTheoMaThe(raw.toUpperCase());
+            if (cardOpt.isPresent()) {
+                targetPlate = cardOpt.get().getBienSoXe();
+                res.put("scannedCardCode", cardOpt.get().getMaThe());
+                res.put("resolvedPlate", targetPlate);
+            }
+        } else if (raw.toUpperCase().startsWith("BK-")) {
+            var bkOpt = datChoTruocRepository.findByMaDatCho(raw.toUpperCase());
+            if (bkOpt.isPresent()) {
+                targetPlate = bkOpt.get().getBienSoXe();
+                res.put("scannedBookingCode", bkOpt.get().getMaDatCho());
+                res.put("resolvedPlate", targetPlate);
+            }
+        }
+
+        var vResult = BienSoXeHelper.validate(targetPlate);
         res.put("valid", vResult.valid());
         res.put("message", vResult.message());
         res.put("displayValue", vResult.displayValue());
@@ -286,8 +303,12 @@ public class GateController {
     @GetMapping({"/xe-ra", "/nhan-xe", "/parking/check-out"})
     public String checkOutPage(
             @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "maQR", required = false) String maQR,
             Model model
     ) {
+        if ((code == null || code.trim().isEmpty()) && maQR != null && !maQR.trim().isEmpty()) {
+            code = maQR;
+        }
         if (code != null && !code.trim().isEmpty()) {
             try {
                 CheckOutPreviewResponse preview = parkingService.previewCheckOut(code.trim());
@@ -337,9 +358,11 @@ public class GateController {
     public String handleCheckOut(
             @RequestParam(value = "veXeId", required = false) Integer veXeId,
             @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "bienSoThucTe", required = false) String bienSoThucTe,
             @RequestParam(value = "hinhThucThanhToan", defaultValue = "TIEN_MAT") String hinhThucThanhToan,
             @RequestParam(value = "anhRaData", required = false) String anhRaData,
             @RequestParam(value = "ghiChu", required = false) String ghiChu,
+            java.security.Principal principal,
             RedirectAttributes redirectAttributes
     ) {
         try {
@@ -350,10 +373,41 @@ public class GateController {
             if (veXeId == null) {
                 throw new IllegalArgumentException("Vui lòng tra cứu hoặc chọn vé xe hợp lệ trước khi xác nhận!");
             }
-            VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThucThanhToan, anhRaData, ghiChu);
+            String staff = principal != null ? principal.getName() : "nhan_vien";
+            VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThucThanhToan, anhRaData, ghiChu, bienSoThucTe, staff);
+            
+            if ("CHO_THANH_TOAN".equals(veXe.getTrangThaiThanhToan())) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Đã tạo giao dịch chuyển khoản cho xe: " + veXe.getBienSoXe() +
+                                " | Số tiền: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ. Đang chờ nhân viên đối soát nhận tiền để hoàn tất xe ra.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Xác nhận xe ra thành công! Biển số: " + veXe.getBienSoXe() +
+                                " | Phí: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ.");
+            }
+            redirectAttributes.addFlashAttribute("completedTicket", veXe);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/xe-ra";
+    }
+
+    /**
+     * Xác nhận đã nhận được tiền chuyển khoản ngân hàng và hoàn tất lượt xe ra
+     */
+    @PostMapping({"/xe-ra/xac-nhan-chuyen-khoan", "/nhan-xe/xac-nhan-chuyen-khoan"})
+    public String handleConfirmBankTransfer(
+            @RequestParam("veXeId") Integer veXeId,
+            @RequestParam(value = "maGiaoDich", required = false) String maGiaoDich,
+            java.security.Principal principal,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            String staff = principal != null ? principal.getName() : "nhan_vien";
+            String txn = (maGiaoDich != null && !maGiaoDich.isBlank()) ? maGiaoDich : "BANK-" + System.currentTimeMillis();
+            VeXe veXe = parkingService.xacNhanThanhToanChuyenKhoan(veXeId, txn, staff);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Thanh toán và cho xe ra thành công! Biển số: " + veXe.getBienSoXe() +
-                            " | Phí: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ | Cổng Barie đã mở.");
+                    "Đã xác nhận thanh toán chuyển khoản thành công! Hoàn tất xuất bãi cho xe: " + veXe.getBienSoXe());
             redirectAttributes.addFlashAttribute("completedTicket", veXe);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -387,8 +441,9 @@ public class GateController {
             @RequestParam("veXeId") Integer veXeId,
             @RequestParam(value = "hinhThucThanhToan", defaultValue = "TIEN_MAT") String hinhThucThanhToan,
             @RequestParam(value = "ghiChu", required = false) String ghiChu,
+            java.security.Principal principal,
             RedirectAttributes redirectAttributes
     ) {
-        return handleCheckOut(veXeId, null, hinhThucThanhToan, null, ghiChu, redirectAttributes);
+        return handleCheckOut(veXeId, null, null, hinhThucThanhToan, null, ghiChu, principal, redirectAttributes);
     }
 }

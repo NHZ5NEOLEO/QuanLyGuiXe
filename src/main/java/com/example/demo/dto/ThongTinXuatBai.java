@@ -14,6 +14,8 @@ public class ThongTinXuatBai {
     private boolean laVeThang;
     private String tenKhachHang;
     private Double soTien;
+    private Double phuPhiLuuKho = 0.0;
+    private String quyTacApDung;
     private String vietQrUrl;
     private String anhVaoUrl;
 
@@ -122,5 +124,21 @@ public class ThongTinXuatBai {
 
     public void setAnhVaoUrl(String anhVaoUrl) {
         this.anhVaoUrl = anhVaoUrl;
+    }
+
+    public Double getPhuPhiLuuKho() {
+        return phuPhiLuuKho;
+    }
+
+    public void setPhuPhiLuuKho(Double phuPhiLuuKho) {
+        this.phuPhiLuuKho = phuPhiLuuKho;
+    }
+
+    public String getQuyTacApDung() {
+        return quyTacApDung;
+    }
+
+    public void setQuyTacApDung(String quyTacApDung) {
+        this.quyTacApDung = quyTacApDung;
     }
 }

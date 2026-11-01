@@ -15,9 +15,21 @@ public interface VeThangRepository extends JpaRepository<VeThang, Long> {
 
     Optional<VeThang> findFirstByBienSoXeAndTrangThai(String bienSoXe, String trangThai);
 
+    List<VeThang> findByBienSoXeAndTrangThai(String bienSoXe, String trangThai);
+
     List<VeThang> findByTrangThai(String trangThai);
 
     long countByTrangThai(String trangThai);
+
+    List<VeThang> findByKhachHangIdOrderByNgayBatDauDesc(Long khachHangId);
+
+    List<VeThang> findByKhachHangSoDienThoaiOrderByNgayBatDauDesc(String soDienThoai);
+
+    @Query("SELECT COUNT(v) FROM VeThang v WHERE LOWER(v.bienSoXe) = LOWER(:bienSoXe) AND v.trangThai = 'HOAT_DONG' AND v.ngayHetHan >= :currentDate")
+    long countActiveByBienSoXe(@Param("bienSoXe") String bienSoXe, @Param("currentDate") LocalDate currentDate);
+
+    @Query("SELECT COALESCE(SUM(v.giaTien), 0.0) FROM VeThang v WHERE v.ngayBatDau BETWEEN :startDate AND :endDate")
+    Double calculateRevenueBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("SELECT v FROM VeThang v WHERE " +
            "LOWER(v.bienSoXe) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

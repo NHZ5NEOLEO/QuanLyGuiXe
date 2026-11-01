@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.DashboardStatsDto;
 import com.example.demo.model.LoaiXe;
-import com.example.demo.model.VeXe;
 import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
 import com.example.demo.repository.VeXeRepository;
@@ -55,6 +54,10 @@ public class ReportRestController {
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Ngày bắt đầu không được lớn hơn ngày kết thúc!"));
+        }
+
         LocalDate end = (endDate != null) ? endDate : LocalDate.now();
         LocalDate start = (startDate != null) ? startDate : end.minusDays(6);
 
@@ -75,17 +78,17 @@ public class ReportRestController {
             cur = cur.plusDays(1);
         }
 
-        // Doanh thu theo loại xe
+        // Doanh thu theo loại xe (lọc chuẩn theo thoiGianRa đồng nhất với calculateRevenueBetween)
         List<LoaiXe> loaiXes = loaiXeRepository.findAll();
         List<Map<String, Object>> revenueByVehicleType = new ArrayList<>();
         for (LoaiXe lx : loaiXes) {
-            List<VeXe> outList = veXeRepository.searchHistory(null, "Đã ra", lx.getId(), startDt, endDt);
-            double typeTotal = outList.stream().mapToDouble(v -> v.getChiPhi() != null ? v.getChiPhi() : 0.0).sum();
+            Double typeTotal = veXeRepository.calculateRevenueBetweenAndLoaiXe(startDt, endDt, lx.getId());
+            Long ticketCount = veXeRepository.countExitedBetweenAndLoaiXe(startDt, endDt, lx.getId());
             Map<String, Object> item = new HashMap<>();
             item.put("vehicleTypeId", lx.getId());
             item.put("vehicleTypeName", lx.getTenLoai());
-            item.put("ticketCount", outList.size());
-            item.put("totalRevenue", typeTotal);
+            item.put("ticketCount", ticketCount != null ? ticketCount : 0L);
+            item.put("totalRevenue", typeTotal != null ? typeTotal : 0.0);
             revenueByVehicleType.add(item);
         }
 

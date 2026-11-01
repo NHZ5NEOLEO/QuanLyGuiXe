@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Cá Nhân &amp; Tài Khoản — QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='tai-khoan')}"></div>
+
+    <main class="flex-grow-1 pb-5">
+        <!-- =================================================================
+             TIÊU ĐỀ TRANG & BREADCRUMB
+             ================================================================= -->
+        <section class="portal-page-header py-4">
+            <div class="container-xl px-3 px-sm-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2 text-xs">
+                        <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none text-muted"><i class="fa-solid fa-house me-1"></i>Trang chủ</a></li>
+                        <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">Hồ sơ cá nhân</li>
+                    </ol>
+                </nav>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <h1 class="portal-page-title fs-3 fw-bold mb-1 text-dark">HỒ SƠ TÀI KHOẢN</h1>
+                        <p class="portal-page-desc text-muted mb-0 small">
+                            Xem thông tin cá nhân, cập nhật số điện thoại liên hệ, đổi mật khẩu và quản lý danh sách vé tháng.
+                        </p>
+                    </div>
+                    <div>
+                        <a th:href="@{/dang-ky-ve-thang}" class="btn btn-primary d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 text-xs fw-semibold shadow-xs">
+                            <i class="fa-solid fa-id-card"></i>
+                            <span>Đăng ký vé tháng mới</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             MAIN CONTENT: 2 CỘT (TỔNG QUAN TÀI KHOẢN & TAB CHI TIẾT)
+             ================================================================= -->
+        <section class="pt-2">
+            <div class="container-xl px-3 px-sm-4">
+
+                <!-- Alert Thông Báo Chung -->
+                <div th:if="${successMessage != null}" class="alert alert-success border-success d-flex align-items-center gap-2.5 p-3 rounded-3 mb-4 shadow-xs" role="alert">
+                    <i class="fa-solid fa-circle-check text-success fs-5 flex-shrink-0"></i>
+                    <div class="small fw-semibold text-success flex-grow-1" th:text="${successMessage}">
+                        Cập nhật thông tin thành công!
+                    </div>
+                    <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
+
+                <div th:if="${errorMessage != null}" class="alert alert-danger border-danger d-flex align-items-center gap-2.5 p-3 rounded-3 mb-4 shadow-xs" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation text-danger fs-5 flex-shrink-0"></i>
+                    <div class="small fw-semibold text-danger flex-grow-1" th:text="${errorMessage}">
+                        Có lỗi xảy ra, vui lòng kiểm tra lại dữ liệu!
+                    </div>
+                    <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
+
+                <div class="row g-4">
+                    <!-- CỘT TRÁI: THẺ THÔNG TIN TỔNG QUAN -->
+                    <div class="col-lg-4">
+                        <div class="profile-card p-4 text-center">
+                            <!-- Avatar Letter -->
+                            <div class="profile-avatar-wrapper mb-3">
+                                <span th:text="${user.hoTen != null and !user.hoTen.isBlank() ? #strings.substring(user.hoTen, 0, 1).toUpperCase() : 'U'}">U</span>
+                            </div>
+
+                            <h2 class="h5 fw-bold text-dark mb-1" th:text="${user.hoTen != null ? user.hoTen : 'Chưa đặt tên'}">Nguyễn Văn A</h2>
+                            <div class="text-muted text-xs mb-3 font-monospace">@<span th:text="${user.tenDangNhap}">username</span></div>
+
+                            <!-- Role Badge -->
+                            <div class="mb-4">
+                                <span th:if="${user.vaiTro == 'CU_DAN'}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1.5 rounded-pill text-xs fw-semibold">
+                                    <i class="fa-solid fa-building me-1"></i> Cư Dân Tòa Nhà
+                                </span>
+                                <span th:if="${user.vaiTro == 'KHACH_HANG'}" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill text-xs fw-semibold">
+                                    <i class="fa-solid fa-user-tag me-1"></i> Thành Viên
+                                </span>
+                                <span th:if="${user.vaiTro == 'NHAN_VIEN'}" class="badge bg-warning bg-opacity-15 text-dark border border-warning border-opacity-50 px-3 py-1.5 rounded-pill text-xs fw-semibold">
+                                    <i class="fa-solid fa-id-badge me-1"></i> Nhân Viên Trực Cổng
+                                </span>
+                                <span th:if="${user.vaiTro == 'ADMIN'}" class="badge bg-dark bg-opacity-10 text-dark border border-secondary border-opacity-25 px-3 py-1.5 rounded-pill text-xs fw-semibold">
+                                    <i class="fa-solid fa-shield-halved me-1"></i> Quản Trị Viên
+                                </span>
+                            </div>
+
+                            <!-- Stat Boxes -->
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <div class="profile-stat-box">
+                                        <div class="text-xs text-muted fw-semibold mb-1">Vé đang hiệu lực</div>
+                                        <div class="fs-4 fw-bold text-success" th:text="${activeTicketsCount}">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="profile-stat-box">
+                                        <div class="text-xs text-muted fw-semibold mb-1">Tổng vé tháng</div>
+                                        <div class="fs-4 fw-bold text-dark" th:text="${totalTicketsCount}">0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- User Info Summary -->
+                            <div class="border-top pt-3 text-start">
+                                <h3 class="text-xs text-uppercase fw-bold text-muted mb-2.5">Thông tin liên hệ</h3>
+                                <ul class="list-unstyled mb-0 d-flex flex-column gap-2 text-xs">
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-phone text-muted avatar-20 text-center"></i>
+                                        <span class="text-muted">SĐT:</span>
+                                        <strong class="text-dark font-monospace" th:text="${user.soDienThoai != null and !user.soDienThoai.isBlank() ? user.soDienThoai : 'Chưa cập nhật'}">0900000000</strong>
+                                    </li>
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-envelope text-muted avatar-20 text-center"></i>
+                                        <span class="text-muted">Email:</span>
+                                        <strong class="text-dark text-truncate mw-180" th:text="${customer.email != null and !customer.email.isBlank() ? customer.email : 'Chưa thiết lập'}">email@example.com</strong>
+                                    </li>
+                                    <li class="d-flex align-items-center gap-2 pt-1 border-top">
+                                        <i class="fa-solid fa-circle-check text-success avatar-20 text-center"></i>
+                                        <span class="text-muted">Trạng thái:</span>
+                                        <span class="text-success fw-bold">Hoạt động bình thường</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CỘT PHẢI: NAV TABS & CÁC FORM CHỈNH SỬA -->
+                    <div class="col-lg-8">
+                        <div class="profile-card p-3 p-sm-4">
+                            <!-- Nav Pills -->
+                            <ul class="nav nav-pills gap-2 border-bottom pb-3 mb-4" id="profileTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="profile-tab-pill active" id="tab-info-btn" data-bs-toggle="pill" data-bs-target="#tab-info-pane" type="button" role="tab" aria-controls="tab-info-pane" aria-selected="true">
+                                        <i class="fa-solid fa-user-pen"></i>
+                                        <span>Thông tin cá nhân</span>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="profile-tab-pill" id="tab-password-btn" data-bs-toggle="pill" data-bs-target="#tab-password-pane" type="button" role="tab" aria-controls="tab-password-pane" aria-selected="false">
+                                        <i class="fa-solid fa-key"></i>
+                                        <span>Đổi mật khẩu</span>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="profile-tab-pill" id="tab-tickets-btn" data-bs-toggle="pill" data-bs-target="#tab-tickets-pane" type="button" role="tab" aria-controls="tab-tickets-pane" aria-selected="false">
+                                        <i class="fa-solid fa-ticket"></i>
+                                        <span>Vé tháng của tôi</span>
+                                        <span class="badge bg-primary rounded-pill ms-1 text-2xs" th:text="${totalTicketsCount}">0</span>
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Contents -->
+                            <div class="tab-content" id="profileTabContent">
+
+                                <!-- =============================================================
+                                     TAB 1: THÔNG TIN CÁ NHÂN
+                                     ============================================================= -->
+                                <div class="tab-pane fade show active" id="tab-info-pane" role="tabpanel" aria-labelledby="tab-info-btn">
+                                    <div class="mb-3">
+                                        <h3 class="h6 fw-bold text-dark mb-1">Cập Nhật Thông Tin Cá Nhân</h3>
+                                        <p class="text-muted text-xs mb-0">
+                                            Thay đổi họ tên, số điện thoại hoặc địa chỉ nhận thông báo gia hạn vé tháng.
+                                        </p>
+                                    </div>
+
+                                    <form th:action="@{/tai-khoan/cap-nhat}" method="post" id="formUpdateProfile" accept-charset="UTF-8">
+                                        <div class="row g-3 mb-3">
+                                            <!-- Readonly: Tên đăng nhập -->
+                                            <div class="col-sm-6">
+                                                <label class="form-label text-xs fw-bold text-muted mb-1" for="readonlyUsername">
+                                                    Tên đăng nhập <span class="badge bg-light text-muted border text-2xs ms-1">Cố định</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-at"></i></span>
+                                                    <input type="text" id="readonlyUsername" aria-label="Tên đăng nhập" title="Tên đăng nhập" placeholder="Tên đăng nhập" class="form-control portal-form-control border-start-0 profile-input-readonly" th:value="${user.tenDangNhap}" readonly disabled>
+                                                </div>
+                                            </div>
+
+                                            <!-- Readonly: Vai trò -->
+                                            <div class="col-sm-6">
+                                                <label class="form-label text-xs fw-bold text-muted mb-1" for="readonlyRole">
+                                                    Quyền hạn tài khoản <span class="badge bg-light text-muted border text-2xs ms-1">Cố định</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-shield"></i></span>
+                                                    <input type="text" id="readonlyRole" aria-label="Quyền hạn tài khoản" title="Quyền hạn tài khoản" placeholder="Quyền hạn tài khoản" class="form-control portal-form-control border-start-0 profile-input-readonly" th:value="${user.vaiTro}" readonly disabled>
+                                                </div>
+                                            </div>
+
+                                            <!-- Editable: Họ và tên -->
+                                            <div class="col-sm-6">
+                                                <label class="form-label text-xs fw-bold text-dark mb-1" for="hoTen">
+                                                    Họ và tên <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-user"></i></span>
+                                                    <input type="text" class="form-control portal-form-control border-start-0" id="hoTen" name="hoTen" th:value="${user.hoTen}" placeholder="Nhập họ và tên đầy đủ" required minlength="2" maxlength="100">
+                                                </div>
+                                            </div>
+
+                                            <!-- Editable: Số điện thoại -->
+                                            <div class="col-sm-6">
+                                                <label class="form-label text-xs fw-bold text-dark mb-1" for="soDienThoai">
+                                                    Số điện thoại liên hệ <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-phone"></i></span>
+                                                    <input type="tel" class="form-control portal-form-control border-start-0 font-monospace" id="soDienThoai" name="soDienThoai" th:value="${user.soDienThoai}" placeholder="VD: 0912345678" required pattern="^(0|\+84)[0-9]{8,10}$">
+                                                </div>
+                                                <div class="form-text text-2xs text-muted">Dùng để tra cứu lượt gửi xe và liên kết vé tháng.</div>
+                                            </div>
+
+                                            <!-- Editable: Email -->
+                                            <div class="col-12">
+                                                <label class="form-label text-xs fw-bold text-dark mb-1" for="email">
+                                                    Địa chỉ Email
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-envelope"></i></span>
+                                                    <input type="email" class="form-control portal-form-control border-start-0" id="email" name="email" th:value="${customer.email}" placeholder="VD: name@domain.com">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                                            <div class="text-2xs text-muted">
+                                                <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                                                Dữ liệu cá nhân được lưu trữ an toàn và bảo mật theo quy định.
+                                            </div>
+                                            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill fw-semibold text-xs shadow-xs">
+                                                <i class="fa-solid fa-floppy-disk"></i>
+                                                <span>Lưu thay đổi</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- =============================================================
+                                     TAB 2: ĐỔI MẬT KHẨU
+                                     ============================================================= -->
+                                <div class="tab-pane fade" id="tab-password-pane" role="tabpanel" aria-labelledby="tab-password-btn">
+                                    <div class="mb-3">
+                                        <h3 class="h6 fw-bold text-dark mb-1">Đổi Mật Khẩu Tài Khoản</h3>
+                                        <p class="text-muted text-xs mb-0">
+                                            Để bảo vệ tài khoản, bạn nên sử dụng mật khẩu mạnh gồm chữ, số và ký tự đặc biệt.
+                                        </p>
+                                    </div>
+
+                                    <!-- Alert Mật Khẩu -->
+                                    <div th:if="${passwordSuccess != null}" class="alert alert-success border-success d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3 shadow-xs" role="alert">
+                                        <i class="fa-solid fa-circle-check text-success fs-5 flex-shrink-0"></i>
+                                        <div class="small fw-semibold text-success flex-grow-1" th:text="${passwordSuccess}">
+                                            Đổi mật khẩu thành công!
+                                        </div>
+                                    </div>
+
+                                    <div th:if="${passwordError != null}" class="alert alert-danger border-danger d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3 shadow-xs" role="alert">
+                                        <i class="fa-solid fa-circle-exclamation text-danger fs-5 flex-shrink-0"></i>
+                                        <div class="small fw-semibold text-danger flex-grow-1" th:text="${passwordError}">
+                                            Lỗi đổi mật khẩu!
+                                        </div>
+                                    </div>
+
+                                    <form th:action="@{/tai-khoan/doi-mat-khau}" method="post" id="formChangePassword" accept-charset="UTF-8">
+                                        <!-- Mật khẩu hiện tại -->
+                                        <div class="mb-3">
+                                            <label class="form-label text-xs fw-bold text-dark mb-1" for="matKhauHienTai">
+                                                Mật khẩu hiện tại <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-lock"></i></span>
+                                                <input type="password" class="form-control portal-form-control border-start-0 border-end-0" id="matKhauHienTai" name="matKhauHienTai" placeholder="Nhập mật khẩu đang sử dụng" required>
+                                                <button class="btn btn-outline-secondary border-start-0" type="button" aria-label="Hiển thị hoặc ẩn mật khẩu" title="Hiển thị hoặc ẩn mật khẩu" onclick="togglePasswordVisibility('matKhauHienTai', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mật khẩu mới -->
+                                        <div class="mb-3">
+                                            <label class="form-label text-xs fw-bold text-dark mb-1" for="matKhauMoi">
+                                                Mật khẩu mới <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-key"></i></span>
+                                                <input type="password" class="form-control portal-form-control border-start-0 border-end-0" id="matKhauMoi" name="matKhauMoi" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                                                <button class="btn btn-outline-secondary border-start-0" type="button" aria-label="Hiển thị hoặc ẩn mật khẩu" title="Hiển thị hoặc ẩn mật khẩu" onclick="togglePasswordVisibility('matKhauMoi', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text text-2xs text-muted">Mật khẩu cần ít nhất 6 ký tự, không nên trùng với mật khẩu cũ.</div>
+                                        </div>
+
+                                        <!-- Xác nhận mật khẩu mới -->
+                                        <div class="mb-4">
+                                            <label class="form-label text-xs fw-bold text-dark mb-1" for="xacNhanMatKhau">
+                                                Xác nhận mật khẩu mới <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-shield-halved"></i></span>
+                                                <input type="password" class="form-control portal-form-control border-start-0 border-end-0" id="xacNhanMatKhau" name="xacNhanMatKhau" placeholder="Nhập lại chính xác mật khẩu mới" minlength="6" required>
+                                                <button class="btn btn-outline-secondary border-start-0" type="button" aria-label="Hiển thị hoặc ẩn mật khẩu" title="Hiển thị hoặc ẩn mật khẩu" onclick="togglePasswordVisibility('xacNhanMatKhau', this)">
+                                                    <i class="fa-solid fa-eye text-muted"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center justify-content-end pt-3 border-top">
+                                            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill fw-semibold text-xs shadow-xs">
+                                                <i class="fa-solid fa-check"></i>
+                                                <span>Xác nhận đổi mật khẩu</span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- =============================================================
+                                     TAB 3: VÉ THÁNG CỦA TÔI
+                                     ============================================================= -->
+                                <div class="tab-pane fade" id="tab-tickets-pane" role="tabpanel" aria-labelledby="tab-tickets-btn">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                        <div>
+                                            <h3 class="h6 fw-bold text-dark mb-1">Danh Sách Vé Tháng Đã Đăng Ký</h3>
+                                            <p class="text-muted text-xs mb-0">
+                                                Quản lý thời hạn và thông tin các thẻ vé tháng đã đăng ký cho phương tiện của bạn.
+                                            </p>
+                                        </div>
+                                        <a th:href="@{/dang-ky-ve-thang}" class="btn btn-outline-primary btn-sm rounded-pill px-3 text-2xs fw-bold">
+                                            <i class="fa-solid fa-plus me-1"></i> Đăng ký thêm vé
+                                        </a>
+                                    </div>
+
+                                    <!-- Empty State if no tickets -->
+                                    <div th:if="${#lists.isEmpty(tickets)}" class="text-center py-5 border rounded-3 bg-light bg-opacity-50">
+                                        <div class="stat-icon-wrapper stat-icon-amber mx-auto mb-3 avatar-48">
+                                            <i class="fa-solid fa-ticket"></i>
+                                        </div>
+                                        <div class="h6 fw-bold text-dark mb-1">Chưa có vé tháng nào</div>
+                                        <p class="text-muted text-xs mx-auto mb-3 mw-360">
+                                            Bạn chưa đăng ký vé tháng cho phương tiện nào. Đăng ký vé tháng trực tuyến ngay để tiết kiệm chi phí và ra vào bãi thuận tiện.
+                                        </p>
+                                        <a th:href="@{/dang-ky-ve-thang}" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 text-xs fw-semibold">
+                                            <i class="fa-solid fa-id-card me-1"></i> Đăng ký vé tháng ngay
+                                        </a>
+                                    </div>
+
+                                    <!-- Tickets Table -->
+                                    <div th:unless="${#lists.isEmpty(tickets)}" class="table-responsive">
+                                        <table class="table table-hover align-middle border mb-0 text-xs">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-3">Mã thẻ</th>
+                                                    <th>Biển số xe</th>
+                                                    <th>Loại phương tiện</th>
+                                                    <th>Thời hạn vé</th>
+                                                    <th>Trạng thái</th>
+                                                    <th class="text-end pe-3">Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="tk : ${tickets}">
+                                                    <!-- Mã thẻ -->
+                                                    <td class="ps-3">
+                                                        <strong class="font-monospace text-primary" th:text="${tk.maThe}">VT-0001</strong>
+                                                    </td>
+                                                    <!-- Biển số -->
+                                                    <td>
+                                                        <span class="profile-plate-badge" th:text="${tk.bienSoXe}">29A-123.45</span>
+                                                    </td>
+                                                    <!-- Loại xe -->
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border fw-medium" th:text="${tk.loaiXe != null ? tk.loaiXe.tenLoai : 'Xe máy'}">Xe máy</span>
+                                                    </td>
+                                                    <!-- Thời hạn -->
+                                                    <td>
+                                                        <div>
+                                                            <span class="fw-semibold text-dark" th:text="${#temporals.format(tk.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span>
+                                                            <span class="text-muted"> &rarr; </span>
+                                                            <span class="fw-semibold text-dark" th:text="${#temporals.format(tk.ngayHetHan, 'dd/MM/yyyy')}">01/02/2026</span>
+                                                        </div>
+                                                        <div class="text-2xs text-muted mt-0.5">
+                                                            <span th:if="${tk.isConHan()}" class="text-success fw-semibold">
+                                                                <i class="fa-solid fa-clock me-1"></i>Còn <span th:text="${tk.getSoNgayConLai()}">30</span> ngày
+                                                            </span>
+                                                            <span th:unless="${tk.isConHan()}" class="text-danger fw-semibold">
+                                                                <i class="fa-solid fa-triangle-exclamation me-1"></i>Đã hết hạn
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <!-- Trạng thái -->
+                                                    <td>
+                                                        <span th:if="${tk.isConHan()}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill">
+                                                            <i class="fa-solid fa-circle-check me-1"></i> Đang hiệu lực
+                                                        </span>
+                                                        <span th:unless="${tk.isConHan()}" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1 rounded-pill">
+                                                            <i class="fa-solid fa-circle-xmark me-1"></i> Hết hạn
+                                                        </span>
+                                                    </td>
+                                                    <!-- Thao tác -->
+                                                    <td class="text-end pe-3">
+                                                        <a th:href="@{/dang-ky-ve-thang(plate=${tk.bienSoXe})}" class="btn btn-outline-primary btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold" title="Gia hạn vé cho xe này">
+                                                            <i class="fa-solid fa-rotate-right me-1"></i> Gia hạn
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer -->
+    <div th:replace="~{portal/fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Interactive Script for Tab Routing & Password Toggles -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Tự động chuyển tab theo URL Hash (#tab-password, #tab-tickets, #tab-info)
+            const hash = window.location.hash;
+            if (hash) {
+                let targetTabBtn = null;
+                if (hash === '#tab-password' || hash === '#password') {
+                    targetTabBtn = document.getElementById('tab-password-btn');
+                } else if (hash === '#tab-tickets' || hash === '#ve-thang' || hash === '#tickets') {
+                    targetTabBtn = document.getElementById('tab-tickets-btn');
+                } else if (hash === '#tab-info' || hash === '#info') {
+                    targetTabBtn = document.getElementById('tab-info-btn');
+                }
+                if (targetTabBtn) {
+                    const tabTrigger = new bootstrap.Tab(targetTabBtn);
+                    tabTrigger.show();
+                }
+            }
+
+            // Cập nhật hash trên URL khi bấm đổi tab
+            const tabButtons = document.querySelectorAll('.profile-tab-pill');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('shown.bs.tab', function (e) {
+                    const targetId = e.target.getAttribute('data-bs-target');
+                    if (targetId === '#tab-password-pane') {
+                        history.replaceState(null, null, '#tab-password');
+                    } else if (targetId === '#tab-tickets-pane') {
+                        history.replaceState(null, null, '#tab-tickets');
+                    } else {
+                        history.replaceState(null, null, '#tab-info');
+                    }
+                });
+            });
+        });
+
+        // 2. Chức năng bật / tắt hiển thị mật khẩu
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

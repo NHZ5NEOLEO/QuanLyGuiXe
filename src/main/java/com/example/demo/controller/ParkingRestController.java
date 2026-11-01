@@ -58,7 +58,7 @@ public class ParkingRestController {
      * API Xác nhận nhận xe (Check-out) và hoàn tất thanh toán
      */
     @PostMapping("/check-out")
-    public ResponseEntity<TicketResponseDto> checkOut(@RequestBody CheckOutRequest request) {
+    public ResponseEntity<TicketResponseDto> checkOut(@RequestBody CheckOutRequest request, java.security.Principal principal) {
         Integer veXeId = request.getVeXeId();
         if (veXeId == null && request.getTicketCode() != null) {
             VeXe existing = parkingService.getTicketByCode(request.getTicketCode());
@@ -68,11 +68,14 @@ public class ParkingRestController {
             throw new BadRequestException("Vui lòng cung cấp veXeId hoặc ticketCode để thực hiện Check-out!");
         }
 
+        String staff = principal != null ? principal.getName() : "api_staff";
         VeXe completed = parkingService.confirmCheckOut(
                 veXeId,
                 request.getHinhThucThanhToan(),
                 request.getAnhRaData(),
-                request.getGhiChu()
+                request.getGhiChu(),
+                null,
+                staff
         );
         TicketResponseDto dto = parkingService.mapToTicketResponseDto(completed);
         return ResponseEntity.ok(dto);

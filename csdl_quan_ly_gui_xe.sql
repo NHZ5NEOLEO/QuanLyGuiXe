@@ -217,11 +217,12 @@ INSERT INTO LoaiXe (ten_loai, gia_ban_ngay, gia_ban_dem, gia_thang, icon_class, 
 (N'Xe tải nhỏ / Bán tải', 30000, 50000, 1800000, 'fa-truck', N'Xe bán tải, tải nhỏ dưới 1.5 tấn');
 GO
 
--- Chèn dữ liệu Phân khu bãi đỗ
+-- Chèn dữ liệu Phân khu bãi đỗ (Đã chuẩn hóa 4 khu chức năng, bỏ ô đỗ rời rạc)
 INSERT INTO KhuVuc (ma_khu, ten_khu, loai_xe_id, suc_chua, vi_tri) VALUES
-('A', N'Khu A - Đỗ ô tô', 2, 10, N'Tầng 1 sảnh chính'),
-('B', N'Khu B - Đỗ xe máy', 1, 20, N'Tầng hầm B1'),
-('C', N'Khu C - Xe điện và Xe đạp', 3, 10, N'Sân phụ có mái che');
+('2B', N'Khu Đỗ Xe 2 Bánh', 1, 100, N'Tầng hầm B1 & B2'),
+('4B', N'Khu Đỗ Xe 4 Bánh', 2, 20, N'Tầng 1 sảnh ngoài trời'),
+('XD', N'Khu Dành Cho Xe Đạp', 3, 30, N'Sân phụ có mái che'),
+('24H', N'Khu Lưu Xe Tồn Quá 24H', NULL, 20, N'Khu tập kết lưu kho an ninh');
 GO
 
 -- Chèn dữ liệu Phương tiện quản lý mẫu (Vehicles)

@@ -2,16 +2,24 @@ package com.example.demo.config;
 
 import com.example.demo.model.NguoiDung;
 import com.example.demo.repository.NguoiDungRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 import java.util.List;
 
@@ -26,35 +34,39 @@ public class SecurityConfig {
     }
 
     /**
-     * Cấu hình phân quyền:
-     * - Trang công khai (portal, gửi xe, nhận xe, QR): ai cũng truy cập được
-     * - Trang quản trị (staff, price-settings, settings): chỉ ADMIN
-     * - Trang nghiệp vụ (dashboard, gate, history, reports...): ADMIN + NHAN_VIEN
+     * Cấu hình phân quyền chặt chẽ:
+     * - Trang công khai (portal, tra cứu, bảng giá, đăng ký vé tháng portal, xem QR): Khách hàng truy cập được
+     * - Các API có thể tạo lượt gửi, xác nhận checkout, cập nhật vé, báo cáo hoặc dữ liệu quản trị:
+     *   bắt buộc phải đăng nhập và đúng vai trò (ADMIN hoặc NHAN_VIEN)
+     * - Trang quản trị chuyên sâu (nhân viên, bảng giá, cấu hình, báo cáo doanh thu, phương tiện): chỉ ADMIN
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/logout", "/dang-xuat")
+                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**")
             )
             .authorizeHttpRequests(auth -> auth
-                // Trang và API công khai cho khách hàng
-                .requestMatchers("/", "/home", "/portal", "/portal/**", "/cong-thong-tin", "/cong-thong-tin/**").permitAll()
-                .requestMatchers("/tra-cuu", "/tra-cuu/**", "/tra-cuu-xe", "/tra-cuu-xe/**").permitAll()
-                .requestMatchers("/bang-gia-dich-vu", "/bang-gia-dich-vu/**", "/dich-vu/**").permitAll()
-                .requestMatchers("/dang-ky-ve-thang", "/dang-ky-ve-thang/**").permitAll()
-                .requestMatchers("/danh-gia", "/danh-gia/**").permitAll()
-                .requestMatchers("/qr-entry", "/qr-exit", "/qr-cong-vao", "/qr-cong-ra", "/customer-checkin", "/customer-checkout", "/khach-gui-xe", "/khach-nhan-xe", "/khach-xe-vao", "/khach-xe-ra").permitAll()
-                .requestMatchers("/api/gate/qr-checkin", "/api/gate/qr-checkout-preview", "/api/gate/check-plate", "/api/xe-vao/**", "/api/check-plate", "/api/ve-xe/**").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/parking/qr/**").permitAll()
-                // Static resources
+                // 1. Static resources & assets
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-                // Login / Logout
-                .requestMatchers("/login", "/logout", "/dang-nhap", "/dang-xuat").permitAll()
-                // Actuator & Error
-                .requestMatchers("/actuator/**", "/error").permitAll()
-                // Trang chỉ dành riêng cho ADMIN (Quản trị, Cấu hình, Danh mục xe, Báo cáo tài chính & Dashboard)
+                // 2. Authentication & Error
+                .requestMatchers("/login", "/logout", "/dang-nhap", "/dang-xuat", "/dang-ky", "/register", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**").permitAll()
+                .requestMatchers("/api/auth/**", "/actuator/**", "/error").permitAll()
+                // 3. Quản lý Hồ sơ cá nhân & Tài khoản (Bắt buộc phải đăng nhập)
+                .requestMatchers("/tai-khoan", "/tai-khoan/**", "/ho-so", "/ho-so/**", "/portal/ho-so", "/portal/ho-so/**", "/portal/profile").authenticated()
+                // 4. Trang và API công khai cho khách hàng / cư dân
+                .requestMatchers("/", "/home", "/portal", "/portal/**", "/cong-thong-tin", "/cong-thong-tin/**").permitAll()
+                .requestMatchers("/tra-cuu", "/tra-cuu/**", "/tra-cuu-xe", "/tra-cuu-xe/**", "/portal/api/lookup").permitAll()
+                .requestMatchers("/bang-gia-dich-vu", "/bang-gia-dich-vu/**", "/dich-vu/**").permitAll()
+                .requestMatchers("/dang-ky-ve-thang", "/dang-ky-ve-thang/**", "/portal/api/register-monthly").permitAll()
+                .requestMatchers("/danh-gia", "/danh-gia/**", "/portal/api/feedback", "/portal/api/feedbacks").permitAll()
+                .requestMatchers("/qr-entry", "/qr-exit", "/qr-cong-vao", "/qr-cong-ra", "/customer-checkin", "/customer-checkout", "/khach-gui-xe", "/khach-nhan-xe", "/khach-xe-vao", "/khach-xe-ra").permitAll()
+                // 4. API tra cứu công khai (chỉ xem, không làm thay đổi trạng thái bãi xe hay tạo lượt gửi)
+                .requestMatchers("/api/gate/check-plate", "/api/xe-vao/check-plate", "/api/check-plate").permitAll()
+                .requestMatchers("/api/gate/qr-checkout-preview", "/api/parking/preview-checkout").permitAll()
+                .requestMatchers("/api/gate/check-qr-paid", "/api/parking/qr/**").permitAll()
+
+                // 5. Trang và API chỉ dành riêng cho Quản trị viên (ADMIN)
                 .requestMatchers("/staff/**", "/nhan-vien/**").hasRole("ADMIN")
                 .requestMatchers("/price-settings/**", "/bang-gia/**").hasRole("ADMIN")
                 .requestMatchers("/settings/**", "/cai-dat/**").hasRole("ADMIN")
@@ -62,18 +74,19 @@ public class SecurityConfig {
                 .requestMatchers("/phuong-tien/**", "/vehicles/**", "/api/vehicles/**").hasRole("ADMIN")
                 .requestMatchers("/tong-quan", "/tong-quan/**", "/dashboard", "/dashboard/**", "/index").hasRole("ADMIN")
 
-                // Trang Nghiệp vụ trực cổng & Vận hành bãi đỗ (ADMIN + NHAN_VIEN)
-                .requestMatchers("/gui-xe", "/gui-xe/**", "/nhan-xe", "/nhan-xe/**", "/xe-vao", "/xe-vao/**", "/xe-ra", "/xe-ra/**", "/parking/**", "/tickets/**", "/ve-xe/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/gate/**", "/check-in/**", "/check-out/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/checkin", "/checkout/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                // 6. Trang & API Nghiệp vụ trực cổng & Vận hành bãi đỗ (ADMIN + NHAN_VIEN)
+                // Nghiêm ngặt: Tất cả API tạo lượt gửi xe (check-in) và xác nhận checkout phải yêu cầu nhân viên/admin đăng nhập
+                .requestMatchers("/gui-xe", "/gui-xe/**", "/nhan-xe", "/nhan-xe/**", "/xe-vao", "/xe-vao/**", "/xe-ra", "/xe-ra/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/gate/**", "/check-in/**", "/check-out/**", "/checkin", "/checkout/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/api/gate/check-in", "/api/gate/qr-checkin", "/api/gate/check-out/confirm").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/api/parking/check-in", "/api/parking/check-out").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/active-vehicles/**", "/xe-trong-bai/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/history/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/parking-map/**", "/so-do-bai-xe/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/security-alerts/**", "/canh-bao-an-ninh/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/shift/**", "/ca-truc/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/api/tickets/**", "/api/parking/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                // Mọi request khác cần xác thực
+                .requestMatchers("/history/**", "/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/parking-map", "/parking-map/**", "/so-do-bai-xe", "/so-do-bai-xe/**", "/quan-ly-do-xe", "/quan-ly-do-xe/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/security-alerts/**", "/canh-bao-an-ninh/**", "/shift/**", "/ca-truc/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/api/tickets/**", "/api/parking/**", "/api/parking-map/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+
+                // 7. Mọi request khác cần xác thực đăng nhập
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -87,15 +100,40 @@ public class SecurityConfig {
                     String role = "ADMIN";
                     if (userOpt.isPresent()) {
                         NguoiDung nd = userOpt.get();
-                        request.getSession().setAttribute("userName", nd.getHoTen());
-                        request.getSession().setAttribute("userRole", nd.getVaiTro());
+                        HttpSession session = request.getSession(true);
+                        session.setAttribute("currentUser", nd);
+                        session.setAttribute("userId", nd.getId());
+                        session.setAttribute("userName", nd.getHoTen());
+                        session.setAttribute("userRole", nd.getVaiTro());
+                        session.setAttribute("userLogin", nd.getTenDangNhap());
                         role = nd.getVaiTro();
                     } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NHAN_VIEN"))) {
                         role = "NHAN_VIEN";
                         request.getSession().setAttribute("userRole", "NHAN_VIEN");
                     }
+
+                    // Ưu tiên chuyển hướng về SavedRequest nếu người dùng đang truy cập một trang được bảo vệ
+                    RequestCache requestCache = new HttpSessionRequestCache();
+                    SavedRequest savedRequest = requestCache.getRequest(request, response);
+                    if (savedRequest != null) {
+                        String targetUrl = savedRequest.getRedirectUrl();
+                        if (targetUrl != null 
+                                && !targetUrl.contains("/login") 
+                                && !targetUrl.contains("/dang-nhap")
+                                && !targetUrl.endsWith(".css")
+                                && !targetUrl.endsWith(".js")
+                                && !targetUrl.endsWith(".ico")
+                                && !targetUrl.endsWith(".png")
+                                && !targetUrl.endsWith(".jpg")) {
+                            response.sendRedirect(targetUrl);
+                            return;
+                        }
+                    }
+
                     if ("NHAN_VIEN".equalsIgnoreCase(role)) {
                         response.sendRedirect("/gui-xe");
+                    } else if ("KHACH_HANG".equalsIgnoreCase(role) || "CU_DAN".equalsIgnoreCase(role)) {
+                        response.sendRedirect("/dang-ky-ve-thang");
                     } else {
                         response.sendRedirect("/tong-quan");
                     }
@@ -103,17 +141,31 @@ public class SecurityConfig {
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
+            .rememberMe(rm -> rm
+                .key("ParkingAppRememberMeSecretKey2026")
+                .rememberMeParameter("rememberMe")
+                .tokenValiditySeconds(86400 * 7)
+            )
             .exceptionHandling(ex -> ex
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.sendRedirect("/gui-xe?denied=true");
+                    org.springframework.security.core.Authentication auth = 
+                            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                    if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_KHACH_HANG") || a.getAuthority().equals("ROLE_CU_DAN"))) {
+                        response.sendRedirect("/dang-ky-ve-thang");
+                    } else {
+                        response.sendRedirect("/gui-xe?denied=true");
+                    }
                 })
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
+                .logoutRequestMatcher(new OrRequestMatcher(
+                    PathPatternRequestMatcher.pathPattern("/logout"),
+                    PathPatternRequestMatcher.pathPattern("/dang-xuat")
+                ))
                 .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll()
             );
 
@@ -121,9 +173,7 @@ public class SecurityConfig {
     }
 
     /**
-     * UserDetailsService tích hợp với bảng NguoiDung trong SQL Server.
-     * Lưu ý: Project hiện tại lưu mật khẩu dạng plain text (phù hợp đồ án),
-     * nên dùng NoOpPasswordEncoder để tương thích.
+     * UserDetailsService tích hợp bảng NguoiDung
      */
     @Bean
     public UserDetailsService userDetailsService() {
@@ -135,8 +185,7 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("Tài khoản đã bị khóa: " + username);
             }
 
-            // Map vai trò trong DB thành Spring Security role
-            String role = "ROLE_" + nguoiDung.getVaiTro(); // ROLE_ADMIN hoặc ROLE_NHAN_VIEN
+            String role = "ROLE_" + nguoiDung.getVaiTro();
 
             return new User(
                     nguoiDung.getTenDangNhap(),
@@ -147,12 +196,52 @@ public class SecurityConfig {
     }
 
     /**
-     * Sử dụng NoOpPasswordEncoder vì mật khẩu trong DB lưu plain text.
-     * Đây là giải pháp phù hợp cho đồ án chuyên ngành, tránh phải migrate dữ liệu hiện có.
+     * Tự động nâng cấp mật khẩu từ plain text sang BCrypt hash khi người dùng đăng nhập thành công
      */
-    @SuppressWarnings("deprecation")
+    @Bean
+    public UserDetailsPasswordService userDetailsPasswordService() {
+        return (user, newPassword) -> {
+            nguoiDungRepository.findByTenDangNhap(user.getUsername()).ifPresent(nd -> {
+                nd.setMatKhau(newPassword);
+                nguoiDungRepository.save(nd);
+            });
+            return user;
+        };
+    }
+
+    /**
+     * Sử dụng BCryptPasswordEncoder với cơ chế tương thích ngược (Backward Compatibility)
+     * cho phép tài khoản cũ dạng plain text vẫn đăng nhập bình thường và được nâng cấp tự động sang BCrypt.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+        return new PasswordEncoder() {
+            private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+
+            @Override
+            public String encode(CharSequence rawPassword) {
+                if (rawPassword == null) return null;
+                return bcrypt.encode(rawPassword);
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                if (rawPassword == null || encodedPassword == null) {
+                    return false;
+                }
+                // Nếu đã là BCrypt hash ($2a$, $2b$, $2y$)
+                if (encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$")) {
+                    return bcrypt.matches(rawPassword, encodedPassword);
+                }
+                // Tương thích ngược: kiểm tra so khớp mật khẩu plain text cũ
+                return rawPassword.toString().equals(encodedPassword);
+            }
+
+            @Override
+            public boolean upgradeEncoding(String encodedPassword) {
+                if (encodedPassword == null) return true;
+                return !(encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$"));
+            }
+        };
     }
 }

@@ -19,7 +19,13 @@ public interface VeThangService {
 
     Optional<VeThang> layVeThangTheoId(Long id);
 
+    Optional<VeThang> timTheoMaThe(String maThe);
+
     Optional<VeThang> timVeThangConHan(String bienSoXe);
+
+    default Optional<VeThang> timVeThangConHan(String bienSoXe, Long loaiXeId) {
+        return timVeThangConHan(bienSoXe);
+    }
 
     VeThang dangKyVeThang(String hoTen, String sdt, String cccd, String email, String diaChi,
                           String bienSoXe, Long loaiXeId, int soThang);

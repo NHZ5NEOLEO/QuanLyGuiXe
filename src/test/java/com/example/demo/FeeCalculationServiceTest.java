@@ -53,16 +53,19 @@ public class FeeCalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Tính phí lưu bãi nhiều ngày (3 ngày 2 giờ)")
+    @DisplayName("Tính phí lưu bãi nhiều ngày (3 ngày 2 giờ) kèm phụ phí tồn bãi > 24h")
     void testCalculate_MultiDay() {
         LocalDateTime vao = LocalDateTime.of(2026, 10, 10, 8, 0);
         LocalDateTime ra = LocalDateTime.of(2026, 10, 13, 10, 0); // 3 ngày 2 giờ
 
         FeeCalculationResult result = feeCalculationService.calculate(xeMay, vao, ra, false, false);
 
-        // 3 ngày x (4000 + 6000) + 4000 = 34000
-        assertEquals(34000.0, result.getSoTienThanhToan());
+        // 3 ngày x (4000 + 6000) + 4000 = 34000 + Phụ phí lưu kho > 24h (3 x 15000 = 45000) = 79000
+        assertEquals(79000.0, result.getSoTienThanhToan());
+        assertEquals(45000.0, result.getPhuPhiLuuKho());
+        assertEquals(3, result.getSoNgayVuot24h());
         assertTrue(result.getQuyTacApDung().contains("nhiều ngày"));
+        assertTrue(result.getQuyTacApDung().contains("Phụ phí lưu kho"));
     }
 
     @Test
@@ -79,17 +82,18 @@ public class FeeCalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Khấu trừ tiền cọc đặt chỗ trước 20.000 VNĐ")
+    @DisplayName("Không tự ý khấu trừ tiền cọc khi chưa có mô hình giao dịch cọc xác minh")
     void testCalculate_WithPreBookingDeposit() {
         LocalDateTime vao = LocalDateTime.of(2026, 10, 12, 22, 0);
         LocalDateTime ra = LocalDateTime.of(2026, 10, 13, 7, 0); // Ô tô qua đêm 35.000đ
 
         FeeCalculationResult result = feeCalculationService.calculate(oTo, vao, ra, false, true);
 
-        // 35000 - 20000 = 15000
+        // Chưa có giao dịch cọc xác minh nên tiền khấu trừ = 0, ghi rõ thông tin
         assertEquals(35000.0, result.getTongTienGoc());
-        assertEquals(20000.0, result.getTienKhauTru());
-        assertEquals(15000.0, result.getSoTienThanhToan());
+        assertEquals(0.0, result.getTienKhauTru());
+        assertEquals(35000.0, result.getSoTienThanhToan());
+        assertTrue(result.getQuyTacApDung().contains("Chưa hỗ trợ khấu trừ cọc"));
     }
 
     @Test

@@ -1,11 +1,17 @@
 package com.example.demo.dto;
 
+import com.example.demo.model.VeXe;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TrangThaiKhuVucDto {
     private Long id;
     private String maKhu;
     private String tenKhu;
     private String viTri;
     private String tenLoaiXe;
+    private String iconClass = "fa-square-parking";
+    private String badgeColor = "primary";
     private long tongCho;
     private long choTrong;
     private long daDo;
@@ -14,6 +20,7 @@ public class TrangThaiKhuVucDto {
     private String thongDiepCanhBao = "Thông thoáng";
     private long soLuongDatTruoc = 0; // Đơn đặt chỗ trước đang chờ đến
     private long soLuongBaoLuu = 0;   // Chỗ bảo lưu cho xe đặt trước / vé tháng
+    private List<VeXe> danhSachXe = new ArrayList<>();
 
     public TrangThaiKhuVucDto() {
     }
@@ -161,5 +168,29 @@ public class TrangThaiKhuVucDto {
 
     public void setSoLuongBaoLuu(long soLuongBaoLuu) {
         this.soLuongBaoLuu = soLuongBaoLuu;
+    }
+
+    public String getIconClass() {
+        return iconClass;
+    }
+
+    public void setIconClass(String iconClass) {
+        this.iconClass = iconClass;
+    }
+
+    public String getBadgeColor() {
+        return badgeColor;
+    }
+
+    public void setBadgeColor(String badgeColor) {
+        this.badgeColor = badgeColor;
+    }
+
+    public List<VeXe> getDanhSachXe() {
+        return danhSachXe;
+    }
+
+    public void setDanhSachXe(List<VeXe> danhSachXe) {
+        this.danhSachXe = danhSachXe;
     }
 }

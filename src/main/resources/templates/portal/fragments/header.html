@@ -56,12 +56,65 @@
                     </li>
                 </ul>
 
-                <!-- Action Button -->
-                <div class="d-flex align-items-center pt-2 pt-lg-0 ms-lg-2">
-                    <a th:href="@{/login}" class="btn btn-portal-login d-inline-flex align-items-center gap-2">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                        <span>Đăng nhập</span>
-                    </a>
+                <!-- Action Buttons: Login / Register / User profile -->
+                <div class="d-flex align-items-center gap-2 pt-2 pt-lg-0 ms-lg-2 flex-shrink-0">
+                    <div sec:authorize="!isAuthenticated()" class="portal-auth-group">
+                        <a th:href="@{/dang-ky}" class="btn-portal-register" title="Đăng ký tài khoản mới">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Đăng ký</span>
+                        </a>
+                        <a th:href="@{/login}" class="btn-portal-login" title="Đăng nhập">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            <span>Đăng nhập</span>
+                        </a>
+                    </div>
+
+                    <div sec:authorize="isAuthenticated()" class="dropdown flex-shrink-0">
+                        <button class="btn btn-light border d-inline-flex align-items-center gap-2 py-1 px-3 rounded-pill dropdown-toggle shadow-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-circle-user text-primary fs-5"></i>
+                            <span class="fw-semibold small text-dark" sec:authentication="name">Tài khoản</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-1 py-1">
+                            <li>
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2" th:href="@{/tai-khoan}">
+                                    <i class="fa-solid fa-user-gear text-primary"></i>
+                                    <span>Hồ sơ &amp; Thông tin tài khoản</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2" th:href="@{/tai-khoan#tab-tickets}">
+                                    <i class="fa-solid fa-ticket text-info"></i>
+                                    <span>Vé tháng của tôi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2" th:href="@{/dang-ky-ve-thang}">
+                                    <i class="fa-solid fa-id-card text-success"></i>
+                                    <span>Đăng ký vé tháng</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2" th:href="@{/tra-cuu}">
+                                    <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+                                    <span>Tra cứu xe trong bãi</span>
+                                </a>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ADMIN', 'NHAN_VIEN')"><hr class="dropdown-divider my-1"></li>
+                            <li sec:authorize="hasAnyRole('ADMIN', 'NHAN_VIEN')">
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-warning fw-semibold" th:href="@{/tong-quan}">
+                                    <i class="fa-solid fa-gauge-high"></i>
+                                    <span>Phân hệ quản trị</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-danger" th:href="@{/logout}">
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                    <span>Đăng xuất</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

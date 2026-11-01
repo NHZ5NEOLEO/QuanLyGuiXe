@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - Hệ Thống Quản Lý Bãi Đỗ Xe</title>
+    <title>Đăng Nhập - Quản Lý Gửi Xe</title>
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,87 +30,90 @@
                         </div>
                         <div>
                             <span class="login-pill-badge">
-                                PARKING MANAGEMENT 4.0
+                                TRỰC TUYẾN
                             </span>
                             <div class="h5 fw-bold text-white mb-0 mt-1">QUẢN LÝ GỬI XE</div>
                         </div>
                     </div>
 
                     <h2 class="h4 fw-bold text-white lh-base mb-3">
-                        Giải Pháp Quản Lý Bãi Đỗ Xe Hiện Đại Và Tự Động Hóa
+                        Giải Pháp Quản Lý Gửi Xe Thông Minh &amp; Hiện Đại
                     </h2>
                     <p class="text-white text-opacity-75 small mb-4 lh-relaxed">
-                        Nền tảng kiểm soát phương tiện chuẩn mực với công nghệ nhận diện biển số AI, đóng mở barie tự động và đối soát giao dịch thời gian thực.
+                        Gửi phương tiện thông minh, đăng ký vé tháng tiện lợi và thanh toán VietQR minh bạch, an toàn.
                     </p>
 
                     <!-- Feature Highlights -->
                     <div class="login-features-list mb-4">
                         <div class="login-feature-item d-flex align-items-center gap-3">
                             <div class="text-info fs-5">
-                                <i class="fa-solid fa-camera"></i>
+                                <i class="fa-solid fa-id-card"></i>
                             </div>
                             <div>
-                                <div class="text-white text-xs fw-bold">Nhận Diện Biển Số Tự Động (ALPR)</div>
-                                <div class="text-white text-opacity-75 text-2xs">Đối soát ảnh chụp vào / ra siêu tốc 0.5s</div>
+                                <div class="text-white text-xs fw-bold">Đăng Ký &amp; Sử Dụng Vé Tháng</div>
+                                <div class="text-white text-opacity-75 text-2xs">Chủ động giữ chỗ gửi xe với biểu phí ưu đãi</div>
                             </div>
                         </div>
 
                         <div class="login-feature-item d-flex align-items-center gap-3">
                             <div class="text-success fs-5">
-                                <i class="fa-solid fa-shield-halved"></i>
+                                <i class="fa-solid fa-qrcode"></i>
                             </div>
                             <div>
-                                <div class="text-white text-xs fw-bold">Giám Sát An Ninh Và Chống Thất Thoát</div>
-                                <div class="text-white text-opacity-75 text-2xs">Phân quyền chặt chẽ giữa quản trị và ca trực cổng</div>
+                                <div class="text-white text-xs fw-bold">Thanh Toán Không Tiền Mặt VietQR</div>
+                                <div class="text-white text-opacity-75 text-2xs">Quét mã thanh toán tức thời, chuẩn xác</div>
                             </div>
                         </div>
 
                         <div class="login-feature-item d-flex align-items-center gap-3">
                             <div class="text-warning fs-5">
-                                <i class="fa-solid fa-qrcode"></i>
+                                <i class="fa-solid fa-clock-rotate-left"></i>
                             </div>
                             <div>
-                                <div class="text-white text-xs fw-bold">Vé Điện Tử QR Và Thanh Toán VietQR</div>
-                                <div class="text-white text-opacity-75 text-2xs">Khách hàng thanh toán và đối soát trực tuyến</div>
+                                <div class="text-white text-xs fw-bold">Tra Cứu Lịch Sử Phương Tiện</div>
+                                <div class="text-white text-opacity-75 text-2xs">Theo dõi thời gian vào / ra và chi phí minh bạch</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Live Status Footer -->
-                <div class="pt-3 border-top border-white border-opacity-15 d-flex align-items-center justify-content-between text-2xs text-white text-opacity-80">
+                <div class="pt-3 border-top border-white border-opacity-15 d-flex align-items-center text-2xs text-white text-opacity-80">
                     <div class="d-flex align-items-center gap-2">
                         <span class="status-pulse-dot"></span>
-                        <span>Máy chủ bãi xe: <strong>Trực tuyến</strong></span>
+                        <span>Trạng thái: <strong>Trực tuyến</strong></span>
                     </div>
-                    <span>Phiên bản v2.5</span>
                 </div>
             </div>
 
             <!-- CỘT PHẢI: FORM ĐĂNG NHẬP & CHỌN NHANH TÀI KHOẢN -->
             <div class="col-lg-7 login-form-side">
+                
+                <!-- Thanh chuyển đổi nhanh Đăng nhập / Đăng ký -->
+                <div class="auth-segmented-control mb-4">
+                    <a th:href="@{/login}" class="auth-tab-btn active">Đăng Nhập</a>
+                    <a th:href="@{/dang-ky}" class="auth-tab-btn">Đăng Ký Tài Khoản</a>
+                </div>
+
                 <div class="mb-3">
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 rounded-pill fw-bold text-2xs mb-2">
-                        CỔNG NỘI BỘ DÀNH CHO NHÂN VIÊN
-                    </span>
-                    <h1 class="h3 fw-bold text-dark mb-1">Đăng Nhập Hệ Thống</h1>
-                    <p class="text-muted small mb-0">
-                        Vui lòng nhập tài khoản được cấp quyền để truy cập phân hệ làm việc.
-                    </p>
+                    <h1 class="h3 fw-bold text-dark mb-1">Đăng Nhập</h1>
+                    <p class="text-muted small mb-0">Nhập thông tin tài khoản để truy cập</p>
                 </div>
 
                 <!-- Error Alert -->
-                <div th:if="${errorMessage}" class="alert alert-danger border-danger d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3" role="alert">
+                <div th:if="${errorMessage != null or param.error != null or param.denied != null}" class="alert alert-danger border-danger d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation text-danger fs-5 flex-shrink-0"></i>
-                    <div class="small fw-semibold text-danger flex-grow-1" th:text="${errorMessage}">
+                    <div class="small fw-semibold text-danger flex-grow-1" 
+                         th:text="${errorMessage != null ? errorMessage : (param.denied != null ? 'Bạn không có quyền truy cập trang yêu cầu. Vui lòng đăng nhập tài khoản phù hợp!' : 'Tên đăng nhập hoặc mật khẩu không chính xác!')}">
                         Tên đăng nhập hoặc mật khẩu không chính xác!
                     </div>
                 </div>
 
                 <!-- Success Alert -->
-                <div th:if="${successMessage}" class="alert alert-success border-success d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3" role="alert">
+                <div th:if="${successMessage != null or param.logout != null or param.registered != null or param.reset != null}" class="alert alert-success border-success d-flex align-items-center gap-2.5 p-3 rounded-3 mb-3" role="alert">
                     <i class="fa-solid fa-circle-check text-success fs-5 flex-shrink-0"></i>
-                    <div class="small fw-semibold text-success flex-grow-1" th:text="${successMessage}">
+                    <div class="small fw-semibold text-success flex-grow-1" 
+                         th:text="${successMessage != null ? successMessage : (param.reset != null ? 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.' : (param.registered != null ? 'Đăng ký tài khoản thành công! Vui lòng đăng nhập.' : 'Bạn đã đăng xuất thành công!'))}">
                         Đăng xuất thành công!
                     </div>
                 </div>
@@ -119,46 +122,38 @@
                 <div class="p-3 bg-light rounded-3 border mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-2xs fw-bold text-muted text-uppercase">
-                            <i class="fa-solid fa-bolt text-warning me-1"></i>Chọn nhanh tài khoản mẫu:
+                            <i class="fa-solid fa-bolt text-warning me-1"></i>Tài khoản demo nhanh:
                         </span>
                         <span class="text-2xs text-muted">Nhấn để điền tự động</span>
                     </div>
                     <div class="row g-2">
-                        <div class="col-sm-6">
-                            <button type="button" class="login-fast-card" id="btnRoleAdmin" onclick="fillCredentials('admin', 'admin123', this)">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="stat-icon-wrapper stat-icon-blue stat-icon-34">
-                                        <i class="fa-solid fa-user-shield"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark text-xs">Quản Trị Viên (Admin)</div>
-                                        <div class="text-muted font-monospace text-2xs">admin / admin123</div>
-                                    </div>
-                                </div>
+                        <div class="col-4">
+                            <button type="button" class="login-fast-card text-center py-2 px-1" id="btnRoleKhach" onclick="fillCredentials('khachhang', '123456', this)">
+                                <div class="fw-bold text-dark text-xs mb-0.5">Người Dùng</div>
+                                <div class="text-muted font-monospace text-2xs">khachhang</div>
                             </button>
                         </div>
-                        <div class="col-sm-6">
-                            <button type="button" class="login-fast-card" id="btnRoleBaove" onclick="fillCredentials('baove', '123456', this)">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="stat-icon-wrapper stat-icon-green stat-icon-34">
-                                        <i class="fa-solid fa-id-badge"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark text-xs">Nhân Viên Trực Cổng</div>
-                                        <div class="text-muted font-monospace text-2xs">baove / 123456</div>
-                                    </div>
-                                </div>
+                        <div class="col-4">
+                            <button type="button" class="login-fast-card text-center py-2 px-1" id="btnRoleBaove" onclick="fillCredentials('baove', '123456', this)">
+                                <div class="fw-bold text-dark text-xs mb-0.5">Bảo Vệ</div>
+                                <div class="text-muted font-monospace text-2xs">baove</div>
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="login-fast-card text-center py-2 px-1" id="btnRoleAdmin" onclick="fillCredentials('admin', 'admin123', this)">
+                                <div class="fw-bold text-dark text-xs mb-0.5">Admin</div>
+                                <div class="text-muted font-monospace text-2xs">admin</div>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Login Form -->
-                <form th:action="@{/login}" method="post" id="loginForm">
+                <form action="/login" method="post" id="loginForm" accept-charset="UTF-8">
                     <!-- Tên đăng nhập -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark mb-1" for="username">
-                            Tên đăng nhập <span class="text-danger">*</span>
+                            Tên đăng nhập / Số điện thoại <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted">
@@ -168,7 +163,7 @@
                                    class="form-control portal-form-control border-start-0 ps-1" 
                                    id="username" 
                                    name="username" 
-                                   placeholder="Nhập tên đăng nhập (VD: admin hoặc baove)" 
+                                   placeholder="Nhập tên đăng nhập hoặc số điện thoại" 
                                    required 
                                    autofocus 
                                    autocomplete="username">
@@ -191,7 +186,7 @@
                                    class="form-control portal-form-control border-start-0 border-end-0 ps-1" 
                                    id="password" 
                                    name="password" 
-                                   placeholder="Nhập mật khẩu truy cập" 
+                                   placeholder="Nhập mật khẩu" 
                                    required 
                                    autocomplete="current-password">
                             <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" 
@@ -204,34 +199,43 @@
                         </div>
                     </div>
 
-                    <!-- Options Row -->
+                    <!-- Options Row: Ghi nhớ đăng nhập & Quên mật khẩu -->
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" checked>
                             <label class="form-check-label small text-muted" for="rememberMe">
-                                Ghi nhớ phiên đăng nhập
+                                Ghi nhớ đăng nhập
                             </label>
                         </div>
-                        <a th:href="@{/}" class="small text-primary fw-bold text-decoration-none hover-primary">
-                            <i class="fa-solid fa-arrow-left me-1"></i>Trang chủ công khai
+                        <a th:href="@{/quen-mat-khau}" class="small text-primary fw-semibold text-decoration-none hover-primary">
+                            Quên mật khẩu?
                         </a>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-login-gradient w-100 mb-3 shadow-xs" id="btnLoginSubmit">
-                        <span id="btnLoginText">
-                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Hệ Thống
-                        </span>
+                    <!-- Submit Button (Không icon, chữ Đăng Nhập thuần túy) -->
+                    <button type="submit" class="btn btn-login-gradient w-100 py-2.5 mb-3 shadow-xs fw-bold" id="btnLoginSubmit">
+                        <span id="btnLoginText">Đăng Nhập</span>
                         <span id="btnLoginSpinner" class="d-none">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xác thực bảo mật...
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xác thực...
                         </span>
                     </button>
+
+                    <!-- Khung kêu gọi Đăng Ký Tài Khoản Nổi Bật -->
+                    <div class="auth-cta-box p-2.5 px-3 d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <div class="fw-bold text-dark text-xs">Chưa có tài khoản?</div>
+                            <div class="text-muted text-2xs">Đăng ký tài khoản miễn phí</div>
+                        </div>
+                        <a th:href="@{/dang-ky}" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 py-1 text-2xs text-nowrap">
+                            Đăng ký ngay
+                        </a>
+                    </div>
                 </form>
 
                 <!-- Security Footnote -->
                 <div class="text-center text-2xs text-muted pt-2 border-top">
-                    <i class="fa-solid fa-lock text-success me-1"></i>
-                    <span>Hệ thống phân quyền truy cập nội bộ</span>
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                    <span>Bảo mật dữ liệu &amp; Mã hóa thông tin an toàn</span>
                 </div>
             </div>
         </div>
@@ -276,7 +280,9 @@
         const text = document.getElementById('btnLoginText');
         const spinner = document.getElementById('btnLoginSpinner');
 
-        btn.disabled = true;
+        setTimeout(function() {
+            btn.disabled = true;
+        }, 50);
         text.classList.add('d-none');
         spinner.classList.remove('d-none');
     });

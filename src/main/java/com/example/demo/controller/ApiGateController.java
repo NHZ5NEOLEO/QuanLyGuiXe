@@ -136,18 +136,24 @@ public class ApiGateController {
      * API Xác nhận Check-out hoàn tất
      */
     @PostMapping("/check-out/confirm")
-    public ResponseEntity<?> confirmCheckOut(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> confirmCheckOut(@RequestBody Map<String, Object> payload, java.security.Principal principal) {
         try {
             Integer veXeId = Integer.valueOf(payload.get("veXeId").toString());
             String hinhThuc = payload.getOrDefault("hinhThucThanhToan", "TIEN_MAT").toString();
             String anhRaData = payload.get("anhRaData") != null ? payload.get("anhRaData").toString() : null;
             String ghiChu = payload.get("ghiChu") != null ? payload.get("ghiChu").toString() : null;
+            String bienSoThucTe = payload.get("bienSoThucTe") != null ? payload.get("bienSoThucTe").toString() : null;
+            String staff = principal != null ? principal.getName() : "staff";
 
-            VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThuc, anhRaData, ghiChu);
+            VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThuc, anhRaData, ghiChu, bienSoThucTe, staff);
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
-            resp.put("message", "Thanh toán và Check-out thành công! Cổng mở cho xe ra.");
+            if ("CHO_THANH_TOAN".equals(veXe.getTrangThaiThanhToan())) {
+                resp.put("message", "Đã tạo yêu cầu chuyển khoản. Đang chờ nhân viên đối soát thu tiền để hoàn tất xe ra.");
+            } else {
+                resp.put("message", "Xác nhận xe ra thành công!");
+            }
             resp.put("ticketId", veXe.getId());
             resp.put("maQR", veXe.getMaQR());
             resp.put("bienSoXe", veXe.getBienSoXe());
@@ -156,6 +162,8 @@ public class ApiGateController {
             resp.put("thoiGianVao", veXe.getThoiGianVao() != null ? veXe.getThoiGianVao().toString() : "");
             resp.put("thoiGianRa", veXe.getThoiGianRa() != null ? veXe.getThoiGianRa().toString() : "");
             resp.put("chiPhi", veXe.getChiPhi());
+            resp.put("trangThai", veXe.getTrangThai());
+            resp.put("trangThaiThanhToan", veXe.getTrangThaiThanhToan());
             resp.put("hinhThucThanhToan", veXe.getHinhThucThanhToan());
             resp.put("laVeThang", veXe.getVeThang() != null);
             resp.put("khachHang", (veXe.getVeThang() != null && veXe.getVeThang().getKhachHang() != null) ? veXe.getVeThang().getKhachHang().getHoTen() : "Khách vãng lai");
@@ -209,11 +217,10 @@ public class ApiGateController {
     }
 
     /**
-     * API Mô phỏng / Webhook ghi nhận khách quét mã VietQR và chuyển khoản thành công
-     * -> Tự động chốt thanh toán và kích hoạt tín hiệu mở Barie
+     * API Xác nhận nhận tiền chuyển khoản ngân hàng / VietQR (Dành cho nhân viên trực cổng hoặc Webhook đã đối soát)
      */
-    @PostMapping("/simulate-vietqr-payment")
-    public ResponseEntity<?> simulateVietQrPayment(@RequestBody Map<String, Object> payload) {
+    @PostMapping({"/confirm-bank-transfer", "/simulate-vietqr-payment"})
+    public ResponseEntity<?> confirmBankTransfer(@RequestBody Map<String, Object> payload, java.security.Principal principal) {
         try {
             Integer veXeId = null;
             if (payload.get("veXeId") != null) {
@@ -228,13 +235,15 @@ public class ApiGateController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy vé xe!"));
             }
 
-            String anhRaData = payload.get("anhRaData") != null ? payload.get("anhRaData").toString() : null;
-            VeXe veXe = parkingService.confirmCheckOut(veXeId, "CHUYEN_KHOAN", anhRaData, "Thanh toán tự động qua VietQR");
+            String maTxn = payload.get("maGiaoDich") != null ? payload.get("maGiaoDich").toString() : "BANK-" + System.currentTimeMillis();
+            String staff = principal != null ? principal.getName() : "staff";
+
+            VeXe veXe = parkingService.xacNhanThanhToanChuyenKhoan(veXeId, maTxn, staff);
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
             resp.put("paid", true);
-            resp.put("message", "Đã nhận chuyển khoản VietQR thành công! Cổng Barie tự động nâng mở.");
+            resp.put("message", "Đã xác nhận thanh toán chuyển khoản thành công! Hoàn tất lượt xe ra.");
             resp.put("ticketId", veXe.getId());
             resp.put("bienSoXe", veXe.getBienSoXe());
             resp.put("chiPhi", veXe.getChiPhi());

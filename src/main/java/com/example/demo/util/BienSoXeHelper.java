@@ -57,6 +57,10 @@ public final class BienSoXeHelper {
         return input.replaceAll("[\\s\\-\\.,_]+", "").toUpperCase(Locale.ROOT);
     }
 
+    public static String clean(String input) {
+        return toCleanKey(input);
+    }
+
     /**
      * Kiểm tra tính hợp lệ cơ bản của dữ liệu nhập.
     /**

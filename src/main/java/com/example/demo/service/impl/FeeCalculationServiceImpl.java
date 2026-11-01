@@ -97,11 +97,30 @@ public class FeeCalculationServiceImpl implements FeeCalculationService {
             } else {
                 quyTac = String.format("Lưu bãi trọn vẹn %d ngày", soNgay);
             }
+
+            // Nghiệp vụ Lựa chọn 3: Áp dụng phụ phí lưu kho dài ngày cho xe tồn bãi > 24 tiếng
+            long soNgayVuot = Math.max(1, soNgay);
+            double phuPhiMoiNgay = 15000.0; // Mặc định xe máy: +15.000 VNĐ / ngày
+            String tenLoai = (loaiXe != null && loaiXe.getTenLoai() != null) ? loaiXe.getTenLoai().toLowerCase() : "";
+            if (tenLoai.contains("ô tô") || tenLoai.contains("o to") || tenLoai.contains("tải") || tenLoai.contains("tai")
+                    || (loaiXe != null && loaiXe.getId() != null && loaiXe.getId() == 2)) {
+                phuPhiMoiNgay = 50000.0; // Ô tô: +50.000 VNĐ / ngày
+            } else if (tenLoai.contains("đạp") || tenLoai.contains("dap")
+                    || (loaiXe != null && loaiXe.getId() != null && loaiXe.getId() == 3)) {
+                phuPhiMoiNgay = 5000.0; // Xe đạp / điện: +5.000 VNĐ / ngày
+            }
+
+            double tongPhuPhi = soNgayVuot * phuPhiMoiNgay;
+            baseFee += tongPhuPhi;
+            result.setPhuPhiLuuKho(tongPhuPhi);
+            result.setSoNgayVuot24h(soNgayVuot);
+            quyTac += String.format(" [+ Phụ phí lưu kho > 24h: %d ngày x %,.0f VNĐ = %,.0f VNĐ]", soNgayVuot, phuPhiMoiNgay, tongPhuPhi);
         }
 
+        // Theo quy định nghiệp vụ: Không tự ý khấu trừ tiền cọc khi chưa có mô hình giao dịch cọc xác minh
         double tienKhauTru = 0.0;
         if (daCocTruoc) {
-            tienKhauTru = 20000.0;
+            quyTac += " [Đặt chỗ trước: Chưa hỗ trợ khấu trừ cọc tự động do chưa có mô hình giao dịch cọc]";
         }
 
         double soTienThanhToan = Math.max(0.0, baseFee - tienKhauTru);

@@ -3,15 +3,20 @@ package com.example.demo.controller;
 import com.example.demo.model.KhachHang;
 import com.example.demo.model.KhuVuc;
 import com.example.demo.model.LoaiXe;
+import com.example.demo.model.NguoiDung;
 import com.example.demo.model.VeThang;
 import com.example.demo.model.VeXe;
 import com.example.demo.repository.KhachHangRepository;
 import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
+import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +47,7 @@ public class PortalController {
     private final VeThangRepository veThangRepository;
     private final KhuVucRepository khuVucRepository;
     private final KhachHangRepository khachHangRepository;
+    private final NguoiDungRepository nguoiDungRepository;
     private final JdbcTemplate jdbcTemplate;
 
     public PortalController(
@@ -50,6 +56,7 @@ public class PortalController {
             VeThangRepository veThangRepository,
             KhuVucRepository khuVucRepository,
             KhachHangRepository khachHangRepository,
+            NguoiDungRepository nguoiDungRepository,
             JdbcTemplate jdbcTemplate
     ) {
         this.loaiXeRepository = loaiXeRepository;
@@ -57,6 +64,7 @@ public class PortalController {
         this.veThangRepository = veThangRepository;
         this.khuVucRepository = khuVucRepository;
         this.khachHangRepository = khachHangRepository;
+        this.nguoiDungRepository = nguoiDungRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -161,6 +169,7 @@ public class PortalController {
 
     /**
      * Trang web riêng: Đăng ký vé tháng trực tuyến
+     * Yêu cầu người dùng phải có tài khoản và đăng nhập để đăng ký vé tháng.
      */
     @GetMapping({"/dang-ky-ve-thang", "/ve-thang/dang-ky", "/portal/ve-thang"})
     public String dangKyVeThangPage(Model model) {
@@ -168,6 +177,22 @@ public class PortalController {
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("pageTitle", "Đăng ký vé tháng trực tuyến");
         model.addAttribute("activeNav", "ve-thang");
+
+        // Kiểm tra trạng thái đăng nhập
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isLoggedIn = auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+        model.addAttribute("isLoggedIn", isLoggedIn);
+
+        if (isLoggedIn && auth != null) {
+            String username = auth.getName();
+            NguoiDung currentUser = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+            model.addAttribute("currentUser", currentUser);
+            if (currentUser != null && currentUser.getSoDienThoai() != null && !currentUser.getSoDienThoai().isBlank()) {
+                KhachHang currentCustomer = khachHangRepository.findBySoDienThoai(currentUser.getSoDienThoai()).orElse(null);
+                model.addAttribute("currentCustomer", currentCustomer);
+            }
+        }
+
         return "portal/dang-ky-ve-thang";
     }
 
@@ -300,16 +325,40 @@ public class PortalController {
     }
 
     /**
-     * API Đăng ký vé tháng trực tuyến công khai và Sinh mã VietQR chuyển khoản
+     * API Đăng ký vé tháng trực tuyến - BẮT BUỘC PHẢI CÓ TÀI KHOẢN VÀ ĐĂNG NHẬP
      */
     @PostMapping("/portal/api/register-monthly")
     @ResponseBody
     public ResponseEntity<?> registerMonthlyOnline(@RequestBody Map<String, Object> req) {
         try {
-            if (req.get("hoTen") == null || req.get("hoTen").toString().trim().isEmpty()) {
+            // 0. Bắt buộc kiểm tra đăng nhập tài khoản
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                        "success", false,
+                        "requireLogin", true,
+                        "message", "Quý khách cần có tài khoản và đăng nhập để đăng ký vé tháng! Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
+                ));
+            }
+
+            String username = auth.getName();
+            NguoiDung currentUser = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+
+            String hoTen = req.getOrDefault("hoTen", "").toString().trim();
+            String sdt = req.getOrDefault("sdt", "").toString().trim();
+            if (currentUser != null) {
+                if (hoTen.isEmpty() && currentUser.getHoTen() != null) {
+                    hoTen = currentUser.getHoTen();
+                }
+                if (sdt.isEmpty() && currentUser.getSoDienThoai() != null) {
+                    sdt = currentUser.getSoDienThoai();
+                }
+            }
+
+            if (hoTen.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập họ và tên chủ xe!"));
             }
-            if (req.get("sdt") == null || req.get("sdt").toString().trim().isEmpty()) {
+            if (sdt.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập số điện thoại liên hệ!"));
             }
             if (req.get("bienSoXe") == null || req.get("bienSoXe").toString().trim().isEmpty()) {
@@ -319,8 +368,6 @@ public class PortalController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng chọn loại phương tiện!"));
             }
 
-            String hoTen = req.get("hoTen").toString().trim();
-            String sdt = req.get("sdt").toString().trim();
             String cccd = req.getOrDefault("cccd", "").toString().trim();
             String email = req.getOrDefault("email", "").toString().trim();
             String diaChi = req.getOrDefault("diaChi", "").toString().trim();
@@ -329,10 +376,12 @@ public class PortalController {
             int months = Integer.parseInt(req.getOrDefault("months", "1").toString());
             if (months < 1) months = 1;
 
-            // 1. Tìm hoặc tạo khách hàng
+            // 1. Tìm hoặc tạo khách hàng liên kết với số điện thoại của tài khoản
+            final String finalHoTen = hoTen;
+            final String finalSdt = sdt;
             KhachHang khachHang = khachHangRepository.findBySoDienThoai(sdt)
                     .orElseGet(() -> {
-                        KhachHang newKh = new KhachHang(hoTen, sdt, cccd, email, diaChi);
+                        KhachHang newKh = new KhachHang(finalHoTen, finalSdt, cccd, email, diaChi);
                         return khachHangRepository.save(newKh);
                     });
             khachHang.setHoTen(hoTen);

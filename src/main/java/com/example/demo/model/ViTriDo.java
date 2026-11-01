@@ -1,19 +1,39 @@
 package com.example.demo.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Model biểu diễn vị trí đỗ / ô đỗ phục vụ hiển thị sơ đồ (nếu cần),
- * không lưu bảng vật lý trong CSDL quản lý gửi xe thông thường.
+ * Entity vị trí ô đỗ thực tế trong các phân khu của bãi xe
  */
+@Entity
+@Table(name = "ViTriDo", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_vitrido_mavitri", columnNames = {"ma_vi_tri"})
+})
 public class ViTriDo {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String maViTri; // A-01, B-05, C-12
+
+    @Column(name = "ma_vi_tri", nullable = false, length = 30)
+    private String maViTri; // 2B-01, 4B-05, XD-12
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "khu_vuc_id")
     private KhuVuc khuVuc;
+
+    @Column(name = "trang_thai", length = 30)
     private String trangThai = "TRONG"; // TRONG, DA_DO, BAO_TRI
+
+    @Column(name = "bien_so_xe_dang_do", length = 30)
     private String bienSoXeDangDo;
+
+    @Column(name = "thoi_gian_vao_do")
     private LocalDateTime thoiGianVaoDo;
+
+    @Version
+    private Long version;
 
     public ViTriDo() {
     }
@@ -21,7 +41,7 @@ public class ViTriDo {
     public ViTriDo(String maViTri, KhuVuc khuVuc, String trangThai) {
         this.maViTri = maViTri;
         this.khuVuc = khuVuc;
-        this.trangThai = trangThai;
+        this.trangThai = trangThai != null ? trangThai : "TRONG";
     }
 
     public Long getId() {
@@ -70,5 +90,13 @@ public class ViTriDo {
 
     public void setThoiGianVaoDo(LocalDateTime thoiGianVaoDo) {
         this.thoiGianVaoDo = thoiGianVaoDo;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

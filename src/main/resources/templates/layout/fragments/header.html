@@ -39,7 +39,7 @@
 
 
         <!-- User Profile Pill -->
-        <div class="d-flex align-items-center gap-2 ps-2 border-start">
+        <a th:href="@{/tai-khoan}" class="d-flex align-items-center gap-2 ps-2 border-start text-decoration-none text-reset" title="Xem &amp; Cập nhật thông tin cá nhân">
             <div class="user-avatar-circle avatar-sm" 
                  th:text="${session.userName != null ? #strings.substring(session.userName, 0, 1).toUpperCase() : 'A'}">
                 A
@@ -48,7 +48,7 @@
                 <div class="small fw-bold text-dark" th:text="${session.userName != null ? session.userName : 'Admin Quản Trị'}">Admin</div>
                 <small class="text-muted user-role-label" th:text="${session.userRole != null ? (session.userRole == 'NHAN_VIEN' ? 'NHÂN VIÊN' : session.userRole) : 'ADMIN'}">ADMIN</small>
             </div>
-        </div>
+        </a>
     </div>
 </header>
 

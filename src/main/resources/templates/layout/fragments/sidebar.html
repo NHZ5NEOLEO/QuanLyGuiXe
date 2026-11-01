@@ -61,6 +61,12 @@
             <span>Xe đang trong bãi</span>
         </a>
 
+        <!-- 4b. Quản lý đỗ xe (4 Phân khu: 2 Bánh, 4 Bánh, Xe Đạp, Tồn > 24H) -->
+        <a th:href="@{/quan-ly-do-xe}" th:classappend="${activePage == 'quan-ly-do-xe' or activePage == 'parking-map' or activePage == 'so-do-bai-xe'} ? 'active' : ''" class="sidebar-link" title="Quản lý hiện trạng các phân khu đỗ xe">
+            <i class="fa-solid fa-square-parking text-primary" aria-hidden="true"></i>
+            <span>Quản lý đỗ xe</span>
+        </a>
+
         <!-- 5. Quản lý / Tra cứu vé xe -->
         <a th:href="@{/ve-xe}" th:classappend="${activePage == 'tickets' or activePage == 'history'} ? 'active' : ''" class="sidebar-link" th:title="${session.userRole == 'NHAN_VIEN' ? 'Tra cứu thông tin vé khi khách quên vé/mất vé' : 'Danh sách, tra cứu và in vé xe'}">
             <i class="fa-solid fa-ticket text-info" aria-hidden="true"></i>

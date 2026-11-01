@@ -20,6 +20,8 @@ public class KetQuaTinhPhi {
     private Double tienKhauTru;
     private Double soTienThanhToan;
     private boolean laVeThang;
+    private Double phuPhiLuuKho = 0.0; // Phụ phí lưu kho khi xe gửi quá 24h
+    private long soNgayVuot24h = 0;    // Số ngày vượt mốc 24h
 
     public KetQuaTinhPhi() {
     }
@@ -110,5 +112,21 @@ public class KetQuaTinhPhi {
 
     public void setLaVeThang(boolean laVeThang) {
         this.laVeThang = laVeThang;
+    }
+
+    public Double getPhuPhiLuuKho() {
+        return phuPhiLuuKho;
+    }
+
+    public void setPhuPhiLuuKho(Double phuPhiLuuKho) {
+        this.phuPhiLuuKho = phuPhiLuuKho;
+    }
+
+    public long getSoNgayVuot24h() {
+        return soNgayVuot24h;
+    }
+
+    public void setSoNgayVuot24h(long soNgayVuot24h) {
+        this.soNgayVuot24h = soNgayVuot24h;
     }
 }

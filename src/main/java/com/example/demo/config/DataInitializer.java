@@ -2,14 +2,18 @@ package com.example.demo.config;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.util.BienSoXeHelper;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Profile({"dev", "demo", "default"})
 public class DataInitializer implements CommandLineRunner {
 
     private final LoaiXeRepository loaiXeRepository;
@@ -20,6 +24,8 @@ public class DataInitializer implements CommandLineRunner {
     private final VeXeRepository veXeRepository;
     private final DanhSachDenRepository danhSachDenRepository;
     private final PhuongTienRepository phuongTienRepository;
+    private final ViTriDoRepository viTriDoRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(
             LoaiXeRepository loaiXeRepository,
@@ -29,7 +35,9 @@ public class DataInitializer implements CommandLineRunner {
             NguoiDungRepository nguoiDungRepository,
             VeXeRepository veXeRepository,
             DanhSachDenRepository danhSachDenRepository,
-            PhuongTienRepository phuongTienRepository
+            PhuongTienRepository phuongTienRepository,
+            ViTriDoRepository viTriDoRepository,
+            PasswordEncoder passwordEncoder
     ) {
         this.loaiXeRepository = loaiXeRepository;
         this.khuVucRepository = khuVucRepository;
@@ -39,6 +47,8 @@ public class DataInitializer implements CommandLineRunner {
         this.veXeRepository = veXeRepository;
         this.danhSachDenRepository = danhSachDenRepository;
         this.phuongTienRepository = phuongTienRepository;
+        this.viTriDoRepository = viTriDoRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -58,13 +68,34 @@ public class DataInitializer implements CommandLineRunner {
         LoaiXe oTo = allLoaiXe.size() > 1 ? allLoaiXe.get(1) : xeMay;
         LoaiXe xeDap = allLoaiXe.size() > 2 ? allLoaiXe.get(2) : xeMay;
 
-        // 2. Khởi tạo Khu vực đỗ xe
-        if (khuVucRepository.count() == 0) {
-            KhuVuc khuA = new KhuVuc("A", "Khu A - Đỗ ô tô", oTo, 10, "Tầng 1 sảnh chính");
-            KhuVuc khuB = new KhuVuc("B", "Khu B - Đỗ xe máy", xeMay, 20, "Tầng hầm B1");
-            KhuVuc khuC = new KhuVuc("C", "Khu C - Xe điện và Xe đạp", xeDap, 10, "Sân phụ có mái che");
+        // 2. Khởi tạo 4 Phân khu bãi đỗ xe chuẩn
+        if (khuVucRepository.count() == 0 || khuVucRepository.findByMaKhu("2B").isEmpty()) {
+            khuVucRepository.deleteAll();
+            KhuVuc khu2B = new KhuVuc("2B", "Khu Đỗ Xe 2 Bánh", xeMay, 100, "Tầng hầm B1 & B2");
+            KhuVuc khu4B = new KhuVuc("4B", "Khu Đỗ Xe 4 Bánh", oTo, 20, "Tầng 1 sảnh ngoài trời");
+            KhuVuc khuXD = new KhuVuc("XD", "Khu Dành Cho Xe Đạp", xeDap, 30, "Sân phụ có mái che");
+            KhuVuc khu24H = new KhuVuc("24H", "Khu Lưu Xe Tồn Quá 24H", null, 20, "Khu tập kết lưu kho an ninh");
 
-            khuVucRepository.saveAll(List.of(khuA, khuB, khuC));
+            khuVucRepository.saveAll(List.of(khu2B, khu4B, khuXD, khu24H));
+        }
+
+        KhuVuc kv2B = khuVucRepository.findByMaKhu("2B").orElse(null);
+        KhuVuc kv4B = khuVucRepository.findByMaKhu("4B").orElse(null);
+        KhuVuc kvXD = khuVucRepository.findByMaKhu("XD").orElse(null);
+
+        // Khởi tạo các vị trí ô đỗ cụ thể trong DB nếu chưa có
+        if (viTriDoRepository.count() == 0 && kv2B != null && kv4B != null && kvXD != null) {
+            List<ViTriDo> initialSlots = new ArrayList<>();
+            for (int i = 1; i <= 100; i++) {
+                initialSlots.add(new ViTriDo(String.format("2B-%02d", i), kv2B, "TRONG"));
+            }
+            for (int i = 1; i <= 20; i++) {
+                initialSlots.add(new ViTriDo(String.format("4B-%02d", i), kv4B, "TRONG"));
+            }
+            for (int i = 1; i <= 30; i++) {
+                initialSlots.add(new ViTriDo(String.format("XD-%02d", i), kvXD, "TRONG"));
+            }
+            viTriDoRepository.saveAll(initialSlots);
         }
 
         // 3. Khởi tạo Khách hàng và Vé tháng
@@ -83,39 +114,34 @@ public class DataInitializer implements CommandLineRunner {
             veThangRepository.saveAll(List.of(vt1, vt2, vt3));
         }
 
-        // 4. Khởi tạo Tài khoản
+        // 4. Khởi tạo Tài khoản với mật khẩu mã hóa BCrypt
         if (nguoiDungRepository.count() == 0) {
-            NguoiDung admin = new NguoiDung("admin", "admin123", "Quản Trị Viên", "ADMIN", "0909000111");
-            NguoiDung baove = new NguoiDung("baove", "123456", "Nhân Viên Trực Cổng", "NHAN_VIEN", "0909000222");
-            nguoiDungRepository.saveAll(List.of(admin, baove));
+            NguoiDung admin = new NguoiDung("admin", passwordEncoder.encode("admin123"), "Quản Trị Viên", "ADMIN", "0909000111");
+            NguoiDung baove = new NguoiDung("baove", passwordEncoder.encode("123456"), "Nhân Viên Trực Cổng", "NHAN_VIEN", "0909000222");
+            NguoiDung khach = new NguoiDung("khachhang", passwordEncoder.encode("123456"), "Nguyễn Văn An", "KHACH_HANG", "0912345678");
+            nguoiDungRepository.saveAll(List.of(admin, baove, khach));
+        } else {
+            // Nâng cấp mật khẩu cũ sang BCrypt nếu phát hiện dạng plain text
+            List<NguoiDung> users = nguoiDungRepository.findAll();
+            for (NguoiDung u : users) {
+                if (u.getMatKhau() != null && !u.getMatKhau().startsWith("$2a$") && !u.getMatKhau().startsWith("$2b$")) {
+                    u.setMatKhau(passwordEncoder.encode(u.getMatKhau()));
+                    nguoiDungRepository.save(u);
+                }
+            }
         }
 
-        // 5. Khởi tạo một số dữ liệu vé xe mẫu nếu chưa có dữ liệu xe
-        if (veXeRepository.count() == 0) {
-            // Xe vé tháng đang gửi
-            VeThang vt1 = veThangRepository.findFirstByBienSoXe("29B1-88888").orElse(null);
-            VeXe vx1 = new VeXe("QR-DEMO-001", "29B1-88888", xeMay, LocalDateTime.now().minusHours(3), "Đang gửi");
-            vx1.setVeThang(vt1);
-            vx1.setHinhThucThanhToan("VE_THANG");
-
-            // Xe khách vãng lai đang gửi
-            VeXe vx2 = new VeXe("QR-DEMO-002", "30G-67890", oTo, LocalDateTime.now().minusHours(1).minusMinutes(30), "Đang gửi");
-
-            // Vài xe đã ra có doanh thu
-            VeXe vx3 = new VeXe("QR-DEMO-003", "51H-11122", oTo, LocalDateTime.now().minusHours(5), "Đã ra");
-            vx3.setThoiGianRa(LocalDateTime.now().minusHours(2));
-            vx3.setChiPhi(20000.0);
-            vx3.setHinhThucThanhToan("CHUYEN_KHOAN");
-
-            VeXe vx4 = new VeXe("QR-DEMO-004", "29T1-54321", xeMay, LocalDateTime.now().minusHours(4), "Đã ra");
-            vx4.setThoiGianRa(LocalDateTime.now().minusHours(1));
-            vx4.setChiPhi(4000.0);
-            vx4.setHinhThucThanhToan("TIEN_MAT");
-
-            // Xe đỗ quá 24h để demo tính năng Cảnh báo an ninh xe tồn bãi
-            VeXe vx5 = new VeXe("QR-DEMO-005", "43B1-99881", xeMay, LocalDateTime.now().minusHours(32), "Đang gửi");
-
-            veXeRepository.saveAll(List.of(vx1, vx2, vx3, vx4, vx5));
+        // 5. Chuẩn hóa biển số sạch (bienSoClean) cho các vé xe hiện có
+        List<VeXe> existingTickets = veXeRepository.findAll();
+        for (VeXe vx : existingTickets) {
+            boolean updated = false;
+            if (vx.getBienSoClean() == null && vx.getBienSoXe() != null) {
+                vx.setBienSoClean(BienSoXeHelper.clean(vx.getBienSoXe()));
+                updated = true;
+            }
+            if (updated) {
+                veXeRepository.save(vx);
+            }
         }
 
         // 6. Khởi tạo Danh sách đen mẫu

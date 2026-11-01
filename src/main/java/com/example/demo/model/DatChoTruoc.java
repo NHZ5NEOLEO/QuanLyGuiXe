@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "DatChoTruoc")
+@Table(name = "DatChoTruoc", indexes = {
+    @Index(name = "idx_datcho_bienso_trangthai", columnList = "bienSoXe, trangThai")
+})
 public class DatChoTruoc {
 
     @Id
@@ -34,8 +36,17 @@ public class DatChoTruoc {
 
     private Double tienCoc = 20000.0;
 
+    @Column(name = "da_thanh_toan_coc")
+    private Boolean daThanhToanCoc = true; // Tiền cọc đã được xác minh thành công
+
+    @Column(name = "ma_giao_dich_coc", length = 100)
+    private String maGiaoDichCoc; // Mã giao dịch đặt cọc VietQR
+
+    @Column(name = "thoi_gian_checkin")
+    private LocalDateTime thoiGianCheckIn; // Thời điểm thực tế xe vào bãi và nhận chỗ
+
     @Column(length = 20)
-    private String trangThai = "CHO_DEN"; // CHO_DEN, DA_VAO, HUY, HET_HAN
+    private String trangThai = "CHO_DEN"; // CHO_DEN, DA_VAO, HUY, HET_HAN, HOAN_COC
 
     public DatChoTruoc() {
     }
@@ -49,6 +60,7 @@ public class DatChoTruoc {
         this.thoiGianHetHan = thoiGianHetHan;
         this.tienCoc = tienCoc;
         this.trangThai = trangThai;
+        this.daThanhToanCoc = true;
     }
 
     public Long getId() {
@@ -125,6 +137,30 @@ public class DatChoTruoc {
 
     public void setTienCoc(Double tienCoc) {
         this.tienCoc = tienCoc;
+    }
+
+    public Boolean getDaThanhToanCoc() {
+        return daThanhToanCoc != null ? daThanhToanCoc : false;
+    }
+
+    public void setDaThanhToanCoc(Boolean daThanhToanCoc) {
+        this.daThanhToanCoc = daThanhToanCoc;
+    }
+
+    public String getMaGiaoDichCoc() {
+        return maGiaoDichCoc;
+    }
+
+    public void setMaGiaoDichCoc(String maGiaoDichCoc) {
+        this.maGiaoDichCoc = maGiaoDichCoc;
+    }
+
+    public LocalDateTime getThoiGianCheckIn() {
+        return thoiGianCheckIn;
+    }
+
+    public void setThoiGianCheckIn(LocalDateTime thoiGianCheckIn) {
+        this.thoiGianCheckIn = thoiGianCheckIn;
     }
 
     public String getTrangThai() {

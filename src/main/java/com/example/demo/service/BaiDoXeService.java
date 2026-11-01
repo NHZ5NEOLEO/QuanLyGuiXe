@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ParkingOverviewDto;
+import com.example.demo.dto.TrangThaiKhuVucDto;
 import com.example.demo.model.KhuVuc;
 import com.example.demo.model.LoaiXe;
 import com.example.demo.model.ViTriDo;
@@ -8,6 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BaiDoXeService {
+
+    ParkingOverviewDto layTongQuanBaiDoXe();
+    default ParkingOverviewDto getParkingOverview() { return layTongQuanBaiDoXe(); }
+
+    List<TrangThaiKhuVucDto> layTrangThaiCacKhuVuc();
+    default List<TrangThaiKhuVucDto> getAllZoneStatuses() { return layTrangThaiCacKhuVuc(); }
 
     List<KhuVuc> layTatCaKhuVuc();
     default List<KhuVuc> getAllKhuVuc() { return layTatCaKhuVuc(); }

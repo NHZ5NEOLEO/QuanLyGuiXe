@@ -1,11 +1,16 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.BadRequestException;
 import com.example.demo.model.KhachHang;
 import com.example.demo.model.LoaiXe;
+import com.example.demo.model.NguoiDung;
 import com.example.demo.model.VeThang;
 import com.example.demo.repository.KhachHangRepository;
 import com.example.demo.repository.LoaiXeRepository;
+import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
+import com.example.demo.util.BienSoXeHelper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +25,19 @@ public class MonthlyTicketService implements VeThangService {
     private final VeThangRepository veThangRepository;
     private final KhachHangRepository khachHangRepository;
     private final LoaiXeRepository loaiXeRepository;
+    private final NguoiDungRepository nguoiDungRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public MonthlyTicketService(VeThangRepository veThangRepository,
                                 KhachHangRepository khachHangRepository,
-                                LoaiXeRepository loaiXeRepository) {
+                                LoaiXeRepository loaiXeRepository,
+                                NguoiDungRepository nguoiDungRepository,
+                                PasswordEncoder passwordEncoder) {
         this.veThangRepository = veThangRepository;
         this.khachHangRepository = khachHangRepository;
         this.loaiXeRepository = loaiXeRepository;
+        this.nguoiDungRepository = nguoiDungRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -69,25 +80,63 @@ public class MonthlyTicketService implements VeThangService {
     }
 
     @Override
+    public Optional<VeThang> timTheoMaThe(String maThe) {
+        if (maThe == null || maThe.isBlank()) return Optional.empty();
+        return veThangRepository.findByMaThe(maThe.trim());
+    }
+
+    @Override
     public Optional<VeThang> timVeThangConHan(String bienSoXe) {
+        return timVeThangConHan(bienSoXe, null);
+    }
+
+    @Override
+    public Optional<VeThang> timVeThangConHan(String bienSoXe, Long loaiXeId) {
         if (bienSoXe == null || bienSoXe.trim().isEmpty()) return Optional.empty();
         List<VeThang> list = veThangRepository.findByTrangThai("HOAT_DONG");
         for (VeThang vt : list) {
             if (com.example.demo.util.BienSoXeHelper.isSamePlate(vt.getBienSoXe(), bienSoXe) && vt.isConHan()) {
-                return Optional.of(vt);
+                if (loaiXeId == null || (vt.getLoaiXe() != null && vt.getLoaiXe().getId() != null && vt.getLoaiXe().getId().equals(loaiXeId))) {
+                    return Optional.of(vt);
+                }
             }
         }
         return Optional.empty();
     }
 
     public Optional<VeThang> findActiveMonthlyPass(String bienSoXe) {
-        return timVeThangConHan(bienSoXe);
+        return timVeThangConHan(bienSoXe, null);
+    }
+
+    public Optional<VeThang> findActiveMonthlyPass(String bienSoXe, Long loaiXeId) {
+        return timVeThangConHan(bienSoXe, loaiXeId);
     }
 
     @Override
     @Transactional
     public VeThang dangKyVeThang(String hoTen, String sdt, String cccd, String email, String diaChi,
                                   String bienSoXe, Long loaiXeId, int soThang) {
+        if (soThang <= 0 || soThang > 24) {
+            throw new BadRequestException("Số tháng đăng ký vé tháng phải từ 1 đến 24 tháng!");
+        }
+
+        LoaiXe loaiXe = loaiXeRepository.findById(loaiXeId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy loại xe ID: " + loaiXeId));
+
+        BienSoXeHelper.ValidationResult vResult = 
+                BienSoXeHelper.validate(bienSoXe, loaiXe.getTenLoai());
+        if (!vResult.valid()) {
+            throw new BadRequestException("Biển số xe không hợp lệ theo quy chuẩn Việt Nam: " + vResult.message());
+        }
+        String displayPlate = vResult.displayValue();
+        String cleanPlate = BienSoXeHelper.clean(displayPlate);
+
+        // Chặn tạo nhiều vé tháng hoạt động trùng biển số
+        long activeCount = veThangRepository.countActiveByBienSoXe(cleanPlate, LocalDate.now());
+        if (activeCount > 0) {
+            throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] hiện đang có vé tháng đang hoạt động và còn hạn sử dụng!");
+        }
+
         // Tìm hoặc tạo mới khách hàng
         KhachHang khachHang = khachHangRepository.findBySoDienThoai(sdt)
                 .orElseGet(() -> {
@@ -102,12 +151,11 @@ public class MonthlyTicketService implements VeThangService {
         khachHang.setDiaChi(diaChi);
         khachHangRepository.save(khachHang);
 
-        LoaiXe loaiXe = loaiXeRepository.findById(loaiXeId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại xe ID: " + loaiXeId));
-
-        com.example.demo.util.BienSoXeHelper.ValidationResult vResult = 
-                com.example.demo.util.BienSoXeHelper.validate(bienSoXe, loaiXe.getTenLoai());
-        String displayPlate = vResult.valid() ? vResult.displayValue() : bienSoXe.trim().toUpperCase();
+        // Đảm bảo khách hàng luôn có tài khoản đăng nhập (tenDangNhap = sdt) với mật khẩu mã hóa BCrypt
+        if (nguoiDungRepository.findByTenDangNhap(sdt).isEmpty()) {
+            NguoiDung nd = new NguoiDung(sdt, passwordEncoder.encode("123456"), hoTen, "KHACH_HANG", sdt);
+            nguoiDungRepository.save(nd);
+        }
 
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusMonths(soThang);
@@ -138,11 +186,15 @@ public class MonthlyTicketService implements VeThangService {
     @Override
     @Transactional
     public VeThang giaHanVeThang(Long veThangId, int soThang) {
+        if (soThang <= 0 || soThang > 24) {
+            throw new BadRequestException("Số tháng gia hạn phải từ 1 đến 24 tháng!");
+        }
+
         VeThang veThang = veThangRepository.findById(veThangId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vé tháng ID: " + veThangId));
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy vé tháng ID: " + veThangId));
 
         LocalDate currentEnd = veThang.getNgayHetHan();
-        LocalDate newStart = currentEnd.isAfter(LocalDate.now()) ? currentEnd : LocalDate.now();
+        LocalDate newStart = (currentEnd != null && currentEnd.isAfter(LocalDate.now())) ? currentEnd : LocalDate.now();
         LocalDate newEnd = newStart.plusMonths(soThang);
 
         veThang.setNgayHetHan(newEnd);

@@ -33,16 +33,21 @@
             overflow: hidden;
             position: relative;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #334155;
         }
         .camera-viewport {
             position: relative;
             width: 100%;
-            height: 240px;
+            height: 150px;
             background: #1e293b;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            transition: height 0.3s ease;
+        }
+        .camera-viewport.active-stream {
+            height: 240px;
         }
         .camera-viewport video {
             width: 100%;
@@ -55,7 +60,7 @@
             align-items: center;
             justify-content: center;
             color: #94a3b8;
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: center;
         }
         .camera-overlay-guide {
@@ -91,25 +96,24 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(15, 23, 42, 0.75);
-            padding: 2px 8px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 3px 10px;
             border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #cbd5e1;
             z-index: 2;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .rec-indicator {
             width: 8px;
             height: 8px;
-            background: #ef4444;
+            background: #64748b;
             border-radius: 50%;
-            animation: pulse-red 1.5s infinite;
         }
-        @keyframes pulse-red {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
+        .rec-indicator.active {
+            background: #22c55e;
+            animation: pulse-green 1.5s infinite;
         }
 
         /* Ticket POS Receipt */
@@ -317,6 +321,78 @@
             cursor: pointer;
         }
 
+        /* Dedicated QR Scanner Mode Styling */
+        .qr-scanner-box {
+            background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
+            border: 2px solid #2563eb;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+        }
+        .qr-viewfinder {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            margin: 0 auto 12px auto;
+            border: 2px dashed rgba(56, 189, 248, 0.6);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .qr-viewfinder video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .qr-corner {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: #38bdf8;
+            border-style: solid;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .qr-corner-tl { top: 6px; left: 6px; border-width: 3px 0 0 3px; }
+        .qr-corner-tr { top: 6px; right: 6px; border-width: 3px 3px 0 0; }
+        .qr-corner-bl { bottom: 6px; left: 6px; border-width: 0 0 3px 3px; }
+        .qr-corner-br { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; }
+        .qr-laser-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8, 0 0 16px #0284c7;
+            top: 0;
+            left: 0;
+            animation: qrScanLaser 2s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 2;
+        }
+        @keyframes qrScanLaser {
+            0% { top: 5%; opacity: 0.85; }
+            50% { top: 92%; opacity: 0.85; }
+            100% { top: 5%; opacity: 0.85; }
+        }
+        .qr-input-wedge {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            letter-spacing: 1.5px;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .animate-pulse {
+            animation: pulse-qr 1.5s infinite;
+        }
+        @keyframes pulse-qr {
+            0% { transform: scale(1); opacity: 0.75; }
+            50% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.75; }
+        }
+
         @media print {
             body * { visibility: hidden; }
             #printableTicket, #printableTicket * { visibility: visible; }
@@ -353,12 +429,12 @@
                 </div>
             </div>
 
-            <!-- Interactive Barrier & Traffic Signal Console Bar -->
+            <!-- Interactive Barrier & Traffic Signal Console Bar (Ghi rõ tính chất mô phỏng) -->
             <div class="card border-0 shadow-sm rounded-3 mb-4 p-3 bg-white">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-3">
                         <!-- Traffic Light Signal -->
-                        <div class="traffic-light-housing" id="trafficLightSignal" title="Đèn tín hiệu giao thông làn vào">
+                        <div class="traffic-light-housing" id="trafficLightSignal" title="Đèn tín hiệu giao thông làn vào (Mô phỏng)">
                             <div class="traffic-bulb bulb-red active" id="bulbRed"></div>
                             <div class="traffic-bulb bulb-green" id="bulbGreen"></div>
                         </div>
@@ -375,24 +451,24 @@
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="barrier-badge barrier-badge-closed" id="barrierBadge">
-                                    <i class="fa-solid fa-lock me-1"></i> BARIE ĐANG HẠ (CHỜ TIẾP NHẬN)
+                                    <i class="fa-solid fa-lock me-1"></i> CỔNG ĐANG ĐÓNG (MÔ PHỎNG)
                                 </span>
-                                <span class="text-xs text-muted d-none d-md-inline" id="barrierHint">Tự động nâng mở khi tạo vé thành công</span>
+                                <span class="badge bg-light text-muted border text-2xs">Chưa kết nối Barie vật lý</span>
                             </div>
                             <div class="text-xs text-muted mt-1" id="barrierDesc">
-                                <i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Sẵn sàng ghi nhận phương tiện
+                                <i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Sẵn sàng ghi nhận phương tiện vào bãi
                             </div>
                         </div>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-success" id="btnManualOpen" onclick="manualOpenBarrier()" title="Nâng mở cần Barie">
-                            <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> Mở Barie
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnManualOpen" onclick="manualOpenBarrier()" title="Mở cổng mô phỏng">
+                            <i class="fa-solid fa-arrow-up-from-bracket me-1"></i> Mở cần (Mô phỏng)
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnManualClose" onclick="manualCloseBarrier()" title="Hạ đóng cần Barie">
-                            <i class="fa-solid fa-arrow-down me-1"></i> Đóng Barie
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnManualClose" onclick="manualCloseBarrier()" title="Đóng cổng mô phỏng">
+                            <i class="fa-solid fa-arrow-down me-1"></i> Đóng cần
                         </button>
-                        <a th:href="@{/xe-ra}" class="btn btn-sm btn-outline-secondary">
+                        <a th:href="@{/xe-ra}" class="btn btn-sm btn-outline-primary fw-medium">
                             Chuyển sang Xe ra <i class="fa-solid fa-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -415,67 +491,113 @@
             <div class="row g-4">
                 <!-- Left Column: Check-in Form & Live Camera -->
                 <div class="col-lg-7">
-                    <!-- CAMERA LÀN VÀO (WEBCAM & SCANNER TỰ ĐỘNG) -->
-                    <div class="camera-card mb-4">
-                        <div class="camera-rec-dot" id="cameraStatusPill">
-                            <span class="rec-indicator"></span>
-                            <span id="cameraStatusLabel">CAM 01 - LÀN VÀO</span>
-                        </div>
-                        <div class="camera-viewport" id="cameraContainer">
-                            <video id="webcamVideo" class="d-none" autoplay muted></video>
-                            <img id="imageFramePreview" class="d-none" alt="Ảnh phương tiện vào bãi">
-                            <div class="camera-overlay-guide" id="cameraOverlayGuide"></div>
-                            <!-- Placeholder khi chưa bật camera -->
-                            <div class="camera-placeholder" id="cameraPlaceholder">
-                                <i class="fa-solid fa-video-slash fs-1 mb-2 opacity-50"></i>
-                                <div class="fw-semibold">Camera Làn Vào Đang Tắt</div>
-                                <div class="text-xs opacity-75">Bật camera để tự nhận diện biển số xe hoặc quét mã QR tự động</div>
-                            </div>
-                        </div>
-                        <div class="p-2 px-3 bg-dark d-flex flex-wrap align-items-center justify-content-between gap-2 text-white small">
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light py-1 px-2" id="btnToggleCamera" onclick="toggleCamera()">
-                                    <i class="fa-solid fa-camera me-1"></i> <span id="cameraBtnText">Bật Camera Làn Vào</span>
-                                </button>
-                                <!-- Dropdown kết nối và chuyển đổi mọi Camera tìm được -->
-                                <select id="cameraDeviceSelect" class="form-select form-select-sm d-none py-1 bg-dark text-white border-secondary" title="Chọn nguồn thiết bị camera" aria-label="Chọn nguồn thiết bị camera" onchange="switchCamera(this.value)">
-                                    <option value="">-- Đổi Camera --</option>
-                                </select>
-                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2 d-none" id="btnCaptureFrame" onclick="captureManualFrame()">
-                                    <i class="fa-solid fa-camera-retro me-1"></i> Chụp ảnh xe vào
-                                </button>
-                                <!-- Tải ảnh từ tệp hoặc điện thoại (Không cần quyền camera) -->
-                                <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2" onclick="document.getElementById('fileUploadInput').click()" title="Tải ảnh từ máy hoặc chụp từ điện thoại">
-                                    <i class="fa-solid fa-upload me-1"></i> Tải ảnh
-                                </button>
-                                <input type="file" id="fileUploadInput" class="d-none" accept="image/*" title="Tải ảnh xe từ thiết bị" aria-label="Tải ảnh xe từ thiết bị" placeholder="Tải ảnh xe" onchange="handleFileUpload(this)">
-                                <!-- Nạp xe mẫu vào bãi để mô phỏng camera nhận diện tức thì -->
-                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 text-light" onclick="loadSampleEntryVehicle()" title="Mô phỏng Camera phát hiện xe vào và tự động nhận diện biển số">
-                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Xe mẫu vào
-                                </button>
-                            </div>
-                            <div class="text-muted text-xs d-none d-xl-block">
-                                <i class="fa-solid fa-bolt text-warning me-1"></i> Tự động nhận diện biển số & tạo vé
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BIỂU MẪU TIẾP NHẬN XE VÀO -->
+                    <!-- BIỂU MẪU TIẾP NHẬN XE VÀO (TRỌNG TÂM THAO TÁC) -->
                     <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h2 class="h5 fw-bold text-dark mb-0">Biểu mẫu tiếp nhận xe vào</h2>
-                            <small class="text-muted">Nhập biển số hoặc quét QR (Phím tắt: Nhấn Enter để tạo vé)</small>
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="h5 fw-bold text-dark mb-0">Biểu mẫu tiếp nhận xe vào</h2>
+                                <small class="text-muted">Nhập biển số hoặc quét QR (Phím tắt: Nhấn Enter để tạo vé)</small>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                <i class="fa-solid fa-bolt me-1"></i> Luồng thao tác chính
+                            </span>
                         </div>
                         <div class="card-body p-4">
                             <form th:action="@{/gui-xe}" method="post" id="checkInForm" novalidate>
                                 <!-- Hidden input lưu ảnh base64 chụp từ camera -->
                                 <input type="hidden" name="anhVaoData" id="anhVaoData">
 
-                                <!-- Biển số xe -->
+                                <!-- CHẾ ĐỘ TIẾP NHẬN: CHUYỂN ĐỔI GIỮA NHẬP BIỂN SỐ VÀ QUÉT MÃ QR / THẺ -->
+                                <div class="mb-3">
+                                    <div class="d-flex p-1 bg-light rounded-3 border">
+                                        <button type="button" class="btn btn-sm flex-fill fw-bold rounded-2 btn-primary shadow-sm" id="btnModePlate" onclick="switchCheckInMode('plate')">
+                                            <i class="fa-solid fa-keyboard me-1.5"></i> Chế độ Nhập biển số <span class="badge bg-white text-dark ms-1">F3</span>
+                                        </button>
+                                        <button type="button" class="btn btn-sm flex-fill fw-bold rounded-2 btn-light text-muted" id="btnModeQr" onclick="switchCheckInMode('qr')">
+                                            <i class="fa-solid fa-qrcode me-1.5 text-primary"></i> Chế độ Quét mã QR / Thẻ <span class="badge bg-secondary text-white ms-1">F4</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- KHUNG CHUYÊN DỤNG: QUÉT MÃ QR / THẺ (HIỂN THỊ KHI Ở CHẾ ĐỘ QUÉT QR) -->
+                                <div id="qrScannerPanel" class="qr-scanner-box mb-3 d-none">
+                                    <div class="d-flex align-items-center justify-content-between text-white mb-2">
+                                        <div class="fw-bold small d-flex align-items-center gap-2">
+                                            <span class="badge bg-primary"><i class="fa-solid fa-qrcode me-1"></i> SCANNER</span>
+                                            <span>Quét mã QR Thẻ vé tháng / Đặt chỗ / Thẻ thành viên</span>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 text-2xs" id="qrStatusPill">
+                                            <i class="fa-solid fa-circle-dot me-1"></i> Sẵn sàng nhận mã
+                                        </span>
+                                    </div>
+
+                                    <!-- QR Viewfinder with Laser Scanner -->
+                                    <div class="qr-viewfinder position-relative">
+                                        <div class="qr-corner qr-corner-tl"></div>
+                                        <div class="qr-corner qr-corner-tr"></div>
+                                        <div class="qr-corner qr-corner-bl"></div>
+                                        <div class="qr-corner qr-corner-br"></div>
+                                        <div class="qr-laser-line" id="qrLaserLine"></div>
+                                        
+                                        <!-- Placeholder biểu tượng QR đồ họa -->
+                                        <div id="qrPlaceholderIcon" class="text-center text-white p-2">
+                                            <i class="fa-solid fa-qrcode fs-1 text-info opacity-75 mb-1 animate-pulse"></i>
+                                            <div class="text-2xs text-light opacity-75">Hướng mã QR vào khung ngắm</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ô nhận diện đầu đọc mã vạch / máy quét USB chuyên dụng -->
+                                    <div class="mb-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-dark border-secondary text-info">
+                                                <i class="fa-solid fa-barcode"></i>
+                                            </span>
+                                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary qr-input-wedge" 
+                                                   id="qrScannerInput" 
+                                                   placeholder="Quét mã thẻ / QR (VT-xxxx, BK-xxxx)..." 
+                                                   title="Quét hoặc nhập mã thẻ / QR" 
+                                                   aria-label="Quét hoặc nhập mã thẻ / QR" 
+                                                   autocomplete="off">
+                                            <button class="btn btn-sm btn-primary px-3 fw-bold" type="button" onclick="handleQrInputSubmit()">
+                                                <i class="fa-solid fa-magnifying-glass me-1"></i> Quét
+                                            </button>
+                                        </div>
+                                        <div class="text-2xs text-light opacity-75 mt-1 d-flex align-items-center justify-content-between">
+                                            <span><i class="fa-solid fa-circle-info me-1 text-info"></i>Hỗ trợ đầu đọc mã vạch USB/Bluetooth hoặc nhập mã thẻ</span>
+                                            <span class="text-warning"><kbd class="kbd-key py-0 px-1 text-dark">Enter</kbd> xác nhận</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Các nút mô phỏng quét nhanh mã QR kiểm thử nghiệp vụ -->
+                                    <div class="pt-2 border-top border-secondary">
+                                        <div class="text-2xs text-light opacity-75 mb-1.5 fw-bold text-uppercase">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Mô phỏng quét nhanh mã QR thẻ:
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-1.5">
+                                            <button type="button" class="btn btn-xs btn-outline-info text-white" onclick="simulateQrScan('VT-99999999')">
+                                                <i class="fa-solid fa-id-card me-1 text-info"></i> QR Vé tháng (VT-99999999)
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-outline-warning text-white" onclick="simulateQrScan('BK-20261101')">
+                                                <i class="fa-solid fa-calendar-check me-1 text-warning"></i> QR Đặt chỗ (BK-20261101)
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-outline-success text-white" onclick="simulateQrScan('XD-0088')">
+                                                <i class="fa-solid fa-bicycle me-1 text-success"></i> Thẻ xe đạp (XD-0088)
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-outline-primary text-white" onclick="document.getElementById('qrFileUploadInput').click()">
+                                                <i class="fa-solid fa-image me-1"></i> Tải ảnh QR
+                                            </button>
+                                            <input type="file" id="qrFileUploadInput" class="d-none" accept="image/*" 
+                                                   title="Tải ảnh mã QR từ thiết bị" aria-label="Tải ảnh mã QR từ thiết bị" placeholder="Tải ảnh mã QR" 
+                                                   onchange="handleQrFileUpload(this)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 1. Biển số xe -->
                                 <div class="mb-3">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
                                         <label class="form-label fw-bold small text-dark mb-0" for="bienSoXe">
-                                            Biển số phương tiện <span class="text-danger">*</span>
+                                            1. Biển số phương tiện <span class="text-danger">*</span>
                                         </label>
                                         <div class="d-flex align-items-center gap-1">
                                             <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 d-none" id="btnAutoBikeCode" onclick="generateBicyclePlate()" title="Xe đạp không có biển số - Nhấp để tự sinh mã thẻ xe đạp">
@@ -505,19 +627,19 @@
                                     <div id="specialNoticeBox" class="mt-2 d-none"></div>
                                 </div>
 
-                                <!-- Loại phương tiện (Thẻ chọn kèm Icon trực quan & tự động nhận diện) -->
+                                <!-- 2. Loại phương tiện (Thẻ chọn kèm Icon trực quan & bảng giá chi tiết) -->
                                 <div class="mb-3">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <label class="form-label fw-bold small text-dark mb-0">
-                                            Loại phương tiện <span class="text-danger">*</span>
+                                            2. Loại phương tiện <span class="text-danger">*</span>
                                         </label>
-                                        <small class="text-muted text-xs"><i class="fa-solid fa-hand-pointer me-1 text-primary"></i>Nhấp icon xe để chọn nhanh</small>
+                                        <small class="text-muted text-xs"><i class="fa-solid fa-hand-pointer me-1 text-primary"></i>Nhấp icon xe để xác nhận hoặc đổi loại</small>
                                     </div>
 
                                     <!-- Grid Icon Cards lựa chọn loại xe trực quan -->
                                     <div class="row g-2 mb-2" id="vehicleTypeCards">
                                         <div th:each="lx : ${loaiXes}" class="col-6 col-md-3">
-                                            <div class="vehicle-type-card text-center p-2 rounded-3"
+                                            <div class="vehicle-type-card text-center p-2 rounded-3 h-100 d-flex flex-column justify-content-between"
                                                  th:classappend="${lxStat.first} ? 'active' : ''"
                                                  th:data-id="${lx.id}"
                                                  th:data-type="${lx.tenLoai}"
@@ -526,8 +648,11 @@
                                                     <i th:class="${'fa-solid fs-2 ' + (lx.iconClass != null and !lx.iconClass.isEmpty() ? (lx.iconClass.startsWith('fa-') ? lx.iconClass : 'fa-' + lx.iconClass) : (#strings.containsIgnoreCase(lx.tenLoai, 'tô') or #strings.containsIgnoreCase(lx.tenLoai, 'car') ? 'fa-car' : (#strings.containsIgnoreCase(lx.tenLoai, 'máy') ? 'fa-motorcycle' : (#strings.containsIgnoreCase(lx.tenLoai, 'đạp') or #strings.containsIgnoreCase(lx.tenLoai, 'điện') ? 'fa-bicycle' : 'fa-truck'))))}"></i>
                                                 </div>
                                                 <div class="vehicle-name fw-bold small text-truncate" th:text="${lx.tenLoai}">Xe máy</div>
-                                                <div class="vehicle-price text-muted font-monospace text-xs" 
-                                                     th:text="${#numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ'}">4.000 đ</div>
+                                                <div class="vehicle-price text-primary font-monospace fw-semibold text-xs mt-1" 
+                                                     th:text="${#numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ / lượt ngày'}">4.000 đ / lượt ngày</div>
+                                                <div class="text-2xs text-muted font-monospace"
+                                                     th:if="${lx.giaBanDem != null}"
+                                                     th:text="${'Đêm: ' + #numbers.formatDecimal(lx.giaBanDem, 0, 'POINT', 0, 'COMMA') + ' đ'}">Đêm: 6.000 đ</div>
                                             </div>
                                         </div>
                                     </div>
@@ -537,17 +662,17 @@
                                         <option value="" disabled>-- Chọn loại phương tiện --</option>
                                         <option th:each="lx : ${loaiXes}" 
                                                 th:value="${lx.id}" 
-                                                th:text="${lx.tenLoai + ' (Giá ngày: ' + #numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ)'}"
+                                                th:text="${lx.tenLoai + ' (Ngày: ' + #numbers.formatDecimal(lx.giaBanNgay, 0, 'POINT', 0, 'COMMA') + ' đ / Đêm: ' + #numbers.formatDecimal(lx.giaBanDem, 0, 'POINT', 0, 'COMMA') + ' đ)'}"
                                                 th:data-type="${lx.tenLoai}"
                                                 th:selected="${lxStat.first}">Xe máy</option>
                                     </select>
                                 </div>
 
-                                <!-- Ghi chú phương tiện -->
+                                <!-- 3. Ghi chú phương tiện -->
                                 <div class="mb-4">
                                     <div class="d-flex align-items-center justify-content-between mb-1">
                                         <label class="form-label fw-bold small text-dark mb-0" for="ghiChu">
-                                            Ghi chú & Đặc điểm nhận diện
+                                            3. Ghi chú & Đặc điểm nhận diện
                                         </label>
                                         <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="clearGhiChu()" title="Xóa trắng ghi chú">
                                             <i class="fa-solid fa-xmark"></i>
@@ -562,16 +687,61 @@
                                     </div>
                                 </div>
 
-                                <!-- Submit Action Button -->
+                                <!-- 4. Nút Ghi nhận xe vào -->
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-primary btn-lg flex-grow-1 fw-bold shadow-sm" id="btnSubmitCheckin">
-                                        <i class="fa-solid fa-circle-check me-2"></i> Xác nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>
+                                        <i class="fa-solid fa-circle-check me-2"></i> Ghi nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>
                                     </button>
-                                    <button type="reset" class="btn btn-outline-secondary px-3" title="Đặt lại form" onclick="resetPlateFeedback()">
+                                    <button type="button" class="btn btn-outline-secondary px-3" title="Đặt lại form" onclick="clearBienSoXe()">
                                         <i class="fa-solid fa-rotate-left"></i>
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- KHU VỰC CAMERA & GIÁM SÁT LÀN VÀO (MÔ PHỎNG / THIẾT BỊ CHƯA KẾT NỐI) -->
+                    <div class="camera-card mb-4">
+                        <div class="camera-rec-dot" id="cameraStatusPill">
+                            <span class="rec-indicator" id="cameraStatusDot"></span>
+                            <span id="cameraStatusLabel">Camera đang tắt (Thiết bị chưa kết nối)</span>
+                        </div>
+                        <div class="camera-viewport" id="cameraContainer">
+                            <video id="webcamVideo" class="d-none" autoplay muted></video>
+                            <img id="imageFramePreview" class="d-none" alt="Ảnh phương tiện vào bãi">
+                            <div class="camera-overlay-guide d-none" id="cameraOverlayGuide"></div>
+                            <!-- Placeholder khi chưa bật camera -->
+                            <div class="camera-placeholder" id="cameraPlaceholder">
+                                <i class="fa-solid fa-video-slash fs-2 mb-2 opacity-50"></i>
+                                <div class="fw-semibold small">Camera Làn Vào Đang Tắt</div>
+                                <div class="text-xs opacity-75">Bật camera để kết nối webcam hoặc tải ảnh để nhận diện biển số</div>
+                            </div>
+                        </div>
+                        <div class="p-2 px-3 bg-dark d-flex flex-wrap align-items-center justify-content-between gap-2 text-white small">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light py-1 px-2" id="btnToggleCamera" onclick="toggleCamera()">
+                                    <i class="fa-solid fa-camera me-1"></i> <span id="cameraBtnText">Bật Camera Làn Vào</span>
+                                </button>
+                                <!-- Dropdown kết nối và chuyển đổi mọi Camera tìm được -->
+                                <select id="cameraDeviceSelect" class="form-select form-select-sm d-none py-1 bg-dark text-white border-secondary" title="Chọn nguồn thiết bị camera" aria-label="Chọn nguồn thiết bị camera" onchange="switchCamera(this.value)">
+                                    <option value="">-- Đổi Camera --</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2 d-none" id="btnCaptureFrame" onclick="captureManualFrame()">
+                                    <i class="fa-solid fa-camera-retro me-1"></i> Chụp ảnh xe vào
+                                </button>
+                                <!-- Tải ảnh từ tệp hoặc điện thoại (Không cần quyền camera) -->
+                                <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2" onclick="document.getElementById('fileUploadInput').click()" title="Tải ảnh từ máy hoặc chụp từ điện thoại">
+                                    <i class="fa-solid fa-upload me-1"></i> Tải ảnh
+                                </button>
+                                <input type="file" id="fileUploadInput" class="d-none" accept="image/*" title="Tải ảnh xe từ thiết bị" aria-label="Tải ảnh xe từ thiết bị" placeholder="Tải ảnh xe" onchange="handleFileUpload(this)">
+                                <!-- Nạp xe mẫu vào bãi để mô phỏng camera nhận diện tức thì -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 text-light" onclick="loadSampleEntryVehicle()" title="Mô phỏng Camera phát hiện xe vào và tự động nhận diện biển số">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> [Mô phỏng] Xe mẫu vào
+                                </button>
+                            </div>
+                            <div class="text-muted text-xs d-none d-xl-block">
+                                <i class="fa-solid fa-circle-info text-secondary me-1"></i> Nhận diện biển số & chụp ảnh phương tiện
+                            </div>
                         </div>
                     </div>
 
@@ -596,6 +766,8 @@
                             <span class="fw-bold text-dark">Phím tắt ca trực:</span>
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span><kbd class="kbd-key">F3</kbd> Nhập biển</span>
+                            <span><kbd class="kbd-key">F4</kbd> Quét QR</span>
                             <span><kbd class="kbd-key">Enter</kbd> Tạo vé</span>
                             <span><kbd class="kbd-key">Space</kbd> Xe tiếp theo</span>
                             <span><kbd class="kbd-key">F2</kbd> Camera</span>
@@ -608,6 +780,13 @@
                 <div class="col-lg-5">
                     <!-- Ticket Generated Card (Displayed right on this page after check-in) -->
                     <div th:if="${newTicket != null}" class="ticket-receipt-card shadow-sm mb-4" id="printableTicket">
+                        <!-- Prominent Next Vehicle Action Button -->
+                        <button type="button" class="btn btn-success btn-lg w-100 fw-bold shadow-sm mb-3 d-flex align-items-center justify-content-center gap-2" onclick="prepareNextCheckIn()">
+                            <i class="fa-solid fa-forward"></i>
+                            <span>TIẾP NHẬN LƯỢT TIẾP THEO</span>
+                            <kbd class="kbd-key bg-white text-dark ms-1">Space</kbd>
+                        </button>
+
                         <div class="small fw-bold text-success text-uppercase letter-spacing-1 mb-1">
                             <i class="fa-solid fa-circle-check me-1"></i> TIẾP NHẬN XE VÀO THÀNH CÔNG
                         </div>
@@ -639,6 +818,10 @@
                                 <span class="text-muted">Hình thức:</span>
                                 <b class="text-primary" th:text="${newTicket.hinhThucThanhToan == 'VE_THANG' ? '⭐ Vé tháng (Miễn phí ngày)' : 'Vé lượt'}">Vé lượt</b>
                             </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Khu vực đỗ:</span>
+                                <b class="text-dark">Khu vực chung</b>
+                            </div>
                             <div class="d-flex justify-content-between py-1">
                                 <span class="text-muted">Thời gian vào:</span>
                                 <b class="text-dark" th:text="${newTicket.thoiGianVao != null ? #temporals.format(newTicket.thoiGianVao, 'HH:mm:ss dd/MM/yyyy') : '—'}">18/10/2026 14:30:00</b>
@@ -653,7 +836,7 @@
                                 <i class="fa-solid fa-eye me-1"></i> Chi tiết
                             </a>
                             <button type="button" class="btn btn-outline-success btn-sm fw-medium" onclick="prepareNextCheckIn()" title="Tiếp nhận xe tiếp theo (Space)">
-                                <i class="fa-solid fa-forward me-1"></i> Xe tiếp
+                                <i class="fa-solid fa-forward me-1"></i> Lượt tiếp
                             </button>
                         </div>
                     </div>
@@ -673,14 +856,14 @@
                                     <div class="p-2 rounded-3 bg-light border text-center">
                                         <div class="text-xs text-muted mb-1">Xe đang gửi trong bãi</div>
                                         <div class="fs-4 fw-bold text-primary font-monospace" th:text="${activeCount != null ? activeCount : '0'} + ' xe'">0 xe</div>
-                                        <div class="text-2xs text-muted">Hiện diện thực tế</div>
+                                        <div class="text-2xs text-muted">Lượt đang gửi theo hệ thống</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="p-2 rounded-3 bg-light border text-center">
                                         <div class="text-xs text-muted mb-1">Lượt vào hôm nay</div>
                                         <div class="fs-4 fw-bold text-success font-monospace" th:text="${todayCheckInsCount != null ? todayCheckInsCount : '0'} + ' lượt'">0 lượt</div>
-                                        <div class="text-2xs text-muted">Ghi nhận check-in</div>
+                                        <div class="text-2xs text-muted">Ghi nhận check-in trong ngày</div>
                                     </div>
                                 </div>
                             </div>
@@ -781,6 +964,148 @@
 
 <script>
     // ==========================================
+    // 0. CHẾ ĐỘ TIẾP NHẬN: NHẬP BIỂN SỐ vs QUÉT MÃ QR / THẺ
+    // ==========================================
+    let currentCheckInMode = 'plate'; // 'plate' | 'qr'
+
+    function switchCheckInMode(mode) {
+        currentCheckInMode = mode;
+        const btnPlate = document.getElementById('btnModePlate');
+        const btnQr = document.getElementById('btnModeQr');
+        const qrPanel = document.getElementById('qrScannerPanel');
+        const plateInput = document.getElementById('bienSoXe');
+        const qrInput = document.getElementById('qrScannerInput');
+
+        if (mode === 'qr') {
+            if (btnPlate) {
+                btnPlate.className = 'btn btn-sm flex-fill fw-bold rounded-2 btn-light text-muted';
+            }
+            if (btnQr) {
+                btnQr.className = 'btn btn-sm flex-fill fw-bold rounded-2 btn-primary shadow-sm';
+            }
+            if (qrPanel) {
+                qrPanel.classList.remove('d-none');
+            }
+            if (qrInput) {
+                qrInput.focus();
+                qrInput.select();
+            }
+            // Nếu camera chưa bật, hỗ trợ mở camera để jsQR quét liên tục
+            if (!videoStream && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                toggleCamera().catch(() => {});
+            }
+        } else {
+            if (btnPlate) {
+                btnPlate.className = 'btn btn-sm flex-fill fw-bold rounded-2 btn-primary shadow-sm';
+            }
+            if (btnQr) {
+                btnQr.className = 'btn btn-sm flex-fill fw-bold rounded-2 btn-light text-muted';
+            }
+            if (qrPanel) {
+                qrPanel.classList.add('d-none');
+            }
+            if (plateInput) {
+                plateInput.focus();
+            }
+        }
+    }
+
+    function handleQrInputSubmit() {
+        const qrInput = document.getElementById('qrScannerInput');
+        if (!qrInput) return;
+        const val = qrInput.value.trim().toUpperCase();
+        if (!val) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Vui lòng nhập hoặc quét mã QR',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
+        processScannedCode(val);
+    }
+
+    function simulateQrScan(code) {
+        const qrInput = document.getElementById('qrScannerInput');
+        if (qrInput) qrInput.value = code;
+        processScannedCode(code);
+    }
+
+    function processScannedCode(code) {
+        if (!code) return;
+        const clean = code.trim().toUpperCase();
+        const plateInput = document.getElementById('bienSoXe');
+        const qrInput = document.getElementById('qrScannerInput');
+        const qrStatus = document.getElementById('qrStatusPill');
+
+        if (qrInput) qrInput.value = clean;
+        if (plateInput) {
+            plateInput.value = clean;
+            plateInput.focus();
+        }
+
+        playScanBeep();
+
+        if (qrStatus) {
+            qrStatus.className = 'badge bg-success text-white text-2xs';
+            qrStatus.innerHTML = '<i class="fa-solid fa-check me-1"></i> Đã quét: ' + clean;
+            setTimeout(() => {
+                if (qrStatus) {
+                    qrStatus.className = 'badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 text-2xs';
+                    qrStatus.innerHTML = '<i class="fa-solid fa-circle-dot me-1"></i> Sẵn sàng nhận mã';
+                }
+            }, 3000);
+        }
+
+        updateCameraSnapshotForPlate(clean);
+        validateAndLookupPlate(clean);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Đã nhận diện mã: ' + clean,
+            text: 'Đang kiểm tra và xác thực dữ liệu phương tiện...',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+
+    function handleQrFileUpload(input) {
+        const file = input && input.files && input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                if (typeof jsQR !== 'undefined') {
+                    const imgData = ctx.getImageData(0, 0, img.width, img.height);
+                    const code = jsQR(imgData.data, imgData.width, imgData.height);
+                    if (code && code.data) {
+                        processScannedCode(code.data);
+                        return;
+                    }
+                }
+                
+                // Fallback nếu ảnh không chứa mã QR thì đưa sang nhận diện biển số OCR
+                handleFileUpload(input);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ==========================================
     // 1. BIẾN TOÀN CỤC & CAMERA CONTROLLER
     // ==========================================
     let videoStream = null;
@@ -842,7 +1167,11 @@
             btnCapture.style.display = 'none';
             placeholder.style.display = 'flex';
             btnText.textContent = 'Bật Camera Làn Vào';
-            document.getElementById('cameraStatusLabel').textContent = 'CAM 01 - LÀN VÀO';
+            document.getElementById('cameraStatusLabel').textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
+            const dot = document.getElementById('cameraStatusDot');
+            if (dot) dot.classList.remove('active');
+            const container = document.getElementById('cameraContainer');
+            if (container) container.classList.remove('active-stream');
         } else {
             // Kiểm tra bảo mật trình duyệt đối với getUserMedia
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -914,7 +1243,11 @@
         statusPill.classList.remove('d-none');
         btnCapture.classList.remove('d-none');
         placeholder.classList.add('d-none');
-        document.getElementById('cameraStatusLabel').textContent = 'CAM 01 - LÀN VÀO (TRỰC TIẾP)';
+        document.getElementById('cameraStatusLabel').textContent = 'Camera đang hoạt động (Làn vào 01)';
+        const dot = document.getElementById('cameraStatusDot');
+        if (dot) dot.classList.add('active');
+        const container = document.getElementById('cameraContainer');
+        if (container) container.classList.add('active-stream');
 
         startQrScanning();
     }
@@ -938,6 +1271,12 @@
             videoStream.getTracks().forEach(track => track.stop());
             videoStream = null;
         }
+        const dot = document.getElementById('cameraStatusDot');
+        if (dot) dot.classList.remove('active');
+        const container = document.getElementById('cameraContainer');
+        if (container) container.classList.remove('active-stream');
+        const label = document.getElementById('cameraStatusLabel');
+        if (label) label.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
     }
 
     // ==========================================
@@ -1225,17 +1564,21 @@
         imgPreview.src = dataUrl;
         imgPreview.classList.remove('d-none');
         if (statusLabel) {
-            statusLabel.textContent = 'ANPR: ' + sample.plate;
+            statusLabel.textContent = '[Mô phỏng] Xe mẫu: ' + sample.plate;
         }
+        const container = document.getElementById('cameraContainer');
+        if (container) container.classList.add('active-stream');
+        const dot = document.getElementById('cameraStatusDot');
+        if (dot) dot.classList.remove('active');
 
-        // TỰ ĐỘNG GHI NHẬN BIỂN SỐ VÀO Ô NHẬP LIỆU
+        // Ghi nhận biển số vào ô nhập liệu để nhân viên đối chiếu và xác nhận
         const inputPlate = document.getElementById('bienSoXe');
         if (inputPlate) {
             inputPlate.value = sample.plate;
             inputPlate.focus();
         }
 
-        // TỰ ĐỘNG CHỌN LOẠI XE TƯƠNG ỨNG
+        // Tự động gợi ý loại xe tương ứng
         const select = document.getElementById('loaiXeId');
         if (select) {
             for (let opt of select.options) {
@@ -1250,7 +1593,7 @@
             }
         }
 
-        // TỰ ĐỘNG ĐIỀN GHI CHÚ ĐẶC ĐIỂM XE
+        // Điền ghi chú đặc điểm nhận diện
         const inputGhiChu = document.getElementById('ghiChu');
         if (inputGhiChu) {
             inputGhiChu.value = sample.modelName + ', ' + sample.colorName;
@@ -1266,11 +1609,11 @@
         Swal.fire({
             toast: true,
             position: 'top-end',
-            icon: 'success',
-            title: 'Camera Làn Vào đã nhận diện: ' + sample.plate,
+            icon: 'info',
+            title: '[Mô phỏng] Đã nhận diện xe mẫu: ' + sample.plate,
             html: '<small class="text-muted">' + sample.modelName + ' (' + sample.typeName + ' - ' + sample.colorName + ')</small>',
             showConfirmButton: false,
-            timer: 2200
+            timer: 2000
         });
     }
 
@@ -1301,18 +1644,17 @@
         const imgPreview = document.getElementById('imageFramePreview');
         const placeholder = document.getElementById('cameraPlaceholder');
         const statusLabel = document.getElementById('cameraStatusLabel');
+        const container = document.getElementById('cameraContainer');
 
         if (videoStream) stopCamera();
         video.classList.add('d-none');
         placeholder.classList.add('d-none');
         imgPreview.src = dataUrl;
         imgPreview.classList.remove('d-none');
-        if (statusLabel) statusLabel.textContent = 'ANPR: ' + plate;
+        if (container) container.classList.add('active-stream');
+        if (statusLabel) statusLabel.textContent = '[Mô phỏng] Biển số: ' + plate;
     }
 
-    /**
-     * Tải ảnh phương tiện từ máy tính hoặc chụp từ điện thoại -> Tự động nhận diện biển số
-     */
     /**
      * Nút Làm mới: Xóa trắng ô biển số xe để sửa nhanh
      */
@@ -1325,12 +1667,18 @@
         resetPlateFeedback();
         const statusLabel = document.getElementById('cameraStatusLabel');
         if (statusLabel) {
-            statusLabel.textContent = 'CAM 01 - LÀN VÀO';
+            statusLabel.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
         }
         const badge = document.getElementById('autoInferenceBadge');
         if (badge) {
             badge.classList.add('d-none');
             badge.style.display = 'none';
+        }
+        const btnSubmit = document.getElementById('btnSubmitCheckin');
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('disabled');
+            btnSubmit.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Ghi nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>';
         }
         Swal.fire({
             toast: true,
@@ -1716,19 +2064,21 @@
                         inputPlate.focus();
                     }
                     if (statusLabel) {
-                        statusLabel.textContent = 'ANPR: ' + detectedPlate;
+                        statusLabel.textContent = 'OCR đã đọc: ' + detectedPlate;
                     }
+                    const container = document.getElementById('cameraContainer');
+                    if (container) container.classList.add('active-stream');
                     playScanBeep();
                     validateAndLookupPlate(detectedPlate);
 
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
-                        icon: 'success',
-                        title: 'Camera Làn Vào đã nhận diện: ' + detectedPlate,
-                        text: 'Trích xuất biển số thành công từ ảnh',
+                        icon: 'info',
+                        title: 'Đã trích xuất biển số: ' + detectedPlate,
+                        text: 'Vui lòng kiểm tra, điều chỉnh loại xe/ghi chú và nhấn "Ghi nhận xe vào"',
                         showConfirmButton: false,
-                        timer: 2200
+                        timer: 2500
                     });
                 } else {
                     // Nếu chưa nhận diện rõ, để trống ô nhập và hướng dẫn nhập tay hoặc nhấn Làm mới
@@ -1843,17 +2193,7 @@
     function handleScannedQrData(data) {
         const plateInput = document.getElementById('bienSoXe');
         if (data && data !== plateInput.value) {
-            playScanBeep();
-            plateInput.value = data.trim().toUpperCase();
-            validateAndLookupPlate(plateInput.value);
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'Đã nhận diện mã: ' + data,
-                showConfirmButton: false,
-                timer: 1500
-            });
+            processScannedCode(data);
         }
     }
 
@@ -1973,6 +2313,12 @@
         }
         const input = document.getElementById('bienSoXe');
         if (input) input.classList.remove('is-invalid', 'is-valid');
+        const btnSubmit = document.getElementById('btnSubmitCheckin');
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('disabled');
+            btnSubmit.title = '';
+        }
     }
 
     let bikeCounter = Math.floor(1000 + Math.random() * 9000);
@@ -2217,16 +2563,26 @@
                 .then(data => {
                     if (!notice) return;
 
+                    // Nếu quét thẻ/mã QR vé tháng (VT-xxxx) -> tự động điền biển số xe đăng ký
+                    if (data.resolvedPlate && data.scannedCardCode) {
+                        input.value = data.resolvedPlate;
+                        fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-qrcode me-1"></i> Quét thẻ vé tháng: <strong>' + data.scannedCardCode + '</strong> &rarr; Biển số: <strong>' + data.resolvedPlate + '</strong></span>';
+                    }
+
                     let alertItems = [];
+                    let submitBlocked = false;
+                    let blockReason = '';
 
                     // 1. CẢNH BÁO AN NINH: XE TRONG DANH SÁCH ĐEN (BLACKLIST)
                     if (data.isBlacklisted) {
+                        submitBlocked = true;
+                        blockReason = 'Xe thuộc danh sách đen - Không được phép tạo vé!';
                         alertItems.push(`
                             <div class="alert alert-danger blacklist-alert-banner py-2 px-3 small mb-2 border-2 border-danger shadow-sm d-flex align-items-center gap-2">
                                 <i class="fa-solid fa-triangle-exclamation fs-3 text-danger animate-pulse"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-bold text-uppercase"><i class="fa-solid fa-ban me-1"></i> CẢNH BÁO AN NINH - XE TRONG DANH SÁCH ĐEN (${data.blacklistLevel || 'MỨC CAO'})</div>
-                                    <div class="text-xs">Lý do: <strong>${data.blacklistReason || 'Vi phạm nội quy bãi xe'}</strong> &bull; Đề nghị giữ phương tiện và báo quản lý ngay!</div>
+                                    <div class="text-xs">Lý do: <strong>${data.blacklistReason || 'Vi phạm nội quy bãi xe'}</strong> &bull; Đề nghị giữ phương tiện và báo quản lý ngay! (Đã chặn tạo vé)</div>
                                 </div>
                             </div>
                         `);
@@ -2248,6 +2604,8 @@
 
                     // 3. XE ĐANG Ở TRONG BÃI
                     if (data.alreadyInLot) {
+                        submitBlocked = true;
+                        blockReason = 'Xe đang có lượt gửi trong bãi - Không thể tạo vé mới!';
                         alertItems.push(`
                             <div class="alert alert-danger py-2 px-3 small mb-2 d-flex align-items-center justify-content-between">
                                 <div>
@@ -2255,20 +2613,33 @@
                                     <strong>Xe này đang ở trong bãi!</strong> (Vé #${data.ticketCode} - vào lúc ${data.thoiGianVao})
                                 </div>
                                 <a href="/xe-ra?code=${encodeURIComponent(data.ticketCode)}" class="btn btn-sm btn-danger py-0 px-2 fw-bold text-nowrap">
-                                    Sang Làn Xe Ra &rarr;
+                                    Xem tại Làn Xe Ra &rarr;
                                 </a>
                             </div>
                         `);
                     }
 
-                    // 4. KHÁCH VÉ THÁNG HỢP LỆ
+                    // 4. ĐƠN ĐẶT CHỖ TRƯỚC HỢP LỆ
+                    if (data.hasPreBooking) {
+                        alertItems.push(`
+                            <div class="alert alert-info py-2 px-3 small mb-2 border-2 border-info shadow-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-calendar-check fs-4 text-info"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold"><i class="fa-solid fa-bookmark me-1"></i> ĐẶT CHỖ TRƯỚC: ${data.bookingCustomerName || ''} (Mã #${data.bookingCode})</div>
+                                    <div class="text-xs">Hạn giữ chỗ: <strong>${data.bookingExpiry || ''}</strong> &bull; Tiền cọc ghi nhận: <strong>${data.bookingDepositFormatted || ''}</strong> (Chưa tự động khấu trừ cọc)</div>
+                                </div>
+                            </div>
+                        `);
+                    }
+
+                    // 5. KHÁCH VÉ THÁNG HỢP LỆ
                     if (data.hasMonthlyPass) {
                         alertItems.push(`
                             <div class="monthly-pass-alert small d-flex align-items-center gap-2 mb-2">
                                 <i class="fa-solid fa-id-card fs-4 text-purple"></i>
                                 <div>
                                     <div class="fw-bold">⭐ KHÁCH VÉ THÁNG: ${data.customerName} (${data.monthlyPassCode})</div>
-                                    <div class="text-xs opacity-75">Hạn sử dụng đến: <strong>${data.expiryDate}</strong> - Tự động miễn phí lượt vào bãi!</div>
+                                    <div class="text-xs opacity-75">Hạn sử dụng đến: <strong>${data.expiryDate}</strong> &bull; Áp dụng miễn phí theo quy định vé tháng</div>
                                 </div>
                             </div>
                         `);
@@ -2282,6 +2653,20 @@
                         notice.classList.add('d-none');
                         notice.style.display = 'none';
                         notice.innerHTML = '';
+                    }
+
+                    // Khóa / Mở nút submit dựa trên kết quả kiểm tra nghiệp vụ
+                    const btnSubmit = document.getElementById('btnSubmitCheckin');
+                    if (btnSubmit) {
+                        if (submitBlocked) {
+                            btnSubmit.disabled = true;
+                            btnSubmit.classList.add('disabled');
+                            btnSubmit.title = blockReason;
+                        } else {
+                            btnSubmit.disabled = false;
+                            btnSubmit.classList.remove('disabled');
+                            btnSubmit.title = '';
+                        }
                     }
                 })
                 .catch(() => {});
@@ -2420,8 +2805,20 @@
         }
     }
 
-    // Bắt phím tắt toàn trang: F2 (Camera), Space (Xe tiếp), Escape (Reset)
+    // Bắt phím tắt toàn trang: F3 (Nhập biển), F4 (Quét QR), F2 (Camera), Space (Xe tiếp), Escape (Reset)
     document.addEventListener('keydown', function(e) {
+        if (e.key === 'F3') {
+            e.preventDefault();
+            switchCheckInMode('plate');
+            return;
+        }
+
+        if (e.key === 'F4') {
+            e.preventDefault();
+            switchCheckInMode('qr');
+            return;
+        }
+
         if (e.key === 'F2') {
             e.preventDefault();
             toggleCamera();
@@ -2443,10 +2840,38 @@
 
     function prepareNextCheckIn() {
         const input = document.getElementById('bienSoXe');
+        const qrInput = document.getElementById('qrScannerInput');
         if (input) {
             input.value = '';
             resetPlateFeedback();
+        }
+        if (qrInput) {
+            qrInput.value = '';
+        }
+
+        if (currentCheckInMode === 'qr' && qrInput) {
+            qrInput.focus();
+        } else if (input) {
             input.focus();
+        }
+
+        const btnSubmit = document.getElementById('btnSubmitCheckin');
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('disabled');
+            btnSubmit.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Ghi nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>';
+        }
+        const statusLabel = document.getElementById('cameraStatusLabel');
+        if (statusLabel && !videoStream) {
+            statusLabel.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
+        }
+        const dot = document.getElementById('cameraStatusDot');
+        if (dot && !videoStream) {
+            dot.classList.remove('active');
+        }
+        const container = document.getElementById('cameraContainer');
+        if (container && !videoStream) {
+            container.classList.remove('active-stream');
         }
     }
 
@@ -2493,17 +2918,22 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo vé xe vào...';
     });
 
-    // Khi trang tải xong: Tự động focus ô biển số & mở Barie nếu vừa tạo vé
+    // Khi trang tải xong: Tự động focus và cấu hình sự kiện
     document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById('bienSoXe');
-        if (input) {
-            input.focus();
+        const qrInput = document.getElementById('qrScannerInput');
+
+        if (qrInput) {
+            qrInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleQrInputSubmit();
+                }
+            });
         }
 
-        // Nếu có phiếu vé mới vừa tạo (trang load sau khi check-in thành công)
-        const printableTicket = document.getElementById('printableTicket');
-        if (printableTicket) {
-            triggerBarrierOpen(4000);
+        if (input) {
+            input.focus();
         }
 
         // Khởi động trước (pre-warm) Tesseract OCR Worker chạy nền sau 500ms để người dùng tải ảnh là nhận diện tức thì

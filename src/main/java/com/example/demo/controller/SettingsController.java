@@ -4,6 +4,9 @@ import com.example.demo.model.NguoiDung;
 import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.service.ParkingLotService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +21,14 @@ public class SettingsController {
 
     private final ParkingLotService parkingLotService;
     private final NguoiDungRepository nguoiDungRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public SettingsController(ParkingLotService parkingLotService, NguoiDungRepository nguoiDungRepository) {
+    public SettingsController(ParkingLotService parkingLotService, 
+                              NguoiDungRepository nguoiDungRepository,
+                              PasswordEncoder passwordEncoder) {
         this.parkingLotService = parkingLotService;
         this.nguoiDungRepository = nguoiDungRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -54,8 +61,9 @@ public class SettingsController {
             RedirectAttributes redirectAttributes
     ) {
         try {
-            NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
-            if (currentUser == null) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth != null ? auth.getName() : null;
+            if (username == null || "anonymousUser".equals(username)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
                 return "redirect:/login";
             }
@@ -65,13 +73,13 @@ public class SettingsController {
                 return "redirect:/cai-dat";
             }
 
-            NguoiDung userInDb = nguoiDungRepository.findById(currentUser.getId()).orElse(null);
-            if (userInDb == null || !userInDb.getMatKhau().equals(currentPassword.trim())) {
+            NguoiDung userInDb = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+            if (userInDb == null || !passwordEncoder.matches(currentPassword.trim(), userInDb.getMatKhau())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu hiện tại không chính xác!");
                 return "redirect:/cai-dat";
             }
 
-            userInDb.setMatKhau(newPassword.trim());
+            userInDb.setMatKhau(passwordEncoder.encode(newPassword.trim()));
             nguoiDungRepository.save(userInDb);
             session.setAttribute("currentUser", userInDb);
 

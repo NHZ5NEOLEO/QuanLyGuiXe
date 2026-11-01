@@ -96,12 +96,20 @@
                                         </td>
                                         <td><span th:text="${v.loaiXe != null ? v.loaiXe.tenLoai : 'Chưa rõ'}">Ô tô</span></td>
                                         <td><small class="text-muted" th:text="${#temporals.format(v.thoiGianVao, 'HH:mm dd/MM/yyyy')}">10/10/2026</small></td>
-                                        <td><span class="badge-pro badge-error-pro">Quá 24 giờ</span></td>
+                                        <td>
+                                            <span class="badge-pro badge-error-pro mb-1 d-inline-block">Quá 24 giờ</span>
+                                            <div class="small text-muted"><i class="fa-solid fa-warehouse text-warning me-1"></i>Khu Tồn Bãi 24H</div>
+                                        </td>
                                         <td><span class="badge-pro badge-neutral-pro" th:text="${v.veThang != null ? 'Vé tháng' : 'Vé lượt'}">Vé lượt</span></td>
                                         <td class="text-end">
-                                            <a th:href="@{/gate(tab='checkout', query=${v.bienSoXe})}" class="btn-pro btn-danger-pro btn-sm-pro py-1">
-                                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out ngay
-                                            </a>
+                                            <div class="d-flex gap-1 justify-content-end">
+                                                <a th:href="@{/quan-ly-do-xe(maKhu='24H')}" class="btn btn-sm btn-outline-danger py-1" title="Xem tại Khu Xe Tồn > 24H">
+                                                    <i class="fa-solid fa-clock-rotate-left"></i> Khu 24H
+                                                </a>
+                                                <a th:href="@{/gate(tab='checkout', query=${v.bienSoXe})}" class="btn-pro btn-danger-pro btn-sm-pro py-1">
+                                                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>

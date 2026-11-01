@@ -296,7 +296,7 @@
                                         <i class="fa-solid fa-circle-dot me-1"></i>Đang gửi
                                     </span>
                                     <span th:if="${v.trangThai == 'Đã ra'}" class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 text-nowrap px-2 py-1">
-                                        <i class="fa-solid fa-check-double me-1"></i>Đã ra
+                                        <i class="fa-solid fa-check me-1"></i>Đã ra
                                     </span>
                                 </td>
 
@@ -325,31 +325,33 @@
 
                                 <!-- Hành Động (Chi tiết, Sửa, Xóa, Ra) -->
                                 <td class="text-end pe-3">
-                                    <div class="d-inline-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                                    <div class="ticket-actions-group">
                                         <!-- Xem Chi Tiết -->
-                                        <a th:href="@{'/ve-xe/' + ${v.id}}" class="btn btn-sm btn-outline-info text-dark py-1 px-2 text-nowrap" title="Xem chi tiết vé">
+                                        <a th:href="@{'/ve-xe/' + ${v.id}}" class="btn btn-sm btn-outline-info text-dark btn-ticket-action btn-ticket-detail" title="Xem chi tiết vé">
                                             <i class="fa-solid fa-eye text-info me-1"></i>Chi tiết
                                         </a>
 
                                         <!-- Nút Sửa Vé -->
-                                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 text-nowrap" 
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-ticket-action btn-ticket-edit" 
                                                 th:data-id="${v.id}" onclick="openEditModal(this.getAttribute('data-id'))" title="Chỉnh sửa vé xe này">
                                             <i class="fa-solid fa-pen-to-square me-1"></i>Sửa
                                         </button>
 
                                         <!-- Nút Xóa Vé -->
-                                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 text-nowrap" 
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-ticket-action btn-ticket-delete" 
                                                 th:data-id="${v.id}" th:data-code="${v.maQR}" th:data-plate="${v.bienSoXe}" 
                                                 onclick="confirmDeleteTicket(this.getAttribute('data-id'), this.getAttribute('data-code'), this.getAttribute('data-plate'))" title="Xóa vé xe khỏi hệ thống">
                                             <i class="fa-solid fa-trash-can me-1"></i>Xóa
                                         </button>
 
-                                        <!-- Nút Ra Xe (Chỉ hiển thị khi đang gửi) -->
+                                        <!-- Nút Ra Xe (Chỉ hiển thị khi đang gửi, nếu đã ra thì giữ placeholder để cột đều đặn) -->
                                         <a th:if="${v.trangThai == 'Đang gửi'}" 
                                            th:href="@{/xe-ra(code=${v.maQR})}" 
-                                           class="btn btn-sm btn-warning py-1 px-2 text-dark fw-bold text-nowrap" title="Tính phí & cho xe ra bãi">
+                                           class="btn btn-sm btn-warning text-dark fw-bold btn-ticket-action btn-ticket-exit" 
+                                           title="Tính phí & cho xe ra bãi">
                                             <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Ra
                                         </a>
+                                        <span th:unless="${v.trangThai == 'Đang gửi'}" class="btn btn-sm btn-ticket-action btn-ticket-placeholder" aria-hidden="true">Ra</span>
                                     </div>
                                 </td>
                             </tr>

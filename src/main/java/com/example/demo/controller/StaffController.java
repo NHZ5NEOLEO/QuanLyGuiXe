@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.NguoiDung;
 import com.example.demo.repository.NguoiDungRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +16,11 @@ import java.util.stream.Collectors;
 public class StaffController {
 
     private final NguoiDungRepository nguoiDungRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public StaffController(NguoiDungRepository nguoiDungRepository) {
+    public StaffController(NguoiDungRepository nguoiDungRepository, PasswordEncoder passwordEncoder) {
         this.nguoiDungRepository = nguoiDungRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -91,7 +94,7 @@ public class StaffController {
 
             NguoiDung user = new NguoiDung(
                     tenDangNhap.trim(),
-                    matKhau.trim(),
+                    passwordEncoder.encode(matKhau.trim()),
                     hoTen.trim(),
                     vaiTro.trim().toUpperCase(),
                     soDienThoai != null ? soDienThoai.trim() : ""
@@ -122,7 +125,7 @@ public class StaffController {
             user.setVaiTro(vaiTro.trim().toUpperCase());
             if (soDienThoai != null) user.setSoDienThoai(soDienThoai.trim());
             if (matKhauMoi != null && !matKhauMoi.trim().isEmpty()) {
-                user.setMatKhau(matKhauMoi.trim());
+                user.setMatKhau(passwordEncoder.encode(matKhauMoi.trim()));
             }
 
             nguoiDungRepository.save(user);
