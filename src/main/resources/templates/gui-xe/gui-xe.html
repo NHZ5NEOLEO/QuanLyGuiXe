@@ -323,39 +323,72 @@
 
         /* Dedicated QR Scanner Mode Styling */
         .qr-scanner-box {
-            background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
-            border: 2px solid #2563eb;
-            border-radius: 12px;
-            padding: 16px;
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            border-radius: 14px;
+            padding: 18px;
             position: relative;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.1);
         }
         .qr-viewfinder {
             position: relative;
-            width: 170px;
-            height: 170px;
-            margin: 0 auto 12px auto;
-            border: 2px dashed rgba(56, 189, 248, 0.6);
+            width: 260px;
+            height: 190px;
+            margin: 0 auto 14px auto;
+            border: 2px dashed #0284c7;
             border-radius: 12px;
-            background: rgba(15, 23, 42, 0.7);
+            background: #f0f9ff;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .qr-viewfinder.camera-active {
+            background: #0f172a;
+            border: 2px solid #22c55e;
         }
         .qr-viewfinder video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        .qr-icon-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0f2fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera-live-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #22c55e;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 5;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
         .qr-corner {
             position: absolute;
             width: 18px;
             height: 18px;
-            border-color: #38bdf8;
+            border-color: #0284c7;
             border-style: solid;
             pointer-events: none;
-            z-index: 3;
+            z-index: 4;
+        }
+        .qr-viewfinder.camera-active .qr-corner {
+            border-color: #22c55e;
         }
         .qr-corner-tl { top: 6px; left: 6px; border-width: 3px 0 0 3px; }
         .qr-corner-tr { top: 6px; right: 6px; border-width: 3px 3px 0 0; }
@@ -365,13 +398,17 @@
             position: absolute;
             width: 100%;
             height: 2px;
-            background: #38bdf8;
-            box-shadow: 0 0 8px #38bdf8, 0 0 16px #0284c7;
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e, 0 0 16px #86efac;
             top: 0;
             left: 0;
             animation: qrScanLaser 2s infinite ease-in-out;
             pointer-events: none;
-            z-index: 2;
+            z-index: 3;
+            display: none;
+        }
+        .qr-viewfinder.camera-active .qr-laser-line {
+            display: block;
         }
         @keyframes qrScanLaser {
             0% { top: 5%; opacity: 0.85; }
@@ -521,70 +558,89 @@
 
                                 <!-- KHUNG CHUYÊN DỤNG: QUÉT MÃ QR / THẺ (HIỂN THỊ KHI Ở CHẾ ĐỘ QUÉT QR) -->
                                 <div id="qrScannerPanel" class="qr-scanner-box mb-3 d-none">
-                                    <div class="d-flex align-items-center justify-content-between text-white mb-2">
-                                        <div class="fw-bold small d-flex align-items-center gap-2">
-                                            <span class="badge bg-primary"><i class="fa-solid fa-qrcode me-1"></i> SCANNER</span>
-                                            <span>Quét mã QR Thẻ vé tháng / Đặt chỗ / Thẻ thành viên</span>
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <div class="fw-bold small d-flex align-items-center gap-2 text-dark">
+                                            <span class="badge bg-primary px-2 py-1"><i class="fa-solid fa-qrcode me-1"></i> SCANNER</span>
+                                            <span class="fs-6 fw-bold">Quét mã QR Thẻ vé tháng</span>
                                         </div>
-                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 text-2xs" id="qrStatusPill">
-                                            <i class="fa-solid fa-circle-dot me-1"></i> Sẵn sàng nhận mã
-                                        </span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle text-xs px-2.5 py-1" id="qrStatusPill">
+                                                <i class="fa-solid fa-circle-dot me-1"></i> Sẵn sàng nhận mã
+                                            </span>
+                                            <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" id="btnToggleQrCamera" onclick="toggleCamera()">
+                                                <i class="fa-solid fa-camera me-1"></i> <span id="btnToggleQrCameraText">Bật Camera</span>
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <!-- QR Viewfinder with Laser Scanner -->
-                                    <div class="qr-viewfinder position-relative">
+                                    <!-- QR Viewfinder with Laser Scanner & Live Video Feed -->
+                                    <div class="qr-viewfinder position-relative" id="qrViewfinderContainer">
                                         <div class="qr-corner qr-corner-tl"></div>
                                         <div class="qr-corner qr-corner-tr"></div>
                                         <div class="qr-corner qr-corner-bl"></div>
                                         <div class="qr-corner qr-corner-br"></div>
                                         <div class="qr-laser-line" id="qrLaserLine"></div>
                                         
-                                        <!-- Placeholder biểu tượng QR đồ họa -->
-                                        <div id="qrPlaceholderIcon" class="text-center text-white p-2">
-                                            <i class="fa-solid fa-qrcode fs-1 text-info opacity-75 mb-1 animate-pulse"></i>
-                                            <div class="text-2xs text-light opacity-75">Hướng mã QR vào khung ngắm</div>
+                                        <!-- Video webcam thật khi bật camera -->
+                                        <video id="qrWebcamVideo" class="d-none" autoplay muted playsinline></video>
+
+                                        <!-- Badge overlay khi camera đang chạy -->
+                                        <div class="camera-live-badge d-none" id="qrCameraLiveBadge">
+                                            <span class="rec-indicator active"></span> CAMERA ĐANG QUÉT
+                                        </div>
+                                        
+                                        <!-- Placeholder đồ họa sáng sủa khi camera chưa bật -->
+                                        <div id="qrPlaceholderIcon" class="text-center p-3">
+                                            <div class="qr-icon-circle mx-auto mb-2">
+                                                <i class="fa-solid fa-qrcode fs-2 text-primary animate-pulse"></i>
+                                            </div>
+                                            <div class="fw-bold small text-dark mb-0.5">Hướng mã QR vào khung ngắm</div>
+                                            <div class="text-xs text-muted mb-2">Hỗ trợ mã thẻ vé tháng hoặc quét mã từ điện thoại</div>
+                                            <button type="button" class="btn btn-sm btn-primary py-1 px-3 shadow-sm fw-semibold" onclick="toggleCamera()">
+                                                <i class="fa-solid fa-camera me-1"></i> Bật Camera quét
+                                            </button>
                                         </div>
                                     </div>
 
                                     <!-- Ô nhận diện đầu đọc mã vạch / máy quét USB chuyên dụng -->
-                                    <div class="mb-2">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-xs text-secondary mb-1" for="qrScannerInput">
+                                            <i class="fa-solid fa-barcode me-1 text-primary"></i> Nhập hoặc quét bằng máy quét cầm tay USB:
+                                        </label>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-dark border-secondary text-info">
+                                            <span class="input-group-text bg-white text-primary border-primary border-opacity-25">
                                                 <i class="fa-solid fa-barcode"></i>
                                             </span>
-                                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary qr-input-wedge" 
+                                            <input type="text" class="form-control form-control-lg font-monospace fw-bold qr-input-wedge" 
                                                    id="qrScannerInput" 
-                                                   placeholder="Quét mã thẻ / QR (VT-xxxx, BK-xxxx)..." 
-                                                   title="Quét hoặc nhập mã thẻ / QR" 
-                                                   aria-label="Quét hoặc nhập mã thẻ / QR" 
+                                                   placeholder="Quét mã thẻ / QR vé tháng (VT-xxxx)..." 
+                                                   title="Quét hoặc nhập mã thẻ / QR vé tháng" 
+                                                   aria-label="Quét hoặc nhập mã thẻ / QR vé tháng" 
                                                    autocomplete="off">
-                                            <button class="btn btn-sm btn-primary px-3 fw-bold" type="button" onclick="handleQrInputSubmit()">
-                                                <i class="fa-solid fa-magnifying-glass me-1"></i> Quét
+                                            <button class="btn btn-primary px-3 fw-bold" type="button" onclick="handleQrInputSubmit()">
+                                                <i class="fa-solid fa-magnifying-glass me-1"></i> Quét mã
                                             </button>
                                         </div>
-                                        <div class="text-2xs text-light opacity-75 mt-1 d-flex align-items-center justify-content-between">
-                                            <span><i class="fa-solid fa-circle-info me-1 text-info"></i>Hỗ trợ đầu đọc mã vạch USB/Bluetooth hoặc nhập mã thẻ</span>
-                                            <span class="text-warning"><kbd class="kbd-key py-0 px-1 text-dark">Enter</kbd> xác nhận</span>
+                                        <div class="text-xs text-muted mt-1.5 d-flex align-items-center justify-content-between">
+                                            <span><i class="fa-solid fa-circle-info me-1 text-info"></i>Máy quét mã vạch USB tự động điền và xác nhận khi quét thẻ</span>
+                                            <span class="text-muted"><kbd class="kbd-key py-0 px-1 text-dark">Enter</kbd> xác nhận</span>
                                         </div>
                                     </div>
 
                                     <!-- Các nút mô phỏng quét nhanh mã QR kiểm thử nghiệp vụ -->
-                                    <div class="pt-2 border-top border-secondary">
-                                        <div class="text-2xs text-light opacity-75 mb-1.5 fw-bold text-uppercase">
-                                            <i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Mô phỏng quét nhanh mã QR thẻ:
+                                    <div class="pt-2 border-top">
+                                        <div class="text-2xs text-muted mb-1.5 fw-bold text-uppercase">
+                                            <i class="fa-solid fa-bolt text-warning me-1"></i> Thử nhanh chức năng quét:
                                         </div>
-                                        <div class="d-flex flex-wrap gap-1.5">
-                                            <button type="button" class="btn btn-xs btn-outline-info text-white" onclick="simulateQrScan('VT-99999999')">
-                                                <i class="fa-solid fa-id-card me-1 text-info"></i> QR Vé tháng (VT-99999999)
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" onclick="simulateQrScan('VT-99999999')">
+                                                <i class="fa-solid fa-id-card me-1"></i> QR Vé tháng (VT-99999999)
                                             </button>
-                                            <button type="button" class="btn btn-xs btn-outline-warning text-white" onclick="simulateQrScan('BK-20261101')">
-                                                <i class="fa-solid fa-calendar-check me-1 text-warning"></i> QR Đặt chỗ (BK-20261101)
+                                            <button type="button" class="btn btn-xs btn-outline-success fw-semibold" onclick="simulateQrScan('XD-0088')">
+                                                <i class="fa-solid fa-bicycle me-1"></i> Thẻ xe đạp (XD-0088)
                                             </button>
-                                            <button type="button" class="btn btn-xs btn-outline-success text-white" onclick="simulateQrScan('XD-0088')">
-                                                <i class="fa-solid fa-bicycle me-1 text-success"></i> Thẻ xe đạp (XD-0088)
-                                            </button>
-                                            <button type="button" class="btn btn-xs btn-outline-primary text-white" onclick="document.getElementById('qrFileUploadInput').click()">
-                                                <i class="fa-solid fa-image me-1"></i> Tải ảnh QR
+                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" onclick="document.getElementById('qrFileUploadInput').click()">
+                                                <i class="fa-solid fa-image me-1"></i> Tải ảnh QR từ máy
                                             </button>
                                             <input type="file" id="qrFileUploadInput" class="d-none" accept="image/*" 
                                                    title="Tải ảnh mã QR từ thiết bị" aria-label="Tải ảnh mã QR từ thiết bị" placeholder="Tải ảnh mã QR" 
@@ -1249,6 +1305,30 @@
         const container = document.getElementById('cameraContainer');
         if (container) container.classList.add('active-stream');
 
+        // Đồng bộ luồng video sang khung ngắm Quét mã QR trực tiếp
+        const qrVideo = document.getElementById('qrWebcamVideo');
+        const qrViewfinder = document.getElementById('qrViewfinderContainer');
+        const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
+        const qrLiveBadge = document.getElementById('qrCameraLiveBadge');
+        const btnToggleQrCamText = document.getElementById('btnToggleQrCameraText');
+
+        if (qrVideo) {
+            qrVideo.srcObject = videoStream;
+            qrVideo.classList.remove('d-none');
+        }
+        if (qrViewfinder) {
+            qrViewfinder.classList.add('camera-active');
+        }
+        if (qrPlaceholder) {
+            qrPlaceholder.classList.add('d-none');
+        }
+        if (qrLiveBadge) {
+            qrLiveBadge.classList.remove('d-none');
+        }
+        if (btnToggleQrCamText) {
+            btnToggleQrCamText.textContent = 'Tắt Camera';
+        }
+
         startQrScanning();
     }
 
@@ -1277,6 +1357,30 @@
         if (container) container.classList.remove('active-stream');
         const label = document.getElementById('cameraStatusLabel');
         if (label) label.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
+
+        // Đặt lại giao diện khung ngắm QR Scanner
+        const qrVideo = document.getElementById('qrWebcamVideo');
+        const qrViewfinder = document.getElementById('qrViewfinderContainer');
+        const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
+        const qrLiveBadge = document.getElementById('qrCameraLiveBadge');
+        const btnToggleQrCamText = document.getElementById('btnToggleQrCameraText');
+
+        if (qrVideo) {
+            qrVideo.srcObject = null;
+            qrVideo.classList.add('d-none');
+        }
+        if (qrViewfinder) {
+            qrViewfinder.classList.remove('camera-active');
+        }
+        if (qrPlaceholder) {
+            qrPlaceholder.classList.remove('d-none');
+        }
+        if (qrLiveBadge) {
+            qrLiveBadge.classList.add('d-none');
+        }
+        if (btnToggleQrCamText) {
+            btnToggleQrCamText.textContent = 'Bật Camera';
+        }
     }
 
     // ==========================================
@@ -2166,7 +2270,9 @@
      */
     function startQrScanning() {
         if (typeof jsQR === 'undefined') return;
-        const video = document.getElementById('webcamVideo');
+        const video = (document.getElementById('qrWebcamVideo') && !document.getElementById('qrWebcamVideo').classList.contains('d-none')) 
+            ? document.getElementById('qrWebcamVideo') 
+            : document.getElementById('webcamVideo');
 
         qrScanningInterval = setInterval(() => {
             if (!videoStream || video.readyState !== video.HAVE_ENOUGH_DATA) return;
@@ -2872,6 +2978,23 @@
         const container = document.getElementById('cameraContainer');
         if (container && !videoStream) {
             container.classList.remove('active-stream');
+        }
+
+        if (!videoStream) {
+            const qrVideo = document.getElementById('qrWebcamVideo');
+            const qrViewfinder = document.getElementById('qrViewfinderContainer');
+            const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
+            const qrLiveBadge = document.getElementById('qrCameraLiveBadge');
+            const btnToggleQrCamText = document.getElementById('btnToggleQrCameraText');
+
+            if (qrVideo) {
+                qrVideo.srcObject = null;
+                qrVideo.classList.add('d-none');
+            }
+            if (qrViewfinder) qrViewfinder.classList.remove('camera-active');
+            if (qrPlaceholder) qrPlaceholder.classList.remove('d-none');
+            if (qrLiveBadge) qrLiveBadge.classList.add('d-none');
+            if (btnToggleQrCamText) btnToggleQrCamText.textContent = 'Bật Camera';
         }
     }
 
