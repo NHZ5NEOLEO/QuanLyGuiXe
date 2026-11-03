@@ -66,22 +66,35 @@ public class DataInitializer implements CommandLineRunner {
 
         LoaiXe xeMay = allLoaiXe.get(0);
         LoaiXe oTo = allLoaiXe.size() > 1 ? allLoaiXe.get(1) : xeMay;
-        LoaiXe xeDap = allLoaiXe.size() > 2 ? allLoaiXe.get(2) : xeMay;
+        // 2. Khởi tạo 3 Phân khu bãi đỗ xe chuẩn theo quy hoạch vật lý
+        KhuVuc kv2B = khuVucRepository.findByMaKhu("2B").orElseGet(() -> khuVucRepository.save(new KhuVuc("2B", "Khu Đỗ Xe 2 Bánh", null, 100, "Tầng hầm B1 & B2")));
+        KhuVuc kv4B = khuVucRepository.findByMaKhu("4B").orElseGet(() -> khuVucRepository.save(new KhuVuc("4B", "Khu Đỗ Xe 4 Bánh", null, 20, "Tầng 1 sảnh ngoài trời")));
+        KhuVuc kvXD = khuVucRepository.findByMaKhu("XD").orElseGet(() -> khuVucRepository.save(new KhuVuc("XD", "Khu Dành Cho Xe Đạp / Xe Điện", null, 30, "Sân phụ có mái che")));
 
-        // 2. Khởi tạo 4 Phân khu bãi đỗ xe chuẩn
-        if (khuVucRepository.count() == 0 || khuVucRepository.findByMaKhu("2B").isEmpty()) {
-            khuVucRepository.deleteAll();
-            KhuVuc khu2B = new KhuVuc("2B", "Khu Đỗ Xe 2 Bánh", xeMay, 100, "Tầng hầm B1 & B2");
-            KhuVuc khu4B = new KhuVuc("4B", "Khu Đỗ Xe 4 Bánh", oTo, 20, "Tầng 1 sảnh ngoài trời");
-            KhuVuc khuXD = new KhuVuc("XD", "Khu Dành Cho Xe Đạp", xeDap, 30, "Sân phụ có mái che");
-            KhuVuc khu24H = new KhuVuc("24H", "Khu Lưu Xe Tồn Quá 24H", null, 20, "Khu tập kết lưu kho an ninh");
+        // Loại bỏ phân khu giả định 24H nếu có trong CSDL (vì 24H là cảnh báo theo thời gian, không phải phân khu vật lý)
+        khuVucRepository.findByMaKhu("24H").ifPresent(khuVucRepository::delete);
 
-            khuVucRepository.saveAll(List.of(khu2B, khu4B, khuXD, khu24H));
+        // Đảm bảo sức chứa chuẩn
+        if (kv2B.getSucChua() == null || kv2B.getSucChua() != 100) { kv2B.setSucChua(100); khuVucRepository.save(kv2B); }
+        if (kv4B.getSucChua() == null || kv4B.getSucChua() != 20) { kv4B.setSucChua(20); khuVucRepository.save(kv4B); }
+        if (kvXD.getSucChua() == null || kvXD.getSucChua() != 30) { kvXD.setSucChua(30); khuVucRepository.save(kvXD); }
+
+        // Gán cấu hình phân khu rõ ràng trong CSDL cho từng Loại xe:
+        // - Xe máy -> 2B (Khu xe 2 bánh)
+        // - Xe đạp / Xe điện -> XD (Khu xe đạp / xe điện)
+        // - Ô tô (4-7 chỗ) -> 4B (Khu ô tô)
+        // - Xe tải nhỏ / Bán tải -> 4B (Khu ô tô)
+        for (LoaiXe lx : loaiXeRepository.findAll()) {
+            String lower = lx.getTenLoai().toLowerCase();
+            if (lower.contains("máy") || lower.contains("motor")) {
+                lx.setKhuVuc(kv2B);
+            } else if (lower.contains("đạp") || lower.contains("điện")) {
+                lx.setKhuVuc(kvXD);
+            } else if (lower.contains("ô tô") || lower.contains("tải")) {
+                lx.setKhuVuc(kv4B);
+            }
+            loaiXeRepository.save(lx);
         }
-
-        KhuVuc kv2B = khuVucRepository.findByMaKhu("2B").orElse(null);
-        KhuVuc kv4B = khuVucRepository.findByMaKhu("4B").orElse(null);
-        KhuVuc kvXD = khuVucRepository.findByMaKhu("XD").orElse(null);
 
         // Khởi tạo các vị trí ô đỗ cụ thể trong DB nếu chưa có
         if (viTriDoRepository.count() == 0 && kv2B != null && kv4B != null && kvXD != null) {

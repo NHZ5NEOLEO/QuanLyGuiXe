@@ -353,10 +353,10 @@
                 </div>
             </div>
 
-            <!-- 3. QUẢN LÝ PHÂN KHU THỐNG KÊ (4 THẺ KHU: 2B, 4B, XD, 24H) -->
+            <!-- 3. QUẢN LÝ PHÂN KHU THỐNG KÊ (3 PHÂN KHU VẬT LÝ: 2B, 4B, XD) -->
             <div class="row g-3 mb-4" id="zonesCardsRow">
                 <!-- Khu 2B -->
-                <div class="col-md-6 col-xl-3" id="cardZone_2B">
+                <div class="col-md-4" id="cardZone_2B">
                     <div class="zone-card p-3 h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center gap-2">
@@ -370,13 +370,16 @@
                             </div>
                             <span class="badge text-xxs bg-success-subtle text-success" id="badgeZone_2B">Thông thoáng</span>
                         </div>
+                        <div class="text-muted text-xxs mb-2">
+                            <i class="fa-solid fa-tags me-1"></i>Xe nhận: <span class="fw-semibold text-dark" id="typesZone_2B">Xe máy</span>
+                        </div>
                         <div class="row g-2 text-center my-2">
                             <div class="col-4">
                                 <div class="small text-muted text-xxs">Sức chứa</div>
                                 <div class="fw-bold text-dark" id="capZone_2B">100</div>
                             </div>
                             <div class="col-4">
-                                <div class="small text-muted text-xxs">Đang đỗ</div>
+                                <div class="small text-muted text-xxs">Đang gửi</div>
                                 <div class="fw-bold text-danger" id="daDoZone_2B">0</div>
                             </div>
                             <div class="col-4">
@@ -395,7 +398,7 @@
                 </div>
 
                 <!-- Khu 4B -->
-                <div class="col-md-6 col-xl-3" id="cardZone_4B">
+                <div class="col-md-4" id="cardZone_4B">
                     <div class="zone-card p-3 h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center gap-2">
@@ -403,11 +406,14 @@
                                     <i class="fa-solid fa-car"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark small">Khu xe 4 bánh</div>
+                                    <div class="fw-bold text-dark small">Khu ô tô & bán tải</div>
                                     <span class="badge bg-light text-secondary border text-xxs">4B</span>
                                 </div>
                             </div>
                             <span class="badge text-xxs bg-success-subtle text-success" id="badgeZone_4B">Thông thoáng</span>
+                        </div>
+                        <div class="text-muted text-xxs mb-2">
+                            <i class="fa-solid fa-tags me-1"></i>Xe nhận: <span class="fw-semibold text-dark" id="typesZone_4B">Ô tô (4-7 chỗ), Xe tải nhỏ / Bán tải</span>
                         </div>
                         <div class="row g-2 text-center my-2">
                             <div class="col-4">
@@ -415,7 +421,7 @@
                                 <div class="fw-bold text-dark" id="capZone_4B">20</div>
                             </div>
                             <div class="col-4">
-                                <div class="small text-muted text-xxs">Đang đỗ</div>
+                                <div class="small text-muted text-xxs">Đang gửi</div>
                                 <div class="fw-bold text-danger" id="daDoZone_4B">0</div>
                             </div>
                             <div class="col-4">
@@ -424,7 +430,7 @@
                             </div>
                         </div>
                         <div class="progress progress-zone">
-                            <div class="progress-bar bg-success w-init-0" id="progressZone_4B" role="progressbar" title="Tỷ lệ lấp đầy khu xe 4 bánh" aria-label="Tỷ lệ lấp đầy khu xe 4 bánh" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-success w-init-0" id="progressZone_4B" role="progressbar" title="Tỷ lệ lấp đầy khu ô tô" aria-label="Tỷ lệ lấp đầy khu ô tô" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <div class="d-flex justify-content-between text-muted text-xxs mt-1">
                             <span>Lấp đầy:</span>
@@ -434,7 +440,7 @@
                 </div>
 
                 <!-- Khu XD -->
-                <div class="col-md-6 col-xl-3" id="cardZone_XD">
+                <div class="col-md-4" id="cardZone_XD">
                     <div class="zone-card p-3 h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center gap-2">
@@ -448,13 +454,16 @@
                             </div>
                             <span class="badge text-xxs bg-success-subtle text-success" id="badgeZone_XD">Thông thoáng</span>
                         </div>
+                        <div class="text-muted text-xxs mb-2">
+                            <i class="fa-solid fa-tags me-1"></i>Xe nhận: <span class="fw-semibold text-dark" id="typesZone_XD">Xe đạp / Xe điện</span>
+                        </div>
                         <div class="row g-2 text-center my-2">
                             <div class="col-4">
                                 <div class="small text-muted text-xxs">Sức chứa</div>
                                 <div class="fw-bold text-dark" id="capZone_XD">30</div>
                             </div>
                             <div class="col-4">
-                                <div class="small text-muted text-xxs">Đang đỗ</div>
+                                <div class="small text-muted text-xxs">Đang gửi</div>
                                 <div class="fw-bold text-danger" id="daDoZone_XD">0</div>
                             </div>
                             <div class="col-4">
@@ -468,45 +477,6 @@
                         <div class="d-flex justify-content-between text-muted text-xxs mt-1">
                             <span>Lấp đầy:</span>
                             <span class="fw-bold" id="rateZone_XD">0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Khu 24H -->
-                <div class="col-md-6 col-xl-3" id="cardZone_24H">
-                    <div class="zone-card p-3 h-100 border-danger">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="zone-icon-box bg-danger text-white">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold text-dark small">Xe tồn quá 24H</div>
-                                    <span class="badge bg-light text-secondary border text-xxs">24H</span>
-                                </div>
-                            </div>
-                            <span class="badge text-xxs bg-secondary text-white" id="badgeZone_24H">Bình thường</span>
-                        </div>
-                        <div class="row g-2 text-center my-2">
-                            <div class="col-4">
-                                <div class="small text-muted text-xxs">Cảnh báo</div>
-                                <div class="fw-bold text-dark">>24 Giờ</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small text-muted text-xxs">Tồn bãi</div>
-                                <div class="fw-bold text-danger" id="daDoZone_24H">0</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small text-muted text-xxs">Mức độ</div>
-                                <div class="fw-bold text-warning" id="statusZone_24H">An toàn</div>
-                            </div>
-                        </div>
-                        <div class="progress progress-zone">
-                            <div class="progress-bar bg-danger w-init-0" id="progressZone_24H" role="progressbar" title="Tỷ lệ xe gửi quá 24 giờ" aria-label="Tỷ lệ xe gửi quá 24 giờ" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <div class="d-flex justify-content-between text-muted text-xxs mt-1">
-                            <span>Trạng thái:</span>
-                            <span class="fw-bold text-danger" id="rateZone_24H">0 xe</span>
                         </div>
                     </div>
                 </div>
@@ -993,23 +963,6 @@ function updateZoneCardsFromVehicles(vehicles) {
     updateSingleZone('4B', 20, count4B);
     updateSingleZone('XD', 30, countXD);
 
-    const daDo24hEl = document.getElementById('daDoZone_24H');
-    const rate24hEl = document.getElementById('rateZone_24H');
-    const badge24hEl = document.getElementById('badgeZone_24H');
-    const prog24hEl = document.getElementById('progressZone_24H');
-    if (daDo24hEl) daDo24hEl.innerText = count24H;
-    if (rate24hEl) rate24hEl.innerText = count24H + ' xe';
-    if (badge24hEl) {
-        if (count24H > 0) {
-            badge24hEl.className = 'badge text-xxs bg-danger text-white';
-            badge24hEl.innerText = 'Cần kiểm tra (' + count24H + ')';
-        } else {
-            badge24hEl.className = 'badge text-xxs bg-secondary text-white';
-            badge24hEl.innerText = 'Bình thường';
-        }
-    }
-    if (prog24hEl) prog24hEl.style.width = Math.min(100, count24H * 10) + '%';
-
     // Cập nhật số đếm trên các nút lọc
     const tabAll = document.querySelector('button[data-filter="ALL"] span');
     const tab24h = document.querySelector('button[data-filter="24H"] span');
@@ -1032,10 +985,13 @@ function updateSingleZone(maKhu, cap, occ) {
     if (daDoEl) daDoEl.innerText = occ;
     if (trongEl) trongEl.innerText = free;
     if (rateEl) rateEl.innerText = pct + '%';
-    if (progEl) progEl.style.width = pct + '%';
+    if (progEl) progEl.style.width = Math.min(100, pct) + '%';
     if (badgeEl) {
-        if (pct >= 90) {
-            badgeEl.className = 'badge text-xxs bg-danger-subtle text-danger';
+        if (pct >= 100) {
+            badgeEl.className = 'badge text-xxs bg-danger text-white';
+            badgeEl.innerText = 'Khu đã đầy';
+        } else if (pct >= 90) {
+            badgeEl.className = 'badge text-xxs bg-warning text-dark';
             badgeEl.innerText = 'Sắp đầy';
         } else if (pct >= 70) {
             badgeEl.className = 'badge text-xxs bg-warning-subtle text-warning';

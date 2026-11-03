@@ -10,6 +10,7 @@ public class TrangThaiKhuVucDto {
     private String tenKhu;
     private String viTri;
     private String tenLoaiXe;
+    private String cacLoaiXeDuocNhan;
     private String iconClass = "fa-square-parking";
     private String badgeColor = "primary";
     private long tongCho;
@@ -96,6 +97,14 @@ public class TrangThaiKhuVucDto {
 
     public void setTenLoaiXe(String tenLoaiXe) {
         this.tenLoaiXe = tenLoaiXe;
+    }
+
+    public String getCacLoaiXeDuocNhan() {
+        return cacLoaiXeDuocNhan != null && !cacLoaiXeDuocNhan.isBlank() ? cacLoaiXeDuocNhan : tenLoaiXe;
+    }
+
+    public void setCacLoaiXeDuocNhan(String cacLoaiXeDuocNhan) {
+        this.cacLoaiXeDuocNhan = cacLoaiXeDuocNhan;
     }
 
     public String getLoaiXe() {

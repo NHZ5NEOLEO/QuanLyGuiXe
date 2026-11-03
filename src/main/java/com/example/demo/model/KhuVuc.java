@@ -1,6 +1,9 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "KhuVuc")
@@ -19,6 +22,9 @@ public class KhuVuc {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "loai_xe_id")
     private LoaiXe loaiXe;
+
+    @OneToMany(mappedBy = "khuVuc", fetch = FetchType.EAGER)
+    private List<LoaiXe> danhSachLoaiXe = new ArrayList<>();
 
     @Column(nullable = false)
     private Integer sucChua = 20;
@@ -88,5 +94,21 @@ public class KhuVuc {
     @Transient
     public String getLoaiXeKhuVuc() {
         return loaiXe != null ? loaiXe.getTenLoai() : "Phương tiện";
+    }
+
+    public List<LoaiXe> getDanhSachLoaiXe() {
+        return danhSachLoaiXe;
+    }
+
+    public void setDanhSachLoaiXe(List<LoaiXe> danhSachLoaiXe) {
+        this.danhSachLoaiXe = danhSachLoaiXe;
+    }
+
+    @Transient
+    public String getCacLoaiXeNhan() {
+        if (danhSachLoaiXe != null && !danhSachLoaiXe.isEmpty()) {
+            return danhSachLoaiXe.stream().map(LoaiXe::getTenLoai).collect(Collectors.joining(", "));
+        }
+        return loaiXe != null ? loaiXe.getTenLoai() : "Chưa cấu hình";
     }
 }

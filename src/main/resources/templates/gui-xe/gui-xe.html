@@ -26,51 +26,80 @@
             font-size: 0.75rem;
         }
 
-        /* Camera Viewport Styling */
-        .camera-card {
-            background: #0f172a;
-            border-radius: 12px;
+        /* Camera Monitor & Viewport Styling */
+        .camera-monitor-card {
+            border: 1px solid #e2e8f0;
             overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+        .camera-icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+        .camera-icon-badge.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .status-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .dot-gray { background: #94a3b8; }
+        .dot-yellow { background: #eab308; animation: pulse-dot 1.2s infinite; }
+        .dot-green { background: #22c55e; }
+        .dot-red { background: #ef4444; }
+        @keyframes pulse-dot {
+            0% { opacity: 0.6; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.15); }
+            100% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        .camera-viewport-wrapper {
+            background: #0f172a;
+            border-top: 1px solid #334155;
+            transition: max-height 0.35s ease;
         }
         .camera-viewport {
             position: relative;
             width: 100%;
-            height: 150px;
-            background: #1e293b;
+            height: 240px;
+            background: #0f172a;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            transition: height 0.3s ease;
-        }
-        .camera-viewport.active-stream {
-            height: 240px;
         }
         .camera-viewport video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .camera-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #94a3b8;
-            padding: 0.75rem;
-            text-align: center;
+        .camera-viewport img#imageFramePreview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #0f172a;
         }
         .camera-overlay-guide {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 75%;
+            width: 72%;
             height: 60%;
-            border: 2px dashed rgba(52, 211, 153, 0.7);
+            border: 2px dashed rgba(52, 211, 153, 0.85);
             border-radius: 8px;
             pointer-events: none;
             display: flex;
@@ -80,7 +109,7 @@
             z-index: 2;
         }
         .camera-overlay-guide::after {
-            content: "KHUNG NHẬN DIỆN BIỂN SỐ / QR LÀN VÀO";
+            content: "KHUNG CĂN CHỈNH BIỂN SỐ LÀN VÀO";
             font-size: 0.65rem;
             font-weight: 700;
             letter-spacing: 1px;
@@ -89,22 +118,28 @@
             padding: 2px 8px;
             border-radius: 4px;
         }
-        .camera-rec-dot {
+        .camera-stream-badge {
             position: absolute;
             top: 10px;
             left: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #22c55e;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 999px;
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            z-index: 2;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 5;
+            border: 1px solid rgba(34, 197, 94, 0.35);
         }
+        .btn-close-xs {
+            font-size: 0.65rem;
+            padding: 0.25rem;
+        }
+
+        /* Giữ tương thích component phụ nếu có */
         .rec-indicator {
             width: 8px;
             height: 8px;
@@ -113,7 +148,6 @@
         }
         .rec-indicator.active {
             background: #22c55e;
-            animation: pulse-green 1.5s infinite;
         }
 
         /* Ticket POS Receipt */
@@ -528,6 +562,92 @@
             <div class="row g-4">
                 <!-- Left Column: Check-in Form & Live Camera -->
                 <div class="col-lg-7">
+                    <!-- KHU VỰC CAMERA & GIÁM SÁT LÀN VÀO (THU GỌN KHI TẮT, MỞ RỘNG KHI BẬT) -->
+                    <div class="card border-0 shadow-sm rounded-3 bg-white mb-3 camera-monitor-card" id="cameraMonitorCard">
+                        <!-- Thanh trạng thái và công cụ điều khiển chính -->
+                        <div class="p-2.5 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="camera-icon-badge" id="cameraIconBadge">
+                                    <i class="fa-solid fa-video-slash" id="cameraIconHeader"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold text-dark small">Camera Làn Vào 01</span>
+                                        <span class="badge bg-secondary-subtle text-secondary border text-xs" id="cameraStatusPill">
+                                            <span class="status-indicator-dot dot-gray" id="cameraStatusDot"></span>
+                                            <span id="cameraStatusLabel">Chưa bật (Thiết bị chưa kết nối)</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-muted" id="cameraSubHint">
+                                        Bật camera để xem hình ảnh trực tiếp hoặc nhập biển số thủ công bên dưới
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <!-- Nút bật/tắt camera chính -->
+                                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold px-3" id="btnToggleCamera" onclick="toggleCamera()">
+                                    <i class="fa-solid fa-camera me-1.5" id="btnToggleCameraIcon"></i>
+                                    <span id="cameraBtnText">Bật Camera Làn Vào</span>
+                                </button>
+
+                                <!-- Dropdown chọn nguồn camera khi có nhiều webcam -->
+                                <select id="cameraDeviceSelect" class="form-select form-select-sm d-none py-1 border-secondary-subtle text-xs" 
+                                        title="Chọn nguồn thiết bị camera" aria-label="Chọn nguồn thiết bị camera" 
+                                        onchange="switchCamera(this.value)">
+                                    <option value="">-- Đổi Camera --</option>
+                                </select>
+
+                                <!-- Nút chụp ảnh từ video feed (chỉ hiện khi camera đang hoạt động) -->
+                                <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2.5 d-none" id="btnCaptureFrame" onclick="captureManualFrame()" title="Chụp ảnh frame hiện tại làm bằng chứng xe vào">
+                                    <i class="fa-solid fa-camera-retro me-1"></i> Chụp ảnh xe
+                                </button>
+
+                                <!-- Phân cách nhóm thao tác phụ -->
+                                <div class="vr mx-1 d-none d-sm-block text-muted opacity-25"></div>
+
+                                <!-- Tải ảnh xe riêng biệt, có nhãn rõ ràng -->
+                                <button type="button" class="btn btn-sm btn-light border text-secondary fw-medium px-2.5" onclick="document.getElementById('fileUploadInput').click()" title="Tải ảnh chụp phương tiện từ máy tính hoặc điện thoại">
+                                    <i class="fa-solid fa-upload me-1 text-primary"></i> Tải ảnh nhận diện
+                                </button>
+                                <input type="file" id="fileUploadInput" class="d-none" accept="image/*" title="Tải ảnh xe từ thiết bị" aria-label="Tải ảnh xe từ thiết bị" placeholder="Tải ảnh xe" onchange="handleFileUpload(this)">
+
+                                <!-- Nút nạp xe mẫu ghi rõ MÔ PHỎNG -->
+                                <button type="button" class="btn btn-sm btn-light border text-muted px-2" onclick="loadSampleEntryVehicle()" title="Nạp dữ liệu xe mẫu để kiểm thử biểu mẫu tiếp nhận">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i> [Mô phỏng] Xe mẫu
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Thông báo lỗi Camera nếu bị từ chối quyền hoặc không tìm thấy thiết bị (mặc định ẩn) -->
+                        <div id="cameraAlertBox" class="alert alert-warning border-start border-warning border-3 rounded-0 m-0 py-2 px-3 small d-none">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>
+                                    <span id="cameraAlertMsg">Không thể kết nối camera. Bạn vẫn có thể nhập biển số thủ công vào biểu mẫu bên dưới.</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-xs" onclick="document.getElementById('cameraAlertBox').classList.add('d-none')" aria-label="Đóng"></button>
+                            </div>
+                        </div>
+
+                        <!-- Khung Viewport Video Camera (Thu gọn khi tắt, mở rộng mượt mà khi bật) -->
+                        <div class="camera-viewport-wrapper" id="cameraViewportWrapper" style="display: none;">
+                            <div class="camera-viewport position-relative" id="cameraContainer">
+                                <video id="webcamVideo" class="d-none" autoplay muted playsinline></video>
+                                <img id="imageFramePreview" class="d-none" alt="Ảnh phương tiện vào bãi">
+                                
+                                <!-- Khung ngắm ANPR hỗ trợ nhân viên căn chỉnh biển số xe -->
+                                <div class="camera-overlay-guide d-none" id="cameraOverlayGuide"></div>
+
+                                <!-- Badge thông tin góc trên khi camera đang phát luồng (Không dùng nhãn REC) -->
+                                <div class="camera-stream-badge d-none" id="cameraStreamBadge">
+                                    <span class="status-indicator-dot dot-green"></span>
+                                    <span>TÍN HIỆU TRỰC TIẾP (WEBCAM)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- BIỂU MẪU TIẾP NHẬN XE VÀO (TRỌNG TÂM THAO TÁC) -->
                     <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
                         <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
@@ -753,51 +873,6 @@
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-
-                    <!-- KHU VỰC CAMERA & GIÁM SÁT LÀN VÀO (MÔ PHỎNG / THIẾT BỊ CHƯA KẾT NỐI) -->
-                    <div class="camera-card mb-4">
-                        <div class="camera-rec-dot" id="cameraStatusPill">
-                            <span class="rec-indicator" id="cameraStatusDot"></span>
-                            <span id="cameraStatusLabel">Camera đang tắt (Thiết bị chưa kết nối)</span>
-                        </div>
-                        <div class="camera-viewport" id="cameraContainer">
-                            <video id="webcamVideo" class="d-none" autoplay muted></video>
-                            <img id="imageFramePreview" class="d-none" alt="Ảnh phương tiện vào bãi">
-                            <div class="camera-overlay-guide d-none" id="cameraOverlayGuide"></div>
-                            <!-- Placeholder khi chưa bật camera -->
-                            <div class="camera-placeholder" id="cameraPlaceholder">
-                                <i class="fa-solid fa-video-slash fs-2 mb-2 opacity-50"></i>
-                                <div class="fw-semibold small">Camera Làn Vào Đang Tắt</div>
-                                <div class="text-xs opacity-75">Bật camera để kết nối webcam hoặc tải ảnh để nhận diện biển số</div>
-                            </div>
-                        </div>
-                        <div class="p-2 px-3 bg-dark d-flex flex-wrap align-items-center justify-content-between gap-2 text-white small">
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light py-1 px-2" id="btnToggleCamera" onclick="toggleCamera()">
-                                    <i class="fa-solid fa-camera me-1"></i> <span id="cameraBtnText">Bật Camera Làn Vào</span>
-                                </button>
-                                <!-- Dropdown kết nối và chuyển đổi mọi Camera tìm được -->
-                                <select id="cameraDeviceSelect" class="form-select form-select-sm d-none py-1 bg-dark text-white border-secondary" title="Chọn nguồn thiết bị camera" aria-label="Chọn nguồn thiết bị camera" onchange="switchCamera(this.value)">
-                                    <option value="">-- Đổi Camera --</option>
-                                </select>
-                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2 d-none" id="btnCaptureFrame" onclick="captureManualFrame()">
-                                    <i class="fa-solid fa-camera-retro me-1"></i> Chụp ảnh xe vào
-                                </button>
-                                <!-- Tải ảnh từ tệp hoặc điện thoại (Không cần quyền camera) -->
-                                <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2" onclick="document.getElementById('fileUploadInput').click()" title="Tải ảnh từ máy hoặc chụp từ điện thoại">
-                                    <i class="fa-solid fa-upload me-1"></i> Tải ảnh
-                                </button>
-                                <input type="file" id="fileUploadInput" class="d-none" accept="image/*" title="Tải ảnh xe từ thiết bị" aria-label="Tải ảnh xe từ thiết bị" placeholder="Tải ảnh xe" onchange="handleFileUpload(this)">
-                                <!-- Nạp xe mẫu vào bãi để mô phỏng camera nhận diện tức thì -->
-                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 text-light" onclick="loadSampleEntryVehicle()" title="Mô phỏng Camera phát hiện xe vào và tự động nhận diện biển số">
-                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> [Mô phỏng] Xe mẫu vào
-                                </button>
-                            </div>
-                            <div class="text-muted text-xs d-none d-xl-block">
-                                <i class="fa-solid fa-circle-info text-secondary me-1"></i> Nhận diện biển số & chụp ảnh phương tiện
-                            </div>
                         </div>
                     </div>
 
@@ -1202,74 +1277,36 @@
      * Bật / Tắt luồng Camera Webcam trực tiếp
      */
     async function toggleCamera() {
-        const video = document.getElementById('webcamVideo');
-        const imgPreview = document.getElementById('imageFramePreview');
-        const placeholder = document.getElementById('cameraPlaceholder');
-        const overlay = document.getElementById('cameraOverlayGuide');
-        const statusPill = document.getElementById('cameraStatusPill');
-        const btnText = document.getElementById('cameraBtnText');
-        const btnCapture = document.getElementById('btnCaptureFrame');
-        const camSelect = document.getElementById('cameraDeviceSelect');
-
         if (videoStream) {
-            // Tắt camera
             stopCamera();
-            video.classList.add('d-none');
-            imgPreview.classList.add('d-none');
-            btnCapture.classList.add('d-none');
-            if (camSelect) camSelect.classList.add('d-none');
-            placeholder.classList.remove('d-none');
-            video.style.display = 'none';
-            btnCapture.style.display = 'none';
-            placeholder.style.display = 'flex';
-            btnText.textContent = 'Bật Camera Làn Vào';
-            document.getElementById('cameraStatusLabel').textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
-            const dot = document.getElementById('cameraStatusDot');
-            if (dot) dot.classList.remove('active');
-            const container = document.getElementById('cameraContainer');
-            if (container) container.classList.remove('active-stream');
         } else {
             // Kiểm tra bảo mật trình duyệt đối với getUserMedia
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                const currentOrigin = window.location.origin;
-                
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Chính sách bảo mật Camera',
-                    html: `<div class="text-start small">
-                        <p class="mb-2">Trình duyệt Chrome/Edge <strong>chỉ cho phép mở Camera</strong> trên các địa chỉ an toàn (<strong>*.localhost</strong>, <strong>localhost</strong> hoặc kết nối <strong>HTTPS</strong>).</p>
-                        <p class="mb-2">Bạn đang truy cập qua: <code>${currentOrigin}</code> (HTTP) nên trình duyệt chặn webcam để bảo mật.</p>
-                        <div class="alert alert-info py-2 mb-2">
-                            <div class="fw-bold mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Giải pháp xử lý ngay:</div>
-                            <ol class="mb-0 ps-3">
-                                <li>Nhấn nút màu xanh bên dưới để mở bằng <strong>http://baixe.localhost/gui-xe</strong> hoặc <strong>http://localhost/gui-xe</strong> &rarr; Camera sẽ mở được ngay lập tức!</li>
-                                <li class="mt-1">Hoặc bấm nút <strong>"Xe mẫu vào"</strong> / <strong>"Tải ảnh"</strong> để kiểm thử camera nhận diện biển số tự động.</li>
-                            </ol>
-                        </div>
-                    </div>`,
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="fa-solid fa-arrow-right me-1"></i> Mở bằng http://baixe.localhost/gui-xe',
-                    cancelButtonText: 'Đóng (Dùng Xe mẫu / Tải ảnh)',
-                    confirmButtonColor: '#2563eb'
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        window.location.href = 'http://baixe.localhost/gui-xe';
+                const alertBox = document.getElementById('cameraAlertBox');
+                if (alertBox) {
+                    alertBox.classList.remove('d-none');
+                    const alertMsg = document.getElementById('cameraAlertMsg');
+                    if (alertMsg) {
+                        alertMsg.innerHTML = 'Trình duyệt chỉ cho phép truy cập Camera qua địa chỉ an toàn (<strong>http://baixe.localhost/gui-xe</strong>, <strong>http://localhost/gui-xe</strong> hoặc kết nối <strong>HTTPS</strong>). Nhân viên vẫn có thể nhập biển số thủ công vào biểu mẫu bên dưới.';
                     }
-                });
+                }
+                const label = document.getElementById('cameraStatusLabel');
+                if (label) label.textContent = 'Chưa cấp quyền / Không an toàn';
+                const dot = document.getElementById('cameraStatusDot');
+                if (dot) dot.className = 'status-indicator-dot dot-yellow';
+                const statusPill = document.getElementById('cameraStatusPill');
+                if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+
+                const plateInput = document.getElementById('bienSoXe');
+                if (plateInput) plateInput.focus();
                 return;
             }
 
-            // Bật camera
             try {
                 await startCameraStream(currentDeviceId);
-                btnText.textContent = 'Tắt Camera';
                 await enumerateCameraDevices();
             } catch (err) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Không thể mở Camera',
-                    text: 'Lỗi thiết bị hoặc trình duyệt chưa cấp quyền: ' + err.message
-                });
+                console.warn("Camera start failed:", err);
             }
         }
     }
@@ -1279,57 +1316,112 @@
 
         const video = document.getElementById('webcamVideo');
         const imgPreview = document.getElementById('imageFramePreview');
-        const placeholder = document.getElementById('cameraPlaceholder');
         const overlay = document.getElementById('cameraOverlayGuide');
         const statusPill = document.getElementById('cameraStatusPill');
+        const dot = document.getElementById('cameraStatusDot');
+        const label = document.getElementById('cameraStatusLabel');
+        const subHint = document.getElementById('cameraSubHint');
+        const btnText = document.getElementById('cameraBtnText');
+        const btnIcon = document.getElementById('btnToggleCameraIcon');
         const btnCapture = document.getElementById('btnCaptureFrame');
+        const iconBadge = document.getElementById('cameraIconBadge');
+        const iconHeader = document.getElementById('cameraIconHeader');
+        const wrapper = document.getElementById('cameraViewportWrapper');
+        const streamBadge = document.getElementById('cameraStreamBadge');
+        const alertBox = document.getElementById('cameraAlertBox');
+
+        // Hiển thị trạng thái đang kết nối
+        if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+        if (dot) dot.className = 'status-indicator-dot dot-yellow';
+        if (label) label.textContent = 'Đang kết nối camera...';
+        if (subHint) subHint.textContent = 'Đang yêu cầu quyền thiết bị và khởi động luồng video...';
 
         const constraints = {
             video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false
         };
 
-        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        currentDeviceId = deviceId || (videoStream.getVideoTracks()[0] && videoStream.getVideoTracks()[0].getSettings().deviceId);
-        video.srcObject = videoStream;
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentDeviceId = deviceId || (videoStream.getVideoTracks()[0] && videoStream.getVideoTracks()[0].getSettings().deviceId);
+            video.srcObject = videoStream;
 
-        video.classList.remove('d-none');
-        imgPreview.classList.add('d-none');
-        overlay.classList.remove('d-none');
-        statusPill.classList.remove('d-none');
-        btnCapture.classList.remove('d-none');
-        placeholder.classList.add('d-none');
-        document.getElementById('cameraStatusLabel').textContent = 'Camera đang hoạt động (Làn vào 01)';
-        const dot = document.getElementById('cameraStatusDot');
-        if (dot) dot.classList.add('active');
-        const container = document.getElementById('cameraContainer');
-        if (container) container.classList.add('active-stream');
+            // Chờ video bắt đầu chạy thực sự trước khi hiển thị "Đang hoạt động"
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play().then(resolve).catch(resolve);
+                };
+            });
 
-        // Đồng bộ luồng video sang khung ngắm Quét mã QR trực tiếp
-        const qrVideo = document.getElementById('qrWebcamVideo');
-        const qrViewfinder = document.getElementById('qrViewfinderContainer');
-        const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
-        const qrLiveBadge = document.getElementById('qrCameraLiveBadge');
-        const btnToggleQrCamText = document.getElementById('btnToggleQrCameraText');
+            // Khi thực sự nhận được video stream -> mở rộng vùng xem và cập nhật trạng thái
+            if (wrapper) wrapper.style.display = 'block';
+            video.classList.remove('d-none');
+            if (imgPreview) imgPreview.classList.add('d-none');
+            if (overlay) overlay.classList.remove('d-none');
+            if (btnCapture) btnCapture.classList.remove('d-none');
+            if (streamBadge) streamBadge.classList.remove('d-none');
+            if (alertBox) alertBox.classList.add('d-none');
 
-        if (qrVideo) {
-            qrVideo.srcObject = videoStream;
-            qrVideo.classList.remove('d-none');
-        }
-        if (qrViewfinder) {
-            qrViewfinder.classList.add('camera-active');
-        }
-        if (qrPlaceholder) {
-            qrPlaceholder.classList.add('d-none');
-        }
-        if (qrLiveBadge) {
-            qrLiveBadge.classList.remove('d-none');
-        }
-        if (btnToggleQrCamText) {
-            btnToggleQrCamText.textContent = 'Tắt Camera';
-        }
+            if (statusPill) statusPill.className = 'badge bg-success-subtle text-success border border-success-subtle text-xs';
+            if (dot) dot.className = 'status-indicator-dot dot-green';
+            if (label) label.textContent = 'Camera đang hoạt động (Webcam làn vào)';
+            if (subHint) subHint.textContent = 'Tín hiệu hình ảnh trực tiếp từ webcam. Bấm Chụp ảnh để lưu bằng chứng xe vào.';
 
-        startQrScanning();
+            if (iconBadge) iconBadge.classList.add('active');
+            if (iconHeader) iconHeader.className = 'fa-solid fa-video';
+            if (btnText) btnText.textContent = 'Tắt Camera';
+            if (btnIcon) btnIcon.className = 'fa-solid fa-video-slash me-1.5';
+
+            // Lắng nghe sự kiện ngắt kết nối thiết bị đột ngột
+            const track = videoStream.getVideoTracks()[0];
+            if (track) {
+                track.addEventListener('ended', () => {
+                    stopCamera();
+                    if (label) label.textContent = 'Camera mất kết nối';
+                    if (dot) dot.className = 'status-indicator-dot dot-yellow';
+                    if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+                });
+            }
+
+            // Đồng bộ sang QR Scanner Viewfinder
+            const qrVideo = document.getElementById('qrWebcamVideo');
+            const qrViewfinder = document.getElementById('qrViewfinderContainer');
+            const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
+            const qrLiveBadge = document.getElementById('qrCameraLiveBadge');
+            const btnToggleQrCamText = document.getElementById('btnToggleQrCameraText');
+
+            if (qrVideo) {
+                qrVideo.srcObject = videoStream;
+                qrVideo.classList.remove('d-none');
+            }
+            if (qrViewfinder) qrViewfinder.classList.add('camera-active');
+            if (qrPlaceholder) qrPlaceholder.classList.add('d-none');
+            if (qrLiveBadge) qrLiveBadge.classList.remove('d-none');
+            if (btnToggleQrCamText) btnToggleQrCamText.textContent = 'Tắt Camera';
+
+            startQrScanning();
+        } catch (err) {
+            // Xử lý lỗi không mở được camera
+            stopCamera();
+            if (wrapper) wrapper.style.display = 'none';
+            if (statusPill) statusPill.className = 'badge bg-danger-subtle text-danger border border-danger-subtle text-xs';
+            if (dot) dot.className = 'status-indicator-dot dot-red';
+            if (label) label.textContent = 'Không thể kết nối Camera';
+            if (subHint) subHint.textContent = 'Thiết bị chưa cấp quyền hoặc không có webcam. Vui lòng nhập biển số bên dưới.';
+
+            if (alertBox) {
+                alertBox.classList.remove('d-none');
+                const alertMsg = document.getElementById('cameraAlertMsg');
+                if (alertMsg) {
+                    alertMsg.textContent = 'Không thể mở camera: ' + err.message + '. Trình duyệt chưa cấp quyền hoặc không tìm thấy webcam. Bạn vẫn có thể nhập biển số thủ công vào biểu mẫu bên dưới.';
+                }
+            }
+
+            // Đảm bảo focus vào ô biển số để nhân viên thao tác tiếp
+            const plateInput = document.getElementById('bienSoXe');
+            if (plateInput) plateInput.focus();
+            throw err;
+        }
     }
 
     async function switchCamera(deviceId) {
@@ -1351,12 +1443,54 @@
             videoStream.getTracks().forEach(track => track.stop());
             videoStream = null;
         }
+
+        const wrapper = document.getElementById('cameraViewportWrapper');
+        if (wrapper) wrapper.style.display = 'none';
+
+        const video = document.getElementById('webcamVideo');
+        if (video) {
+            video.srcObject = null;
+            video.classList.add('d-none');
+        }
+
+        const imgPreview = document.getElementById('imageFramePreview');
+        if (imgPreview) imgPreview.classList.add('d-none');
+
+        const btnCapture = document.getElementById('btnCaptureFrame');
+        if (btnCapture) btnCapture.classList.add('d-none');
+
+        const camSelect = document.getElementById('cameraDeviceSelect');
+        if (camSelect) camSelect.classList.add('d-none');
+
+        const streamBadge = document.getElementById('cameraStreamBadge');
+        if (streamBadge) streamBadge.classList.add('d-none');
+
+        const overlay = document.getElementById('cameraOverlayGuide');
+        if (overlay) overlay.classList.add('d-none');
+
+        const btnText = document.getElementById('cameraBtnText');
+        if (btnText) btnText.textContent = 'Bật Camera Làn Vào';
+
+        const btnIcon = document.getElementById('btnToggleCameraIcon');
+        if (btnIcon) btnIcon.className = 'fa-solid fa-camera me-1.5';
+
+        const iconBadge = document.getElementById('cameraIconBadge');
+        if (iconBadge) iconBadge.classList.remove('active');
+
+        const iconHeader = document.getElementById('cameraIconHeader');
+        if (iconHeader) iconHeader.className = 'fa-solid fa-video-slash';
+
+        const statusPill = document.getElementById('cameraStatusPill');
+        if (statusPill) statusPill.className = 'badge bg-secondary-subtle text-secondary border text-xs';
+
         const dot = document.getElementById('cameraStatusDot');
-        if (dot) dot.classList.remove('active');
-        const container = document.getElementById('cameraContainer');
-        if (container) container.classList.remove('active-stream');
+        if (dot) dot.className = 'status-indicator-dot dot-gray';
+
         const label = document.getElementById('cameraStatusLabel');
-        if (label) label.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
+        if (label) label.textContent = 'Chưa bật (Thiết bị chưa kết nối)';
+
+        const subHint = document.getElementById('cameraSubHint');
+        if (subHint) subHint.textContent = 'Bật camera để xem hình ảnh trực tiếp hoặc nhập biển số thủ công bên dưới';
 
         // Đặt lại giao diện khung ngắm QR Scanner
         const qrVideo = document.getElementById('qrWebcamVideo');
@@ -1369,17 +1503,15 @@
             qrVideo.srcObject = null;
             qrVideo.classList.add('d-none');
         }
-        if (qrViewfinder) {
-            qrViewfinder.classList.remove('camera-active');
-        }
-        if (qrPlaceholder) {
-            qrPlaceholder.classList.remove('d-none');
-        }
-        if (qrLiveBadge) {
-            qrLiveBadge.classList.add('d-none');
-        }
-        if (btnToggleQrCamText) {
-            btnToggleQrCamText.textContent = 'Bật Camera';
+        if (qrViewfinder) qrViewfinder.classList.remove('camera-active');
+        if (qrPlaceholder) qrPlaceholder.classList.remove('d-none');
+        if (qrLiveBadge) qrLiveBadge.classList.add('d-none');
+        if (btnToggleQrCamText) btnToggleQrCamText.textContent = 'Bật Camera';
+
+        // Tự động focus vào ô nhập biển số
+        const plateInput = document.getElementById('bienSoXe');
+        if (plateInput && currentCheckInMode !== 'qr') {
+            plateInput.focus();
         }
     }
 
@@ -1644,7 +1776,7 @@
     }
 
     /**
-     * Nạp xe mẫu vào bãi -> TỰ ĐỘNG GHI NHẬN BIỂN SỐ, CHỌN LOẠI XE, ĐIỀN GHI CHÚ VÀ PHÁT BÍP
+     * Nạp xe mẫu vào bãi -> Ghi nhận biển số mẫu, chọn loại xe, điền ghi chú (Mô phỏng)
      */
     function loadSampleEntryVehicle() {
         const sample = sampleEntryVehicles[sampleEntryIndex % sampleEntryVehicles.length];
@@ -1656,24 +1788,29 @@
         // Lưu vào input ẩn gửi lên server
         document.getElementById('anhVaoData').value = dataUrl;
 
-        // Cập nhật giao diện camera viewport
+        // Cập nhật giao diện camera viewport để nhân viên xem ảnh mô phỏng
+        const wrapper = document.getElementById('cameraViewportWrapper');
+        if (wrapper) wrapper.style.display = 'block';
+
         const video = document.getElementById('webcamVideo');
         const imgPreview = document.getElementById('imageFramePreview');
-        const placeholder = document.getElementById('cameraPlaceholder');
         const statusLabel = document.getElementById('cameraStatusLabel');
+        const statusDot = document.getElementById('cameraStatusDot');
+        const statusPill = document.getElementById('cameraStatusPill');
+        const subHint = document.getElementById('cameraSubHint');
 
         if (videoStream) stopCamera();
-        video.classList.add('d-none');
-        placeholder.classList.add('d-none');
-        imgPreview.src = dataUrl;
-        imgPreview.classList.remove('d-none');
-        if (statusLabel) {
-            statusLabel.textContent = '[Mô phỏng] Xe mẫu: ' + sample.plate;
+        if (wrapper) wrapper.style.display = 'block';
+        if (video) video.classList.add('d-none');
+        if (imgPreview) {
+            imgPreview.src = dataUrl;
+            imgPreview.classList.remove('d-none');
         }
-        const container = document.getElementById('cameraContainer');
-        if (container) container.classList.add('active-stream');
-        const dot = document.getElementById('cameraStatusDot');
-        if (dot) dot.classList.remove('active');
+
+        if (statusLabel) statusLabel.textContent = '[Mô phỏng] Xe mẫu: ' + sample.plate;
+        if (statusDot) statusDot.className = 'status-indicator-dot dot-yellow';
+        if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+        if (subHint) subHint.textContent = 'Dữ liệu xe mẫu mô phỏng để kiểm thử tiếp nhận: ' + sample.modelName + ' (' + sample.typeName + ').';
 
         // Ghi nhận biển số vào ô nhập liệu để nhân viên đối chiếu và xác nhận
         const inputPlate = document.getElementById('bienSoXe');
@@ -1709,15 +1846,15 @@
         // Kiểm tra và hiển thị phản hồi định dạng & tra cứu vé tháng / xe đang trong bãi
         validateAndLookupPlate(sample.plate);
 
-        // Thông báo trực quan cho nhân viên trực cổng
+        // Thông báo trực quan cho nhân viên trực cổng (KHÔNG tự tạo vé)
         Swal.fire({
             toast: true,
             position: 'top-end',
             icon: 'info',
-            title: '[Mô phỏng] Đã nhận diện xe mẫu: ' + sample.plate,
-            html: '<small class="text-muted">' + sample.modelName + ' (' + sample.typeName + ' - ' + sample.colorName + ')</small>',
+            title: '[Mô phỏng] Đã nạp xe mẫu: ' + sample.plate,
+            html: '<small class="text-muted">' + sample.modelName + ' (' + sample.typeName + ' - ' + sample.colorName + ')<br>Vui lòng đối chiếu và nhấn "Ghi nhận xe vào" để hoàn tất.</small>',
             showConfirmButton: false,
-            timer: 2000
+            timer: 2500
         });
     }
 
@@ -1727,36 +1864,10 @@
     }
 
     /**
-     * Cập nhật snapshot camera khi người dùng chọn biển số từ các nút nhanh
+     * Cập nhật snapshot camera (chỉ khi có yêu cầu cụ thể)
      */
     function updateCameraSnapshotForPlate(plate) {
-        if (!plate) return;
-        const isMoto = /^\d{2}[A-Z]\d/.test(plate.replace(/[^A-Z0-9]/g, ''));
-        const dummySample = {
-            plate: plate,
-            typeName: isMoto ? 'Xe máy' : 'Ô tô',
-            modelName: isMoto ? 'Xe máy vào bãi' : 'Ô tô vào bãi',
-            colorName: 'Nhận diện tự động',
-            bodyColor: isMoto ? '#64748b' : '#1e293b',
-            lampColor: '#fef08a'
-        };
-        const canvas = renderAnprCanvas(dummySample);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        document.getElementById('anhVaoData').value = dataUrl;
-
-        const video = document.getElementById('webcamVideo');
-        const imgPreview = document.getElementById('imageFramePreview');
-        const placeholder = document.getElementById('cameraPlaceholder');
-        const statusLabel = document.getElementById('cameraStatusLabel');
-        const container = document.getElementById('cameraContainer');
-
-        if (videoStream) stopCamera();
-        video.classList.add('d-none');
-        placeholder.classList.add('d-none');
-        imgPreview.src = dataUrl;
-        imgPreview.classList.remove('d-none');
-        if (container) container.classList.add('active-stream');
-        if (statusLabel) statusLabel.textContent = '[Mô phỏng] Biển số: ' + plate;
+        // Không tạo ảnh giả lập khi chỉ nhập biển số bình thường
     }
 
     /**
@@ -1769,10 +1880,6 @@
             input.focus();
         }
         resetPlateFeedback();
-        const statusLabel = document.getElementById('cameraStatusLabel');
-        if (statusLabel) {
-            statusLabel.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
-        }
         const badge = document.getElementById('autoInferenceBadge');
         if (badge) {
             badge.classList.add('d-none');
@@ -2107,23 +2214,32 @@
             document.getElementById('anhVaoData').value = dataUrl;
 
             // Hiển thị ảnh vừa nạp lên khung camera
+            const wrapper = document.getElementById('cameraViewportWrapper');
+            if (wrapper) wrapper.style.display = 'block';
+
             const video = document.getElementById('webcamVideo');
             const imgPreview = document.getElementById('imageFramePreview');
-            const placeholder = document.getElementById('cameraPlaceholder');
             const statusLabel = document.getElementById('cameraStatusLabel');
+            const statusDot = document.getElementById('cameraStatusDot');
+            const statusPill = document.getElementById('cameraStatusPill');
+            const subHint = document.getElementById('cameraSubHint');
             const inputPlate = document.getElementById('bienSoXe');
             const plateFb = document.getElementById('plateFeedback');
 
             if (videoStream) stopCamera();
-            video.classList.add('d-none');
-            placeholder.classList.add('d-none');
-            imgPreview.src = dataUrl;
-            imgPreview.classList.remove('d-none');
+            if (wrapper) wrapper.style.display = 'block';
+            if (video) video.classList.add('d-none');
+            if (imgPreview) {
+                imgPreview.src = dataUrl;
+                imgPreview.classList.remove('d-none');
+            }
 
             // Bật trạng thái đang quét AI OCR
-            if (statusLabel) {
-                statusLabel.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span> AI ĐANG QUÉT BIỂN SỐ...';
-            }
+            if (statusLabel) statusLabel.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span> AI đang quét biển số...';
+            if (statusDot) statusDot.className = 'status-indicator-dot dot-yellow';
+            if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+            if (subHint) subHint.textContent = 'Đang phân tích hình ảnh tải lên bằng Tesseract OCR nội bộ...';
+
             if (plateFb) {
                 plateFb.innerHTML = '<span class="text-primary fw-semibold"><i class="fa-solid fa-spinner fa-spin me-1"></i> AI đang phân tích ảnh và trích xuất biển số... Vui lòng chờ giây lát.</span>';
             }
@@ -2167,11 +2283,11 @@
                         inputPlate.value = detectedPlate;
                         inputPlate.focus();
                     }
-                    if (statusLabel) {
-                        statusLabel.textContent = 'OCR đã đọc: ' + detectedPlate;
-                    }
-                    const container = document.getElementById('cameraContainer');
-                    if (container) container.classList.add('active-stream');
+                    if (statusLabel) statusLabel.textContent = 'OCR đã đọc: ' + detectedPlate;
+                    if (statusDot) statusDot.className = 'status-indicator-dot dot-green';
+                    if (statusPill) statusPill.className = 'badge bg-success-subtle text-success border border-success-subtle text-xs';
+                    if (subHint) subHint.textContent = 'Đã trích xuất biển số từ ảnh. Vui lòng đối chiếu và xác nhận thông tin.';
+
                     playScanBeep();
                     validateAndLookupPlate(detectedPlate);
 
@@ -2185,23 +2301,25 @@
                         timer: 2500
                     });
                 } else {
-                    // Nếu chưa nhận diện rõ, để trống ô nhập và hướng dẫn nhập tay hoặc nhấn Làm mới
+                    // Nếu chưa nhận diện rõ, để trống ô nhập và hướng dẫn nhập tay
                     if (inputPlate) {
                         inputPlate.value = '';
                         inputPlate.focus();
                     }
-                    if (statusLabel) {
-                        statusLabel.textContent = 'ẢNH ĐÃ NẠP (VUI LÒNG NHẬP BIỂN SỐ)';
-                    }
+                    if (statusLabel) statusLabel.textContent = 'ẢNH ĐÃ NẠP (CHƯA ĐỌC ĐƯỢC BIỂN SỐ)';
+                    if (statusDot) statusDot.className = 'status-indicator-dot dot-yellow';
+                    if (statusPill) statusPill.className = 'badge bg-warning-subtle text-warning border border-warning-subtle text-xs';
+                    if (subHint) subHint.textContent = 'Không trích xuất được biển số tự động. Nhân viên vui lòng gõ biển số vào ô bên dưới.';
+
                     if (plateFb) {
-                        plateFb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Chưa quét rõ được biển số từ ảnh. Vui lòng gõ biển số vào ô bên dưới hoặc nhấn nút <strong>Làm mới</strong> để sửa.</span>';
+                        plateFb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Chưa quét rõ được biển số từ ảnh. Vui lòng gõ biển số vào ô bên dưới.</span>';
                     }
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
                         icon: 'info',
                         title: 'Đã nạp ảnh xe vào',
-                        text: 'Vui lòng kiểm tra và nhập biển số phương tiện',
+                        text: 'Vui lòng kiểm tra và nhập biển số phương tiện thủ công',
                         showConfirmButton: false,
                         timer: 2500
                     });
@@ -2230,8 +2348,15 @@
     function captureManualFrame() {
         const video = document.getElementById('webcamVideo');
         if (!videoStream || !video || video.videoWidth === 0) {
-            // Nếu camera chưa bật, gọi nạp xe mẫu tự động
-            loadSampleEntryVehicle();
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Camera chưa bật',
+                text: 'Vui lòng nhấn [Bật Camera Làn Vào] để xem hình ảnh trực tiếp trước khi chụp.',
+                showConfirmButton: false,
+                timer: 2000
+            });
             return;
         }
 
@@ -2243,15 +2368,6 @@
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         document.getElementById('anhVaoData').value = dataUrl;
 
-        // Nếu ô biển số đang trống, tự động gán biển số từ hàng đợi nhận diện
-        const inputPlate = document.getElementById('bienSoXe');
-        if (inputPlate && !inputPlate.value.trim()) {
-            const sample = sampleEntryVehicles[sampleEntryIndex % sampleEntryVehicles.length];
-            sampleEntryIndex++;
-            inputPlate.value = sample.plate;
-            validateAndLookupPlate(sample.plate);
-        }
-
         analyzeVehicleImageColor(canvas);
         playScanBeep();
 
@@ -2260,6 +2376,7 @@
             position: 'top-end',
             icon: 'success',
             title: 'Đã chụp ảnh xe vào thành công!',
+            text: 'Ảnh chụp từ camera đã được gắn kèm lượt gửi xe.',
             showConfirmButton: false,
             timer: 1500
         });
@@ -2389,7 +2506,6 @@
             input.focus();
         }
         playScanBeep();
-        updateCameraSnapshotForPlate(plate);
         validateAndLookupPlate(plate);
     }
 
@@ -2839,17 +2955,17 @@
 
         if (barrierTimer) clearTimeout(barrierTimer);
 
-        // Kích hoạt Barie mở & Đèn xanh
+        // Kích hoạt Barie mở & Đèn xanh (Mô phỏng)
         arm.classList.add('open');
         if (bulbRed) bulbRed.classList.remove('active');
         if (bulbGreen) bulbGreen.classList.add('active');
 
         if (badge) {
             badge.className = 'barrier-badge barrier-badge-open';
-            badge.innerHTML = '<i class="fa-solid fa-lock-open me-1"></i> BARIE ĐANG MỞ (MỜI XE QUA)';
+            badge.innerHTML = '<i class="fa-solid fa-lock-open me-1"></i> BARIE ĐANG MỞ (MÔ PHỎNG)';
         }
-        if (hint) hint.textContent = 'Cần Barie đang mở – Bấm Đóng Barie để hạ cần';
-        if (desc) desc.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Barie mở – Mời phương tiện tiến vào bãi!';
+        if (hint) hint.textContent = 'Mô phỏng: Cần Barie đang mở – Bấm Đóng cần để hạ cần';
+        if (desc) desc.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Barie mở mô phỏng (Chưa kết nối thiết bị cơ điện)';
 
         playBarrierAudio(true);
     }
@@ -2866,16 +2982,16 @@
 
         if (barrierTimer) clearTimeout(barrierTimer);
 
-        // Hạ Barie & Đèn đỏ
+        // Hạ Barie & Đèn đỏ (Mô phỏng)
         arm.classList.remove('open');
         if (bulbGreen) bulbGreen.classList.remove('active');
         if (bulbRed) bulbRed.classList.add('active');
 
         if (badge) {
             badge.className = 'barrier-badge barrier-badge-closed';
-            badge.innerHTML = '<i class="fa-solid fa-lock me-1"></i> BARIE ĐANG HẠ (CHỜ TIẾP NHẬN)';
+            badge.innerHTML = '<i class="fa-solid fa-lock me-1"></i> CỔNG ĐANG ĐÓNG (MÔ PHỎNG)';
         }
-        if (hint) hint.textContent = 'Tự động nâng mở khi tạo vé thành công';
+        if (hint) hint.textContent = 'Mô phỏng tín hiệu đóng mở Barie';
         if (desc) desc.innerHTML = '<i class="fa-solid fa-circle-check text-success me-1"></i> Làn vào 01: Cổng đã đóng – Sẵn sàng tiếp nhận xe';
 
         playBarrierAudio(false);
@@ -2947,6 +3063,9 @@
     function prepareNextCheckIn() {
         const input = document.getElementById('bienSoXe');
         const qrInput = document.getElementById('qrScannerInput');
+        const ghiChu = document.getElementById('ghiChu');
+        const anhVaoData = document.getElementById('anhVaoData');
+
         if (input) {
             input.value = '';
             resetPlateFeedback();
@@ -2954,11 +3073,11 @@
         if (qrInput) {
             qrInput.value = '';
         }
-
-        if (currentCheckInMode === 'qr' && qrInput) {
-            qrInput.focus();
-        } else if (input) {
-            input.focus();
+        if (ghiChu) {
+            ghiChu.value = '';
+        }
+        if (anhVaoData) {
+            anhVaoData.value = '';
         }
 
         const btnSubmit = document.getElementById('btnSubmitCheckin');
@@ -2967,20 +3086,36 @@
             btnSubmit.classList.remove('disabled');
             btnSubmit.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Ghi nhận xe vào & Tạo vé QR <small class="opacity-75">(Enter)</small>';
         }
-        const statusLabel = document.getElementById('cameraStatusLabel');
-        if (statusLabel && !videoStream) {
-            statusLabel.textContent = 'Camera đang tắt (Thiết bị chưa kết nối)';
-        }
-        const dot = document.getElementById('cameraStatusDot');
-        if (dot && !videoStream) {
-            dot.classList.remove('active');
-        }
-        const container = document.getElementById('cameraContainer');
-        if (container && !videoStream) {
-            container.classList.remove('active-stream');
-        }
 
+        // Nếu camera không bật thì ẩn ảnh chụp/mô phỏng trước đó và đặt lại trạng thái chuẩn
         if (!videoStream) {
+            const wrapper = document.getElementById('cameraViewportWrapper');
+            if (wrapper) wrapper.style.display = 'none';
+
+            const imgPreview = document.getElementById('imageFramePreview');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('d-none');
+            }
+
+            const label = document.getElementById('cameraStatusLabel');
+            if (label) label.textContent = 'Chưa bật (Thiết bị chưa kết nối)';
+
+            const dot = document.getElementById('cameraStatusDot');
+            if (dot) dot.className = 'status-indicator-dot dot-gray';
+
+            const statusPill = document.getElementById('cameraStatusPill');
+            if (statusPill) statusPill.className = 'badge bg-secondary-subtle text-secondary border text-xs';
+
+            const subHint = document.getElementById('cameraSubHint');
+            if (subHint) subHint.textContent = 'Bật camera để xem hình ảnh trực tiếp hoặc nhập biển số thủ công bên dưới';
+
+            const iconBadge = document.getElementById('cameraIconBadge');
+            if (iconBadge) iconBadge.classList.remove('active');
+
+            const iconHeader = document.getElementById('cameraIconHeader');
+            if (iconHeader) iconHeader.className = 'fa-solid fa-video-slash';
+
             const qrVideo = document.getElementById('qrWebcamVideo');
             const qrViewfinder = document.getElementById('qrViewfinderContainer');
             const qrPlaceholder = document.getElementById('qrPlaceholderIcon');
@@ -2995,6 +3130,12 @@
             if (qrPlaceholder) qrPlaceholder.classList.remove('d-none');
             if (qrLiveBadge) qrLiveBadge.classList.add('d-none');
             if (btnToggleQrCamText) btnToggleQrCamText.textContent = 'Bật Camera';
+        }
+
+        if (currentCheckInMode === 'qr' && qrInput) {
+            qrInput.focus();
+        } else if (input) {
+            input.focus();
         }
     }
 

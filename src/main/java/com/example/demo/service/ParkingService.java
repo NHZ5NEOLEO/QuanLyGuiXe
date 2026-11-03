@@ -22,6 +22,7 @@ import com.example.demo.util.BienSoXeHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -136,85 +137,104 @@ public class ParkingService implements XuLyGuiXeService {
                 maQR = maQR + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
             }
 
-            // 3. Kiểm tra sức chứa phân khu (nếu có cấu hình)
-            if (khuVucRepository != null) {
-                String loai = loaiXe.getTenLoai().toLowerCase();
-                KhuVuc khuVuc = null;
-                if (loai.contains("máy") || loai.contains("motor")) {
-                    khuVuc = khuVucRepository.findByMaKhu("2B").orElse(null);
-                } else if (loai.contains("ô tô") || loai.contains("tải")) {
-                    khuVuc = khuVucRepository.findByMaKhu("4B").orElse(null);
-                } else {
-                    khuVuc = khuVucRepository.findByMaKhu("XD").orElse(null);
-                }
-                if (khuVuc != null && khuVuc.getSucChua() != null && khuVuc.getSucChua() > 0) {
-                    long curParked = veXeRepository.countByTrangThaiAndLoaiXeId("Đang gửi", loaiXe.getId());
+            // 3. Xác thực loại xe và tìm khu vực được cấu hình cho loại xe đó (không suy đoán tên loại xe)
+            KhuVuc khuVuc = loaiXe.getKhuVuc();
+            if (khuVuc == null && khuVucRepository != null) {
+                khuVuc = khuVucRepository.findAll().stream()
+                        .filter(kv -> kv.getLoaiXe() != null && kv.getLoaiXe().getId().equals(loaiXe.getId()))
+                        .findFirst().orElse(null);
+            }
+            if (khuVuc == null) {
+                throw new BadRequestException("Loại phương tiện [" + loaiXe.getTenLoai() + "] chưa được cấu hình phân khu đỗ xe trong hệ thống!");
+            }
+
+            // Đồng bộ theo phân khu để chống race condition vượt sức chứa
+            Object zoneLock = ("checkin-zone-" + (khuVuc.getId() != null ? khuVuc.getId() : khuVuc.getMaKhu())).intern();
+            synchronized (zoneLock) {
+                if (khuVuc.getSucChua() != null && khuVuc.getSucChua() > 0) {
+                    long curParked = (khuVuc.getId() != null)
+                            ? veXeRepository.countDangGuiByKhuVucId(khuVuc.getId())
+                            : veXeRepository.countByTrangThaiAndLoaiXeId("Đang gửi", loaiXe.getId());
                     if (curParked >= khuVuc.getSucChua()) {
                         throw new BadRequestException("Phân khu đỗ xe [" + khuVuc.getTenKhu() + "] đã hết chỗ trống (" + khuVuc.getSucChua() + " chỗ)!");
                     }
                 }
-            }
 
-            // 4. Kiểm tra vé tháng hợp lệ theo quy tắc thống nhất (phải còn hạn, HOAT_DONG, và đúng loại xe)
-            Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(bienSoDisplay, loaiXe.getId());
-            if (veThangOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
-                veThangOpt = monthlyTicketService.findActiveMonthlyPass(cleanKey, loaiXe.getId());
-            }
+                LocalDateTime thoiGianVao = LocalDateTime.now(); // Giờ server
 
-            // 5. Kiểm tra xem xe có đặt chỗ trước (Pre-booking) không
-            Optional<DatChoTruoc> bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(bienSoDisplay, "CHO_DEN");
-            if (bookingOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
-                bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(cleanKey, "CHO_DEN");
-            }
-            if (bookingOpt.isEmpty()) {
-                bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(rawPlate.toUpperCase(), "CHO_DEN");
-            }
-
-            String ghiChu = request.getGhiChu();
-            DatChoTruoc validBooking = null;
-            if (bookingOpt.isPresent()) {
-                DatChoTruoc bk = bookingOpt.get();
-                if (bk.getThoiGianHetHan() != null && bk.getThoiGianHetHan().isBefore(LocalDateTime.now())) {
-                    bk.setTrangThai("HET_HAN");
-                    datChoTruocRepository.save(bk);
-                } else {
-                    // Booking hợp lệ: Giữ tham chiếu nhưng chỉ cập nhật trạng thái sau khi tạo lượt gửi thành công
-                    validBooking = bk;
-                    String note = "Đặt chỗ trước [" + bk.getMaDatCho() + "]. Chưa có mô hình giao dịch cọc";
-                    ghiChu = (ghiChu != null && !ghiChu.isEmpty()) ? ghiChu + " | " + note : note;
+                // 4. Kiểm tra vé tháng hợp lệ theo chính sách: Phải còn hạn tại thời điểm check-in, trạng thái HOAT_DONG và đúng loại xe
+                LocalDate checkInDate = thoiGianVao.toLocalDate();
+                Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(bienSoDisplay, loaiXe.getId());
+                if (veThangOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
+                    veThangOpt = monthlyTicketService.findActiveMonthlyPass(cleanKey, loaiXe.getId());
                 }
+                if (veThangOpt.isPresent() && !veThangOpt.get().isConHan(checkInDate)) {
+                    veThangOpt = Optional.empty();
+                }
+
+                // 5. Kiểm tra xem xe có đặt chỗ trước (Pre-booking) không
+                Optional<DatChoTruoc> bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(bienSoDisplay, "CHO_DEN");
+                if (bookingOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
+                    bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(cleanKey, "CHO_DEN");
+                }
+                if (bookingOpt.isEmpty()) {
+                    bookingOpt = datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(rawPlate.toUpperCase(), "CHO_DEN");
+                }
+
+                String ghiChu = request.getGhiChu();
+                DatChoTruoc validBooking = null;
+                if (bookingOpt.isPresent()) {
+                    DatChoTruoc bk = bookingOpt.get();
+                    if (bk.getThoiGianHetHan() != null && bk.getThoiGianHetHan().isBefore(LocalDateTime.now())) {
+                        bk.setTrangThai("HET_HAN");
+                        datChoTruocRepository.save(bk);
+                    } else {
+                        // Booking hợp lệ: Giữ tham chiếu nhưng chỉ cập nhật trạng thái sau khi tạo lượt gửi thành công
+                        validBooking = bk;
+                        String note = "Đặt chỗ trước [" + bk.getMaDatCho() + "]. Chưa có mô hình giao dịch cọc";
+                        ghiChu = (ghiChu != null && !ghiChu.isEmpty()) ? ghiChu + " | " + note : note;
+                    }
+                }
+
+                // 6. Khởi tạo lượt gửi xe với phân khu đỗ xe, không gán vi_tri_do_id hoặc mã ô giả
+                VeXe veXe = new VeXe();
+                veXe.setBienSoXe(bienSoDisplay);
+                veXe.setBienSoClean(cleanKey);
+                veXe.setMaQR(maQR);
+                veXe.setLoaiXe(loaiXe);
+                veXe.setKhuVuc(khuVuc);
+                veXe.setViTriDo(null); // Quản lý theo khu vực, không gán vi_tri_do_id hoặc mã ô giả
+                veXe.setDatChoTruoc(validBooking);
+                veXe.setTienCocKhauTru(0.0); // Không tự ý khấu trừ tiền cọc khi chưa có mô hình giao dịch cọc xác minh
+                veXe.setThoiGianVao(thoiGianVao);
+                veXe.setTrangThai("Đang gửi");
+                veXe.setAnhVaoUrl(request.getAnhVaoData());
+                veXe.setGhiChu(ghiChu);
+
+                if (veThangOpt.isPresent()) {
+                    VeThang vt = veThangOpt.get();
+                    veXe.setVeThang(vt);
+                    veXe.setHinhThucThanhToan("VE_THANG");
+                    veXe.setTrangThaiThanhToan("MIEN_PHI");
+                    veXe.setSoTienPhaiThu(0.0);
+                    veXe.setChiPhi(0.0);
+                } else {
+                    veXe.setVeThang(null);
+                    veXe.setHinhThucThanhToan("TIEN_MAT");
+                    veXe.setTrangThaiThanhToan("CHUA_THANH_TOAN");
+                }
+
+                VeXe savedTicket = veXeRepository.save(veXe);
+
+                // Chỉ cập nhật trạng thái booking sau khi tạo lượt gửi thành công trong transaction
+                if (validBooking != null) {
+                    validBooking.setTrangThai("DA_VAO");
+                    validBooking.setThoiGianCheckIn(LocalDateTime.now());
+                    datChoTruocRepository.save(validBooking);
+                }
+
+                return savedTicket;
             }
-
-            // 6. Khởi tạo lượt gửi xe với thời gian máy chủ và không giả lập vị trí ô đỗ cụ thể (để Khu vực chung)
-            VeXe veXe = new VeXe();
-            veXe.setBienSoXe(bienSoDisplay);
-            veXe.setBienSoClean(cleanKey);
-            veXe.setMaQR(maQR);
-            veXe.setLoaiXe(loaiXe);
-            veXe.setViTriDo(null); // Giữ khu vực chung, không giả lập ô đỗ cụ thể khi chưa có quản lý cảm biến thực tế
-            veXe.setDatChoTruoc(validBooking);
-            veXe.setTienCocKhauTru(0.0); // Không tự ý khấu trừ tiền cọc khi chưa có mô hình giao dịch cọc xác minh
-            veXe.setThoiGianVao(LocalDateTime.now()); // Giờ server
-            veXe.setTrangThai("Đang gửi");
-            veXe.setTrangThaiThanhToan(veThangOpt.isPresent() ? "MIEN_PHI" : "CHUA_THANH_TOAN");
-            veXe.setAnhVaoUrl(request.getAnhVaoData());
-            veXe.setGhiChu(ghiChu);
-
-            if (veThangOpt.isPresent()) {
-                veXe.setVeThang(veThangOpt.get());
-                veXe.setHinhThucThanhToan("VE_THANG");
-            }
-
-            VeXe savedTicket = veXeRepository.save(veXe);
-
-            // Chỉ cập nhật trạng thái booking sau khi tạo lượt gửi thành công trong transaction
-            if (validBooking != null) {
-                validBooking.setTrangThai("DA_VAO");
-                validBooking.setThoiGianCheckIn(LocalDateTime.now());
-                datChoTruocRepository.save(validBooking);
-            }
-
-            return savedTicket;
         }
     }
 
@@ -288,7 +308,7 @@ public class ParkingService implements XuLyGuiXeService {
         res.setMaQR(veXe.getMaQR());
         res.setBienSoXe(veXe.getBienSoXe());
         res.setTenLoaiXe(veXe.getLoaiXe() != null ? veXe.getLoaiXe().getTenLoai() : "Chưa xác định");
-        res.setMaViTri(veXe.getViTriDo() != null ? veXe.getViTriDo().getMaViTri() : "Khu vực chung");
+        res.setMaViTri(veXe.getMaViTri());
         res.setThoiGianVao(veXe.getThoiGianVao());
         res.setThoiGianRa(thoiGianRa);
         res.setThoiLuong(feeResult.getThoiLuongText());
@@ -440,25 +460,15 @@ public class ParkingService implements XuLyGuiXeService {
     }
 
     /**
-     * Kiểm tra vé tháng hợp lệ theo quy tắc thống nhất: Còn hạn, trạng thái HOAT_DONG, đúng loại xe
+     * Kiểm tra vé tháng hợp lệ theo quyền lợi đã gắn ở lượt gửi xe (VeXe).
+     * Chính sách vé tháng:
+     * - Quyền lợi miễn phí được gắn bền vững vào VeXe tại thời điểm check-in.
+     * - Lượt gửi có vé tháng hợp lệ lúc check-in được miễn phí trọn vẹn, kể cả khi vé tháng hết hạn trong lúc xe còn trong bãi.
+     * - Không tự tìm kiếm vé tháng đang hoạt động tại thời điểm checkout để miễn phí hồi tố cho lượt gửi trước đó chưa gắn vé tháng.
      */
     private boolean checkValidMonthlyPass(VeXe veXe) {
         if (veXe == null) return false;
-        if (veXe.getVeThang() != null) {
-            VeThang vt = veXe.getVeThang();
-            if (vt.isConHan() && "HOAT_DONG".equalsIgnoreCase(vt.getTrangThai())) {
-                if (veXe.getLoaiXe() == null || vt.getLoaiXe() == null || vt.getLoaiXe().getId().equals(veXe.getLoaiXe().getId())) {
-                    return true;
-                }
-            }
-        }
-        Long loaiXeId = veXe.getLoaiXe() != null ? veXe.getLoaiXe().getId() : null;
-        Optional<VeThang> passOpt = monthlyTicketService.findActiveMonthlyPass(veXe.getBienSoXe(), loaiXeId);
-        if (passOpt.isPresent()) {
-            veXe.setVeThang(passOpt.get());
-            return true;
-        }
-        return false;
+        return veXe.getVeThang() != null || "VE_THANG".equalsIgnoreCase(veXe.getHinhThucThanhToan());
     }
 
     /**

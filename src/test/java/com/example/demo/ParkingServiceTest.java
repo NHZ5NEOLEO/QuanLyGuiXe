@@ -8,6 +8,7 @@ import com.example.demo.exception.InvalidTicketStateException;
 import com.example.demo.exception.VehicleAlreadyParkedException;
 import com.example.demo.model.DanhSachDen;
 import com.example.demo.model.DatChoTruoc;
+import com.example.demo.model.KhuVuc;
 import com.example.demo.model.LoaiXe;
 import com.example.demo.model.VeThang;
 import com.example.demo.model.VeXe;
@@ -75,11 +76,19 @@ public class ParkingServiceTest {
 
     @BeforeEach
     void setUp() {
+        KhuVuc kv2B = new KhuVuc("2B", "Khu Đỗ Xe 2 Bánh", null, 100, "Tầng hầm B1");
+        kv2B.setId(1L);
+
+        KhuVuc kv4B = new KhuVuc("4B", "Khu Đỗ Xe 4 Bánh", null, 20, "Tầng 1 ngoài trời");
+        kv4B.setId(2L);
+
         loaiXeMay = new LoaiXe("Xe máy", 4000.0, 6000.0, 100000.0, "fa-motorcycle", "Xe máy");
         loaiXeMay.setId(1L);
+        loaiXeMay.setKhuVuc(kv2B);
 
         loaiXeOTo = new LoaiXe("Ô tô", 20000.0, 35000.0, 1200000.0, "fa-car", "Ô tô con");
         loaiXeOTo.setId(2L);
+        loaiXeOTo.setKhuVuc(kv4B);
     }
 
     @Test

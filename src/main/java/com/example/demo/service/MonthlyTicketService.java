@@ -87,15 +87,21 @@ public class MonthlyTicketService implements VeThangService {
 
     @Override
     public Optional<VeThang> timVeThangConHan(String bienSoXe) {
-        return timVeThangConHan(bienSoXe, null);
+        return timVeThangConHan(bienSoXe, null, LocalDate.now());
     }
 
     @Override
     public Optional<VeThang> timVeThangConHan(String bienSoXe, Long loaiXeId) {
+        return timVeThangConHan(bienSoXe, loaiXeId, LocalDate.now());
+    }
+
+    @Override
+    public Optional<VeThang> timVeThangConHan(String bienSoXe, Long loaiXeId, LocalDate targetDate) {
         if (bienSoXe == null || bienSoXe.trim().isEmpty()) return Optional.empty();
+        LocalDate checkDate = targetDate != null ? targetDate : LocalDate.now();
         List<VeThang> list = veThangRepository.findByTrangThai("HOAT_DONG");
         for (VeThang vt : list) {
-            if (com.example.demo.util.BienSoXeHelper.isSamePlate(vt.getBienSoXe(), bienSoXe) && vt.isConHan()) {
+            if (com.example.demo.util.BienSoXeHelper.isSamePlate(vt.getBienSoXe(), bienSoXe) && vt.isConHan(checkDate)) {
                 if (loaiXeId == null || (vt.getLoaiXe() != null && vt.getLoaiXe().getId() != null && vt.getLoaiXe().getId().equals(loaiXeId))) {
                     return Optional.of(vt);
                 }
@@ -105,11 +111,15 @@ public class MonthlyTicketService implements VeThangService {
     }
 
     public Optional<VeThang> findActiveMonthlyPass(String bienSoXe) {
-        return timVeThangConHan(bienSoXe, null);
+        return timVeThangConHan(bienSoXe, null, LocalDate.now());
     }
 
     public Optional<VeThang> findActiveMonthlyPass(String bienSoXe, Long loaiXeId) {
-        return timVeThangConHan(bienSoXe, loaiXeId);
+        return timVeThangConHan(bienSoXe, loaiXeId, LocalDate.now());
+    }
+
+    public Optional<VeThang> findActiveMonthlyPass(String bienSoXe, Long loaiXeId, LocalDate targetDate) {
+        return timVeThangConHan(bienSoXe, loaiXeId, targetDate);
     }
 
     @Override
@@ -120,8 +130,16 @@ public class MonthlyTicketService implements VeThangService {
             throw new BadRequestException("Số tháng đăng ký vé tháng phải từ 1 đến 24 tháng!");
         }
 
+        if (loaiXeId == null) {
+            throw new BadRequestException("Vui lòng chọn loại phương tiện!");
+        }
+
         LoaiXe loaiXe = loaiXeRepository.findById(loaiXeId)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy loại xe ID: " + loaiXeId));
+
+        if (loaiXe.getGiaThang() == null || loaiXe.getGiaThang() <= 0) {
+            throw new BadRequestException("Loại xe [" + loaiXe.getTenLoai() + "] chưa được cấu hình giá vé tháng hợp lệ!");
+        }
 
         BienSoXeHelper.ValidationResult vResult = 
                 BienSoXeHelper.validate(bienSoXe, loaiXe.getTenLoai());
@@ -129,11 +147,15 @@ public class MonthlyTicketService implements VeThangService {
             throw new BadRequestException("Biển số xe không hợp lệ theo quy chuẩn Việt Nam: " + vResult.message());
         }
         String displayPlate = vResult.displayValue();
-        String cleanPlate = BienSoXeHelper.clean(displayPlate);
 
         // Chặn tạo nhiều vé tháng hoạt động trùng biển số
-        long activeCount = veThangRepository.countActiveByBienSoXe(cleanPlate, LocalDate.now());
-        if (activeCount > 0) {
+        LocalDate today = LocalDate.now();
+        List<VeThang> activePasses = veThangRepository.findByTrangThai("HOAT_DONG");
+        boolean existsActive = activePasses.stream().anyMatch(vt ->
+                BienSoXeHelper.isSamePlate(vt.getBienSoXe(), displayPlate) &&
+                vt.getNgayHetHan() != null && !today.isAfter(vt.getNgayHetHan())
+        );
+        if (existsActive) {
             throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] hiện đang có vé tháng đang hoạt động và còn hạn sử dụng!");
         }
 
@@ -146,9 +168,9 @@ public class MonthlyTicketService implements VeThangService {
 
         // Cập nhật thông tin nếu cần
         khachHang.setHoTen(hoTen);
-        khachHang.setCccd(cccd);
-        khachHang.setEmail(email);
-        khachHang.setDiaChi(diaChi);
+        if (cccd != null && !cccd.isBlank()) khachHang.setCccd(cccd);
+        if (email != null && !email.isBlank()) khachHang.setEmail(email);
+        if (diaChi != null && !diaChi.isBlank()) khachHang.setDiaChi(diaChi);
         khachHangRepository.save(khachHang);
 
         // Đảm bảo khách hàng luôn có tài khoản đăng nhập (tenDangNhap = sdt) với mật khẩu mã hóa BCrypt
@@ -159,7 +181,8 @@ public class MonthlyTicketService implements VeThangService {
 
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusMonths(soThang);
-        double totalPrice = (loaiXe.getGiaThang() != null ? loaiXe.getGiaThang() : 100000.0) * soThang;
+        // Chính sách: Giá vé = giá tháng của loại xe x số tháng. Không áp dụng giảm giá.
+        double totalPrice = loaiXe.getGiaThang() * soThang;
 
         String maThe = "VT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
@@ -193,15 +216,26 @@ public class MonthlyTicketService implements VeThangService {
         VeThang veThang = veThangRepository.findById(veThangId)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy vé tháng ID: " + veThangId));
 
+        LoaiXe loaiXe = veThang.getLoaiXe();
+        if (loaiXe == null || loaiXe.getGiaThang() == null || loaiXe.getGiaThang() <= 0) {
+            throw new BadRequestException("Loại xe của vé tháng chưa được cấu hình giá vé tháng hợp lệ!");
+        }
+
         LocalDate currentEnd = veThang.getNgayHetHan();
-        LocalDate newStart = (currentEnd != null && currentEnd.isAfter(LocalDate.now())) ? currentEnd : LocalDate.now();
+        LocalDate today = LocalDate.now();
+        // Chính sách: Gia hạn trước khi hết hạn thì nối thời gian mới từ ngày hết hạn hiện tại.
+        // Gia hạn sau khi hết hạn thì tính từ ngày gia hạn.
+        boolean isExpired = (currentEnd == null || today.isAfter(currentEnd));
+        LocalDate newStart = isExpired ? today : currentEnd;
         LocalDate newEnd = newStart.plusMonths(soThang);
 
+        if (isExpired) {
+            veThang.setNgayBatDau(newStart);
+        }
         veThang.setNgayHetHan(newEnd);
         veThang.setTrangThai("HOAT_DONG");
-        if (veThang.getLoaiXe() != null && veThang.getLoaiXe().getGiaThang() != null) {
-            veThang.setGiaTien(veThang.getGiaTien() + (veThang.getLoaiXe().getGiaThang() * soThang));
-        }
+        double renewalPrice = loaiXe.getGiaThang() * soThang;
+        veThang.setGiaTien(veThang.getGiaTien() != null ? veThang.getGiaTien() + renewalPrice : renewalPrice);
 
         return veThangRepository.save(veThang);
     }

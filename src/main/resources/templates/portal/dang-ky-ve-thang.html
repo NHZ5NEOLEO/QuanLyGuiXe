@@ -326,21 +326,22 @@
                                     <div class="fs-3 fw-bold text-success font-monospace" id="sumTotalPrice">
                                         0 đ
                                     </div>
-                                    <span class="badge bg-success bg-opacity-10 text-success text-xs fw-bold">Tiết kiệm 40%</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary text-xs fw-bold">Biểu phí chuẩn</span>
                                 </div>
-                                <div class="text-2xs text-muted mt-1">Đã bao gồm thuế và phí bãi quy định</div>
+                                <div class="text-2xs text-muted mt-1">Giá vé = Đơn giá tháng của loại xe × số tháng đăng ký</div>
                             </div>
 
                             <!-- Policy Guidelines -->
                             <div class="p-3 rounded-3 bg-white border small text-muted">
                                 <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-check text-success"></i>
-                                    <span>Quyền lợi thẻ vé tháng:</span>
+                                    <i class="fa-solid fa-circle-info text-primary"></i>
+                                    <span>Quy định & Chính sách vé tháng:</span>
                                 </div>
                                 <ul class="mb-0 ps-3 text-xs">
-                                    <li>Không giới hạn lượt ra/vào suốt thời hạn vé.</li>
-                                    <li>Sau khi gửi biểu mẫu, hệ thống cấp mã thẻ vé tháng tức thì.</li>
-                                    <li>Hỗ trợ thanh toán qua mã VietQR chuyển khoản chính xác số tiền.</li>
+                                    <li>Mỗi vé tháng áp dụng cho 1 biển số xe và 1 loại phương tiện.</li>
+                                    <li>Không giới hạn số lượt ra/vào bãi khi vé còn hiệu lực.</li>
+                                    <li><strong>Lưu ý quan trọng:</strong> Vé tháng là dịch vụ gửi xe định kỳ, <em>không đảm bảo vị trí ô đỗ riêng hoặc giữ chỗ cố định</em>.</li>
+                                    <li>Sau khi tạo thẻ, vui lòng quét mã VietQR hoặc nộp tiền tại quầy để hoàn tất đối soát thanh toán.</li>
                                 </ul>
                             </div>
                         </div>
@@ -363,8 +364,8 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body p-4 text-center">
-                    <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill text-xs fw-bold mb-3">
-                        <i class="fa-solid fa-circle-check me-1"></i>ĐÃ KÍCH HOẠT VÉ THÁNG THÀNH CÔNG
+                    <div class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 px-3 py-1 rounded-pill text-xs fw-bold mb-3">
+                        <i class="fa-solid fa-file-circle-check me-1"></i>ĐÃ GHI NHẬN THÔNG TIN ĐĂNG KÝ
                     </div>
                     <div class="small text-muted mb-1">Mã thẻ vé tháng của bạn:</div>
                     <div class="fs-4 fw-bold text-primary font-monospace mb-3" id="modalMaThe">VT-12345678</div>
@@ -389,14 +390,18 @@
                                 <strong class="d-block text-success font-monospace" id="modalNgayKetThuc">--</strong>
                             </div>
                         </div>
+                        <div class="mt-2 pt-2 border-top text-2xs text-muted">
+                            <i class="fa-solid fa-triangle-exclamation text-secondary me-1"></i>
+                            Vé tháng áp dụng gửi xe theo phương tiện, không bao gồm giữ chỗ hoặc ô đỗ cố định.
+                        </div>
                     </div>
 
                     <!-- VietQR Payment Info -->
                     <div class="p-3 rounded-3 border bg-white mb-3">
-                        <div class="text-2xs fw-bold text-muted text-uppercase mb-2">Quét mã VietQR hoàn tất kích hoạt thẻ</div>
+                        <div class="text-2xs fw-bold text-muted text-uppercase mb-2">Thanh toán chuyển khoản VietQR</div>
                         <img id="modalQrImg" src="" alt="Mã VietQR thanh toán" class="img-fluid rounded-3 mb-2 max-h-240">
                         <div class="small text-muted">Số tiền cần thanh toán: <strong class="text-success font-monospace fs-5" id="modalTongTien">0 đ</strong></div>
-                        <div class="text-2xs text-muted mt-1">Nội dung chuyển khoản đã được tạo tự động trong mã QR</div>
+                        <div class="text-2xs text-muted mt-1">Giao dịch được ghi nhận chính thức sau khi đối soát hoặc xác nhận tại quầy quản lý.</div>
                     </div>
 
                     <div class="d-flex gap-2">

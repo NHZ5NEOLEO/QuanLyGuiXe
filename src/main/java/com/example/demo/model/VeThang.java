@@ -52,12 +52,16 @@ public class VeThang {
     }
 
     public boolean isConHan() {
+        return isConHan(LocalDate.now());
+    }
+
+    public boolean isConHan(LocalDate targetDate) {
         if (!"HOAT_DONG".equalsIgnoreCase(this.trangThai)) {
             return false;
         }
-        LocalDate now = LocalDate.now();
-        return (ngayBatDau != null && !now.isBefore(ngayBatDau)) &&
-               (ngayHetHan != null && !now.isAfter(ngayHetHan));
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        return (ngayBatDau == null || !date.isBefore(ngayBatDau)) &&
+               (ngayHetHan != null && !date.isAfter(ngayHetHan));
     }
 
     public long getSoNgayConLai() {

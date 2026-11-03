@@ -30,6 +30,12 @@ public interface VeXeRepository extends JpaRepository<VeXe, Integer> {
 
     long countByTrangThaiAndLoaiXeId(String trangThai, Long loaiXeId);
 
+    @Query("SELECT COUNT(v) FROM VeXe v WHERE v.trangThai = 'Đang gửi' AND (v.khuVuc.id = :khuVucId OR (v.khuVuc IS NULL AND v.loaiXe.khuVuc.id = :khuVucId))")
+    long countDangGuiByKhuVucId(@Param("khuVucId") Long khuVucId);
+
+    @Query("SELECT v FROM VeXe v WHERE v.trangThai = 'Đang gửi' AND (v.khuVuc.id = :khuVucId OR (v.khuVuc IS NULL AND v.loaiXe.khuVuc.id = :khuVucId)) ORDER BY v.thoiGianVao ASC")
+    List<VeXe> findDangGuiByKhuVucId(@Param("khuVucId") Long khuVucId);
+
     @Query("SELECT COUNT(v) FROM VeXe v WHERE v.thoiGianRa IS NULL OR v.trangThai LIKE '%gửi%' OR v.trangThai LIKE '%gui%'")
     long countActiveVehicles();
 

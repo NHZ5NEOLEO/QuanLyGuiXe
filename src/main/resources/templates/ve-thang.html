@@ -66,6 +66,13 @@
                 </form>
             </div>
 
+            <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                <i class="fa-solid fa-circle-info text-primary fs-5"></i>
+                <div>
+                    <strong>Chính sách vé tháng:</strong> Mỗi vé áp dụng cho 1 biển số và 1 loại xe. Lượt gửi còn hạn tại thời điểm check-in được miễn phí trọn vẹn. <em>Vé tháng là dịch vụ gửi xe định kỳ, không đảm bảo vị trí ô đỗ riêng hoặc giữ chỗ cố định.</em>
+                </div>
+            </div>
+
             <!-- Table of Monthly Tickets -->
             <div class="card-pro">
                 <div class="card-header-pro">
@@ -83,6 +90,7 @@
                                 <th>Biển Số Xe</th>
                                 <th>Loại Xe</th>
                                 <th>Thời Hạn Vé</th>
+                                <th>Giá Vé</th>
                                 <th>Còn Lại</th>
                                 <th>Trạng Thái</th>
                                 <th class="text-end">Thao Tác</th>
@@ -90,7 +98,7 @@
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(tickets)}">
-                                <td colspan="9" class="text-center py-4 text-muted">Không tìm thấy vé tháng nào phù hợp</td>
+                                <td colspan="10" class="text-center py-4 text-muted">Không tìm thấy vé tháng nào phù hợp</td>
                             </tr>
                             <tr th:each="t : ${tickets}">
                                 <td>
@@ -113,6 +121,9 @@
                                 <td>
                                     <small class="text-muted d-block">Từ: <span th:text="${#temporals.format(t.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span></small>
                                     <small class="fw-bold text-dark">Đến: <span th:text="${#temporals.format(t.ngayHetHan, 'dd/MM/yyyy')}">01/06/2026</span></small>
+                                </td>
+                                <td>
+                                    <span class="font-monospace fw-bold text-dark" th:text="${t.giaTien != null ? #numbers.formatDecimal(t.giaTien, 0, 'COMMA', 0, 'POINT') + ' đ' : '--'}">100,000 đ</span>
                                 </td>
                                 <td>
                                     <span th:if="${t.isConHan()}" class="badge-pro badge-success-pro" th:text="${t.getSoNgayConLai() + ' ngày'}">30 ngày</span>
@@ -222,6 +233,11 @@
                                 <option value="12">12 Tháng (Gói 1 năm)</option>
                             </select>
                         </div>
+                        <div class="col-md-12">
+                            <div class="form-text text-muted text-xs">
+                                <i class="fa-solid fa-circle-info text-info me-1"></i>Giá vé = Đơn giá loại xe × số tháng. Vé tháng không giữ chỗ hoặc ô đỗ riêng.
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -262,6 +278,9 @@
                             <option value="6">Gia hạn thêm 6 Tháng</option>
                             <option value="12">Gia hạn thêm 12 Tháng (1 Năm)</option>
                         </select>
+                        <div class="form-text text-muted text-xs mt-2">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i>Gia hạn trước hạn sẽ nối tiếp từ ngày hết hạn hiện tại. Gia hạn sau khi hết hạn sẽ tính từ ngày hôm nay.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

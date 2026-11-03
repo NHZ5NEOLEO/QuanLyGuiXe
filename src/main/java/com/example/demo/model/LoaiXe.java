@@ -28,6 +28,10 @@ public class LoaiXe {
     @Column(length = 255, columnDefinition = "NVARCHAR(255)")
     private String moTa;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "khu_vuc_id")
+    private KhuVuc khuVuc;
+
     public LoaiXe() {
     }
 
@@ -38,6 +42,16 @@ public class LoaiXe {
         this.giaThang = giaThang;
         this.iconClass = iconClass;
         this.moTa = moTa;
+    }
+
+    public LoaiXe(String tenLoai, Double giaBanNgay, Double giaBanDem, Double giaThang, String iconClass, String moTa, KhuVuc khuVuc) {
+        this.tenLoai = tenLoai;
+        this.giaBanNgay = giaBanNgay;
+        this.giaBanDem = giaBanDem;
+        this.giaThang = giaThang;
+        this.iconClass = iconClass;
+        this.moTa = moTa;
+        this.khuVuc = khuVuc;
     }
 
     public Long getId() {
@@ -102,5 +116,23 @@ public class LoaiXe {
 
     public void setMoTa(String moTa) {
         this.moTa = moTa;
+    }
+
+    public KhuVuc getKhuVuc() {
+        return khuVuc;
+    }
+
+    public void setKhuVuc(KhuVuc khuVuc) {
+        this.khuVuc = khuVuc;
+    }
+
+    @Transient
+    public String getTenKhuVuc() {
+        return khuVuc != null ? khuVuc.getTenKhu() : "Chưa cấu hình khu vực";
+    }
+
+    @Transient
+    public String getMaKhuVuc() {
+        return khuVuc != null ? khuVuc.getMaKhu() : null;
     }
 }

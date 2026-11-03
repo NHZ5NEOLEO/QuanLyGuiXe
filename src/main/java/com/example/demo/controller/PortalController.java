@@ -35,8 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Matcher;
+import com.example.demo.exception.BadRequestException;
+import com.example.demo.service.MonthlyTicketService;
 import java.util.regex.Pattern;
 
 @Controller
@@ -48,6 +49,7 @@ public class PortalController {
     private final KhuVucRepository khuVucRepository;
     private final KhachHangRepository khachHangRepository;
     private final NguoiDungRepository nguoiDungRepository;
+    private final MonthlyTicketService monthlyTicketService;
     private final JdbcTemplate jdbcTemplate;
 
     public PortalController(
@@ -57,6 +59,7 @@ public class PortalController {
             KhuVucRepository khuVucRepository,
             KhachHangRepository khachHangRepository,
             NguoiDungRepository nguoiDungRepository,
+            MonthlyTicketService monthlyTicketService,
             JdbcTemplate jdbcTemplate
     ) {
         this.loaiXeRepository = loaiXeRepository;
@@ -65,6 +68,7 @@ public class PortalController {
         this.khuVucRepository = khuVucRepository;
         this.khachHangRepository = khachHangRepository;
         this.nguoiDungRepository = nguoiDungRepository;
+        this.monthlyTicketService = monthlyTicketService;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -371,60 +375,21 @@ public class PortalController {
             String cccd = req.getOrDefault("cccd", "").toString().trim();
             String email = req.getOrDefault("email", "").toString().trim();
             String diaChi = req.getOrDefault("diaChi", "").toString().trim();
-            String bienSoXe = req.get("bienSoXe").toString().trim().toUpperCase();
+            String bienSoXe = req.get("bienSoXe").toString().trim();
             Long loaiXeId = Long.valueOf(req.get("loaiXeId").toString());
-            int months = Integer.parseInt(req.getOrDefault("months", "1").toString());
-            if (months < 1) months = 1;
-
-            // 1. Tìm hoặc tạo khách hàng liên kết với số điện thoại của tài khoản
-            final String finalHoTen = hoTen;
-            final String finalSdt = sdt;
-            KhachHang khachHang = khachHangRepository.findBySoDienThoai(sdt)
-                    .orElseGet(() -> {
-                        KhachHang newKh = new KhachHang(finalHoTen, finalSdt, cccd, email, diaChi);
-                        return khachHangRepository.save(newKh);
-                    });
-            khachHang.setHoTen(hoTen);
-            if (!cccd.isEmpty()) khachHang.setCccd(cccd);
-            if (!email.isEmpty()) khachHang.setEmail(email);
-            if (!diaChi.isEmpty()) khachHang.setDiaChi(diaChi);
-            khachHangRepository.save(khachHang);
-
-            LoaiXe loaiXe = loaiXeRepository.findById(loaiXeId)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy loại xe ID: " + loaiXeId));
-
-            String cleanKey = bienSoXe.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
-            String displayPlate = formatPlateDisplay(cleanKey);
-            if (displayPlate.isEmpty()) {
-                displayPlate = bienSoXe;
+            int months = 1;
+            try {
+                months = Integer.parseInt(req.getOrDefault("months", "1").toString().trim());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Số tháng không hợp lệ!"));
             }
 
-            LocalDate startDate = LocalDate.now();
-            if (req.containsKey("startDate") && req.get("startDate") != null && !req.get("startDate").toString().trim().isEmpty()) {
-                try {
-                    startDate = LocalDate.parse(req.get("startDate").toString().trim());
-                } catch (Exception ignored) {}
-            }
-            LocalDate endDate = startDate.plusMonths(months);
-            double basePrice = loaiXe.getGiaThang() != null ? loaiXe.getGiaThang() : 100000.0;
-            double totalPrice = basePrice * months;
+            // Gọi MonthlyTicketService để thực hiện toàn bộ nghiệp vụ đăng ký, validate biển số, loại xe và kiểm tra vé trùng lặp
+            VeThang veThang = monthlyTicketService.dangKyVeThang(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, months);
 
-            String maThe = "VT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            VeThang veThang = new VeThang(
-                    maThe,
-                    khachHang,
-                    displayPlate,
-                    loaiXe,
-                    startDate,
-                    endDate,
-                    totalPrice,
-                    "HOAT_DONG"
-            );
-            veThangRepository.save(veThang);
-
-            // Sinh mã QR VietQR đúng số tiền
+            double totalPrice = veThang.getGiaTien() != null ? veThang.getGiaTien() : 0.0;
             long intAmount = Math.round(totalPrice);
-            String addInfo = URLEncoder.encode("VE THANG " + displayPlate + " " + maThe, StandardCharsets.UTF_8);
+            String addInfo = URLEncoder.encode("VE THANG " + veThang.getBienSoXe() + " " + veThang.getMaThe(), StandardCharsets.UTF_8);
             String encodedName = URLEncoder.encode("NGUYEN HUE", StandardCharsets.UTF_8);
             String qrUrl = String.format(
                     "https://img.vietqr.io/image/971025-PSP2601617600000204-compact2.png?amount=%d&addInfo=%s&accountName=%s",
@@ -433,20 +398,23 @@ public class PortalController {
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
-            resp.put("message", "Đăng ký vé tháng thành công! Vui lòng quét mã VietQR để hoàn tất thanh toán.");
-            resp.put("maThe", maThe);
+            resp.put("message", "Đã ghi nhận thông tin đăng ký vé tháng! Vui lòng đối soát thanh toán.");
+            resp.put("maThe", veThang.getMaThe());
             resp.put("hoTen", hoTen);
-            resp.put("bienSoXe", displayPlate);
-            resp.put("loaiXe", loaiXe.getTenLoai());
-            resp.put("ngayBatDau", startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-            resp.put("ngayKetThuc", endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            resp.put("bienSoXe", veThang.getBienSoXe());
+            resp.put("loaiXe", veThang.getLoaiXe() != null ? veThang.getLoaiXe().getTenLoai() : "");
+            resp.put("ngayBatDau", veThang.getNgayBatDau().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            resp.put("ngayKetThuc", veThang.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
             resp.put("tongTien", totalPrice);
             resp.put("vietQrUrl", qrUrl);
             resp.put("bankId", "971025 (MoMo)");
             resp.put("accountNo", "PSP2601617600000204");
             resp.put("accountName", "NGUYỄN HUỆ");
+            resp.put("trangThaiThanhToan", "CHO_DOI_SOAT");
 
             return ResponseEntity.ok(resp);
+        } catch (BadRequestException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Lỗi đăng ký: " + e.getMessage()));
         }

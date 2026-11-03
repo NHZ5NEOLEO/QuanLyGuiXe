@@ -34,7 +34,11 @@ public class VeXe {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vi_tri_do_id")
-    private ViTriDo viTriDo; // Vị trí ô đỗ cụ thể được cấp
+    private ViTriDo viTriDo; // Vị trí ô đỗ cụ thể (nếu có hệ thống cảm biến ô)
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "khu_vuc_id")
+    private KhuVuc khuVuc; // Phân khu đỗ xe thực tế của lượt gửi (Khu 2B, 4B, XD)
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dat_cho_truoc_id")
@@ -161,7 +165,18 @@ public class VeXe {
         this.viTriDo = viTriDo;
     }
 
+    public KhuVuc getKhuVuc() {
+        return khuVuc;
+    }
+
+    public void setKhuVuc(KhuVuc khuVuc) {
+        this.khuVuc = khuVuc;
+    }
+
     public String getMaViTri() {
+        if (khuVuc != null) {
+            return khuVuc.getTenKhu();
+        }
         if (viTriDo != null && viTriDo.getMaViTri() != null) {
             return viTriDo.getMaViTri();
         }

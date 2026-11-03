@@ -59,7 +59,9 @@ public class ReportService implements BaoCaoService {
         LocalDateTime startOf7Days = LocalDateTime.of(LocalDate.now().minusDays(6), LocalTime.MIN);
         LocalDateTime startOfMonth = LocalDateTime.of(LocalDate.now().withDayOfMonth(1), LocalTime.MIN);
 
-        long tongCho = khuVucRepository.findAll().stream().mapToLong(k -> k.getSucChua() != null ? k.getSucChua() : 0).sum();
+        long tongCho = khuVucRepository.findAll().stream()
+                .filter(k -> !"24H".equalsIgnoreCase(k.getMaKhu()))
+                .mapToLong(k -> k.getSucChua() != null ? k.getSucChua() : 0).sum();
         if (tongCho <= 0) {
             tongCho = 100;
         }
@@ -303,35 +305,31 @@ public class ReportService implements BaoCaoService {
         List<TrangThaiKhuVucDto> list = new ArrayList<>();
 
         for (KhuVuc kv : khuVucs) {
-            long totalSlots = (kv.getSucChua() != null && kv.getSucChua() > 0) ? kv.getSucChua() : 100;
-
-            String maKhu = kv.getMaKhu() != null ? kv.getMaKhu().toUpperCase() : "";
-            String tenKhu = kv.getTenKhu() != null ? kv.getTenKhu().toLowerCase() : "";
-            String loaiXeTen = (kv.getLoaiXe() != null) ? kv.getLoaiXe().getTenLoai() : "Đa năng";
-
-            // Đếm số lượng xe thực tế đang gửi phù hợp với phân khu này
-            long daDo = 0;
-            for (VeXe v : activeVehicles) {
-                String vType = (v.getLoaiXe() != null) ? v.getLoaiXe().getTenLoai().toLowerCase() : "";
-                if ("A".equals(maKhu) || tenKhu.contains("ô tô") || tenKhu.contains("o to")) {
-                    if (vType.contains("tô") || vType.contains("car") || vType.contains("4-7") || vType.contains("xe con")) {
-                        daDo++;
-                    }
-                } else if ("B".equals(maKhu) || tenKhu.contains("máy") || tenKhu.contains("may")) {
-                    if (vType.contains("máy") || vType.contains("moto") || vType.contains("tay ga") || vType.contains("số")) {
-                        daDo++;
-                    }
-                } else {
-                    if (!vType.contains("tô") && !vType.contains("máy")) {
-                        daDo++;
-                    }
-                }
+            if ("24H".equalsIgnoreCase(kv.getMaKhu())) {
+                continue;
             }
+            long totalSlots = (kv.getSucChua() != null && kv.getSucChua() > 0) ? kv.getSucChua() : 100;
+            String loaiXeTen = kv.getCacLoaiXeNhan();
+
+            // Đếm số lượng xe thực tế đang gửi thuộc phân khu này (dựa vào cấu hình phân khu trong DB)
+            long daDo = activeVehicles.stream().filter(v -> {
+                if (v.getKhuVuc() != null && kv.getId() != null) {
+                    return v.getKhuVuc().getId().equals(kv.getId());
+                }
+                if (v.getLoaiXe() != null && v.getLoaiXe().getKhuVuc() != null && kv.getId() != null) {
+                    return v.getLoaiXe().getKhuVuc().getId().equals(kv.getId());
+                }
+                if (v.getLoaiXe() != null && kv.getLoaiXe() != null && v.getLoaiXe().getId().equals(kv.getLoaiXe().getId())) {
+                    return true;
+                }
+                return false;
+            }).count();
 
             long bookingCount = 0;
-
             long emptySlots = Math.max(0, totalSlots - daDo);
-            list.add(new KhuVucStatusDto(kv.getId(), kv.getMaKhu(), kv.getTenKhu(), kv.getViTri(), loaiXeTen, totalSlots, emptySlots, bookingCount));
+            KhuVucStatusDto dto = new KhuVucStatusDto(kv.getId(), kv.getMaKhu(), kv.getTenKhu(), kv.getViTri(), loaiXeTen, totalSlots, emptySlots, bookingCount);
+            dto.setCacLoaiXeDuocNhan(loaiXeTen);
+            list.add(dto);
         }
 
         return list;

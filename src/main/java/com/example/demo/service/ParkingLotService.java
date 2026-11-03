@@ -92,32 +92,17 @@ public class ParkingLotService implements BaiDoXeService {
                 dto.setQua24h(false);
             }
 
-            // Phân loại phương tiện theo nhóm thực tế (Không tự ý đổi phân khu vật lý khi xe quá 24h)
-            String typeName = "Chưa rõ";
-            String icon = "fa-car";
-            String maKhu = "2B";
-            String tenKhu = "Khu xe 2 bánh";
+            // Phân loại phương tiện theo phân khu thực tế đã cấu hình
+            KhuVuc kv = vx.getKhuVuc() != null ? vx.getKhuVuc() : (vx.getLoaiXe() != null ? vx.getLoaiXe().getKhuVuc() : null);
+            String typeName = vx.getLoaiXe() != null ? vx.getLoaiXe().getTenLoai() : "Chưa rõ";
+            String icon = (vx.getLoaiXe() != null && vx.getLoaiXe().getIconClass() != null && !vx.getLoaiXe().getIconClass().isBlank())
+                    ? vx.getLoaiXe().getIconClass()
+                    : "fa-car";
+            String maKhu = kv != null ? kv.getMaKhu() : "2B";
+            String tenKhu = kv != null ? kv.getTenKhu() : "Khu xe 2 bánh";
 
             if (vx.getLoaiXe() != null) {
                 dto.setLoaiXeId(vx.getLoaiXe().getId());
-                typeName = vx.getLoaiXe().getTenLoai();
-                if (vx.getLoaiXe().getIconClass() != null && !vx.getLoaiXe().getIconClass().isBlank()) {
-                    icon = vx.getLoaiXe().getIconClass();
-                }
-                String lower = typeName.toLowerCase();
-                if (lower.contains("máy") || lower.contains("motor")) {
-                    maKhu = "2B";
-                    tenKhu = "Khu xe 2 bánh";
-                    icon = "fa-motorcycle";
-                } else if (lower.contains("ô tô") || lower.contains("o to") || lower.contains("tải") || lower.contains("tai")) {
-                    maKhu = "4B";
-                    tenKhu = "Khu xe 4 bánh";
-                    icon = "fa-car";
-                } else if (lower.contains("đạp") || lower.contains("dap") || lower.contains("điện")) {
-                    maKhu = "XD";
-                    tenKhu = "Khu xe đạp";
-                    icon = "fa-bicycle";
-                }
             }
             dto.setTenLoaiXe(typeName);
             dto.setIconLoaiXe(icon);
@@ -137,65 +122,74 @@ public class ParkingLotService implements BaiDoXeService {
         overview.setOverdueCount(overdueDtos.size());
         overview.setOccupied(vehicleDtos.size());
 
-        // 2. Tính sức chứa & Thống kê 4 phân khu (2B, 4B, XD, 24H)
+        // 2. Tính sức chứa & Thống kê các phân khu vật lý (2B, 4B, XD) - Loại bỏ 24H khỏi phân khu vật lý
         long totalCap = 0;
         List<TrangThaiKhuVucDto> zoneDtos = new ArrayList<>();
 
         for (KhuVuc kv : khuVucs) {
             String ma = kv.getMaKhu() != null ? kv.getMaKhu() : "";
-            long cap = kv.getSucChua() != null && kv.getSucChua() > 0 ? kv.getSucChua() : 20;
-
-            if (!"24H".equalsIgnoreCase(ma)) {
-                totalCap += cap;
+            if ("24H".equalsIgnoreCase(ma)) {
+                continue; // 24H là cảnh báo thời gian, không phải phân khu vật lý và không tính vào sức chứa
             }
 
-            long daDo = 0;
+            long cap = kv.getSucChua() != null && kv.getSucChua() > 0 ? kv.getSucChua() : 20;
+            totalCap += cap;
+
+            long daDo = activeVehicles.stream().filter(v -> {
+                if (v.getKhuVuc() != null && kv.getId() != null) {
+                    return v.getKhuVuc().getId().equals(kv.getId());
+                }
+                if (v.getLoaiXe() != null && v.getLoaiXe().getKhuVuc() != null && kv.getId() != null) {
+                    return v.getLoaiXe().getKhuVuc().getId().equals(kv.getId());
+                }
+                if (v.getLoaiXe() != null && kv.getLoaiXe() != null && v.getLoaiXe().getId().equals(kv.getLoaiXe().getId())) {
+                    return true;
+                }
+                return false;
+            }).count();
+
             String iconKhu = "fa-square-parking";
             String badge = "primary";
 
             if ("2B".equalsIgnoreCase(ma)) {
-                daDo = vehicleDtos.stream().filter(v -> "2B".equalsIgnoreCase(v.getMaPhanKhu())).count();
                 iconKhu = "fa-motorcycle";
                 badge = "primary";
             } else if ("4B".equalsIgnoreCase(ma)) {
-                daDo = vehicleDtos.stream().filter(v -> "4B".equalsIgnoreCase(v.getMaPhanKhu())).count();
                 iconKhu = "fa-car";
                 badge = "success";
             } else if ("XD".equalsIgnoreCase(ma)) {
-                daDo = vehicleDtos.stream().filter(v -> "XD".equalsIgnoreCase(v.getMaPhanKhu())).count();
                 iconKhu = "fa-bicycle";
                 badge = "info";
-            } else if ("24H".equalsIgnoreCase(ma)) {
-                daDo = overdueDtos.size();
-                cap = Math.max(cap, daDo);
-                iconKhu = "fa-clock-rotate-left";
-                badge = "danger";
             }
 
             long choTrong = Math.max(0, cap - daDo);
+            double rate = cap > 0 ? Math.round(((double) daDo / cap) * 1000.0) / 10.0 : 0.0;
+
             TrangThaiKhuVucDto zDto = new TrangThaiKhuVucDto(
                     kv.getId(),
                     kv.getMaKhu(),
                     kv.getTenKhu(),
                     kv.getViTri(),
-                    kv.getLoaiXe() != null ? kv.getLoaiXe().getTenLoai() : "Tổng hợp",
+                    kv.getCacLoaiXeNhan(),
                     cap,
                     choTrong
             );
+            zDto.setCacLoaiXeDuocNhan(kv.getCacLoaiXeNhan());
             zDto.setIconClass(iconKhu);
             zDto.setBadgeColor(badge);
             zDto.setDaDo(daDo);
             zDto.setChoTrong(choTrong);
-            zDto.setTyLeLapDay(cap > 0 ? Math.round(((double) daDo / cap) * 1000.0) / 10.0 : 0.0);
+            zDto.setTyLeLapDay(rate);
 
-            if ("24H".equalsIgnoreCase(ma)) {
-                if (daDo > 0) {
-                    zDto.setMucCanhBao("QUA_TAI");
-                    zDto.setThongDiepCanhBao("Phát hiện " + daDo + " xe quá 24h");
-                } else {
-                    zDto.setMucCanhBao("BINH_THUONG");
-                    zDto.setThongDiepCanhBao("Không có xe tồn bãi");
-                }
+            if (rate >= 100.0) {
+                zDto.setMucCanhBao("QUA_TAI");
+                zDto.setThongDiepCanhBao("Khu vực đã đầy (Hết chỗ)");
+            } else if (rate >= 90.0) {
+                zDto.setMucCanhBao("SAP_DAY");
+                zDto.setThongDiepCanhBao("Sắp đầy");
+            } else {
+                zDto.setMucCanhBao("BINH_THUONG");
+                zDto.setThongDiepCanhBao("Thông thoáng");
             }
 
             zoneDtos.add(zDto);
@@ -246,41 +240,13 @@ public class ParkingLotService implements BaiDoXeService {
 
     @Override
     public List<ViTriDo> layTatCaViTriDo() {
-        List<KhuVuc> khuVucs = khuVucRepository.findAll();
-        List<VeXe> activeVehicles = veXeRepository.findByTrangThaiOrderByThoiGianVaoDesc("Đang gửi");
-        List<ViTriDo> result = new ArrayList<>();
-
-        for (KhuVuc kv : khuVucs) {
-            int capacity = kv.getSucChua() != null && kv.getSucChua() > 0 ? kv.getSucChua() : 10;
-            String maKhu = kv.getMaKhu() != null ? kv.getMaKhu() : "K";
-            
-            // Lọc các xe đang gửi thuộc loại xe của khu này
-            List<VeXe> matchedVehicles = activeVehicles.stream()
-                    .filter(v -> v.getLoaiXe() != null && kv.getLoaiXe() != null && v.getLoaiXe().getId().equals(kv.getLoaiXe().getId()))
-                    .collect(Collectors.toList());
-
-            for (int i = 1; i <= capacity; i++) {
-                String maViTri = String.format("%s-%02d", maKhu, i);
-                ViTriDo slot = new ViTriDo(maViTri, kv, "TRONG");
-                slot.setId((long) (kv.getId() * 1000 + i));
-
-                if (i <= matchedVehicles.size()) {
-                    VeXe v = matchedVehicles.get(i - 1);
-                    slot.setTrangThai("DA_DO");
-                    slot.setBienSoXeDangDo(v.getBienSoXe());
-                    slot.setThoiGianVaoDo(v.getThoiGianVao());
-                }
-                result.add(slot);
-            }
-        }
-        return result;
+        // Hệ thống quản lý theo phân khu và sức chứa thực tế, không sinh ô đỗ giả lập
+        return Collections.emptyList();
     }
 
     @Override
     public List<ViTriDo> layViTriDoTheoKhuVuc(Long khuVucId) {
-        return layTatCaViTriDo().stream()
-                .filter(s -> s.getKhuVuc() != null && s.getKhuVuc().getId().equals(khuVucId))
-                .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
     @Override
@@ -322,6 +288,7 @@ public class ParkingLotService implements BaiDoXeService {
     @Override
     public long demTongViTri() {
         return khuVucRepository.findAll().stream()
+                .filter(k -> !"24H".equalsIgnoreCase(k.getMaKhu()))
                 .mapToLong(k -> k.getSucChua() != null ? k.getSucChua() : 0)
                 .sum();
     }

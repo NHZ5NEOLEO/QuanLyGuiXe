@@ -27,6 +27,10 @@ public interface VeThangService {
         return timVeThangConHan(bienSoXe);
     }
 
+    default Optional<VeThang> timVeThangConHan(String bienSoXe, Long loaiXeId, java.time.LocalDate targetDate) {
+        return timVeThangConHan(bienSoXe, loaiXeId);
+    }
+
     VeThang dangKyVeThang(String hoTen, String sdt, String cccd, String email, String diaChi,
                           String bienSoXe, Long loaiXeId, int soThang);
 
