@@ -206,6 +206,45 @@ public class MonthlyTicketService implements VeThangService {
         return dangKyVeThang(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, months);
     }
 
+    /**
+     * Nghiệp vụ: Đăng ký vé tháng trực tuyến.
+     * Vé online chưa xác nhận thanh toán ở trạng thái CHO_THANH_TOAN và không được dùng để miễn phí check-in.
+     * Ngày bắt đầu và hết hạn chỉ được tính từ thời điểm nhân viên xác nhận đã nhận tiền.
+     */
+    @Transactional
+    public VeThang dangKyVeThangOnline(String hoTen, String sdt, String cccd, String email, String diaChi,
+                                       String bienSoXe, Long loaiXeId, int soThang) {
+        VeThang vt = dangKyVeThang(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, soThang);
+        vt.setTrangThai("CHO_THANH_TOAN");
+        return veThangRepository.save(vt);
+    }
+
+    /**
+     * Xác nhận đã nhận tiền vé tháng (Dành cho tài khoản có quyền: Admin / Nhân viên quản lý).
+     * Chuyển vé sang HOAT_DONG; ngày bắt đầu và hết hạn được tính từ thời điểm xác nhận này.
+     */
+    @Transactional
+    public VeThang xacNhanThanhToanVeThang(Long veThangId, String nguoiXacNhan) {
+        VeThang vt = veThangRepository.findById(veThangId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy vé tháng ID: " + veThangId));
+
+        if ("HOAT_DONG".equalsIgnoreCase(vt.getTrangThai()) && vt.isConHan()) {
+            throw new BadRequestException("Vé tháng [" + vt.getMaThe() + "] đã ở trạng thái HOẠT ĐỘNG!");
+        }
+
+        LoaiXe lx = vt.getLoaiXe();
+        int soThang = 1;
+        if (lx != null && lx.getGiaThang() != null && lx.getGiaThang() > 0 && vt.getGiaTien() != null) {
+            soThang = (int) Math.max(1, Math.round(vt.getGiaTien() / lx.getGiaThang()));
+        }
+
+        LocalDate activationDate = LocalDate.now();
+        vt.setNgayBatDau(activationDate);
+        vt.setNgayHetHan(activationDate.plusMonths(soThang));
+        vt.setTrangThai("HOAT_DONG");
+        return veThangRepository.save(vt);
+    }
+
     @Override
     @Transactional
     public VeThang giaHanVeThang(Long veThangId, int soThang) {

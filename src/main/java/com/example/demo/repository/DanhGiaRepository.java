@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface DanhGiaRepository extends JpaRepository<DanhGia, Long> {
     List<DanhGia> findTop10ByOrderByThoiGianDesc();
+    List<DanhGia> findAllByOrderByThoiGianDesc();
 }

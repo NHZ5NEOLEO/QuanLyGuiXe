@@ -384,8 +384,8 @@ public class PortalController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Số tháng không hợp lệ!"));
             }
 
-            // Gọi MonthlyTicketService để thực hiện toàn bộ nghiệp vụ đăng ký, validate biển số, loại xe và kiểm tra vé trùng lặp
-            VeThang veThang = monthlyTicketService.dangKyVeThang(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, months);
+            // Gọi MonthlyTicketService đăng ký vé tháng online: ở trạng thái CHO_THANH_TOAN, chưa được miễn phí check-in
+            VeThang veThang = monthlyTicketService.dangKyVeThangOnline(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, months);
 
             double totalPrice = veThang.getGiaTien() != null ? veThang.getGiaTien() : 0.0;
             long intAmount = Math.round(totalPrice);
@@ -398,19 +398,20 @@ public class PortalController {
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
-            resp.put("message", "Đã ghi nhận thông tin đăng ký vé tháng! Vui lòng đối soát thanh toán.");
+            resp.put("message", "Đã ghi nhận thông tin đăng ký vé tháng! Thẻ ở trạng thái chờ thanh toán. Vui lòng chuyển khoản đúng nội dung và chờ nhân viên xác nhận để kích hoạt thẻ.");
             resp.put("maThe", veThang.getMaThe());
             resp.put("hoTen", hoTen);
             resp.put("bienSoXe", veThang.getBienSoXe());
             resp.put("loaiXe", veThang.getLoaiXe() != null ? veThang.getLoaiXe().getTenLoai() : "");
-            resp.put("ngayBatDau", veThang.getNgayBatDau().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-            resp.put("ngayKetThuc", veThang.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            resp.put("ngayBatDau", veThang.getNgayBatDau() != null ? veThang.getNgayBatDau().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "Tính từ khi kích hoạt");
+            resp.put("ngayKetThuc", veThang.getNgayHetHan() != null ? veThang.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "Tính từ khi kích hoạt");
             resp.put("tongTien", totalPrice);
             resp.put("vietQrUrl", qrUrl);
             resp.put("bankId", "971025 (MoMo)");
             resp.put("accountNo", "PSP2601617600000204");
             resp.put("accountName", "NGUYỄN HUỆ");
-            resp.put("trangThaiThanhToan", "CHO_DOI_SOAT");
+            resp.put("trangThai", "CHO_THANH_TOAN");
+            resp.put("trangThaiThanhToan", "CHO_THANH_TOAN");
 
             return ResponseEntity.ok(resp);
         } catch (BadRequestException e) {

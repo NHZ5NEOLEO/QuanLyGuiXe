@@ -67,7 +67,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/gate/check-qr-paid", "/api/parking/qr/**").permitAll()
 
                 // 5. Trang và API chỉ dành riêng cho Quản trị viên (ADMIN)
-                .requestMatchers("/staff/**", "/nhan-vien/**").hasRole("ADMIN")
+                .requestMatchers("/staff", "/staff/**", "/nhan-vien", "/nhan-vien/**", "/nguoi-dung", "/nguoi-dung/**", "/users", "/users/**", "/quan-ly-nguoi-dung", "/quan-ly-nguoi-dung/**", "/quan-ly-nhan-vien", "/quan-ly-nhan-vien/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/thong-tin-danh-gia", "/thong-tin-danh-gia/**", "/danh-gia-khach-hang", "/danh-gia-khach-hang/**", "/reviews", "/reviews/**", "/quan-ly-danh-gia", "/quan-ly-danh-gia/**", "/danh-gia-he-thong", "/danh-gia-he-thong/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/price-settings/**", "/bang-gia/**").hasRole("ADMIN")
                 .requestMatchers("/settings/**", "/cai-dat/**").hasRole("ADMIN")
                 .requestMatchers("/reports/**", "/thong-ke/**", "/api/reports/**").hasRole("ADMIN")

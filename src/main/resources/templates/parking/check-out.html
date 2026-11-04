@@ -1087,6 +1087,12 @@
                 if (data.paid) {
                     clearInterval(vietQrPollInterval);
                     onVietQrPaidSuccess(data);
+                } else if (data.pending) {
+                    const ind = document.getElementById('vietqrPollingIndicator');
+                    if (ind && !ind.dataset.pendingShown) {
+                        ind.dataset.pendingShown = 'true';
+                        ind.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span><span class="fw-bold text-warning small text-uppercase">Đang chờ nhân viên đối soát nhận tiền chuyển khoản...</span>';
+                    }
                 }
             } catch (e) {
                 console.warn('VietQR Polling error:', e);

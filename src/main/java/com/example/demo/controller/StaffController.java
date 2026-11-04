@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping({"/nhan-vien", "/staff"})
+@RequestMapping({"/nhan-vien", "/staff", "/nguoi-dung", "/users", "/quan-ly-nguoi-dung", "/quan-ly-nhan-vien"})
 public class StaffController {
 
     private final NguoiDungRepository nguoiDungRepository;
@@ -57,6 +57,7 @@ public class StaffController {
         long activeCount = nguoiDungRepository.findAll().stream().filter(u -> Boolean.TRUE.equals(u.getTrangThai())).count();
         long adminCount = nguoiDungRepository.findAll().stream().filter(u -> "ADMIN".equalsIgnoreCase(u.getVaiTro())).count();
         long staffCount = nguoiDungRepository.findAll().stream().filter(u -> "NHAN_VIEN".equalsIgnoreCase(u.getVaiTro())).count();
+        long customerCount = nguoiDungRepository.findAll().stream().filter(u -> "KHACH_HANG".equalsIgnoreCase(u.getVaiTro())).count();
 
         model.addAttribute("users", users);
         model.addAttribute("keyword", keyword);
@@ -66,7 +67,8 @@ public class StaffController {
         model.addAttribute("activeCount", activeCount);
         model.addAttribute("adminCount", adminCount);
         model.addAttribute("staffCount", staffCount);
-        model.addAttribute("pageTitle", "Quản lý nhân viên");
+        model.addAttribute("customerCount", customerCount);
+        model.addAttribute("pageTitle", "Quản lý người dùng");
         model.addAttribute("activePage", "staff");
 
         return "nhan-vien";

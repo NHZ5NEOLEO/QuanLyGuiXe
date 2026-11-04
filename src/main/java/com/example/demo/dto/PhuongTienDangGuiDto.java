@@ -25,6 +25,12 @@ public class PhuongTienDangGuiDto {
     private boolean laVeThang;
     private String trangThai;
     private String ghiChu;
+    private Boolean daKiemTra = false;
+    private LocalDateTime thoiGianKiemTra;
+    private String thoiGianKiemTraFormatted;
+    private String nguoiKiemTra;
+    private String ghiChuKiemTra;
+    private String trangThaiXacMinh;
 
     public PhuongTienDangGuiDto() {
     }
@@ -163,6 +169,61 @@ public class PhuongTienDangGuiDto {
 
     public void setGhiChu(String ghiChu) {
         this.ghiChu = ghiChu;
+    }
+
+    public Boolean getDaKiemTra() {
+        return daKiemTra != null ? daKiemTra : false;
+    }
+
+    public boolean isDaKiemTra() {
+        return Boolean.TRUE.equals(daKiemTra);
+    }
+
+    public void setDaKiemTra(Boolean daKiemTra) {
+        this.daKiemTra = daKiemTra;
+    }
+
+    public LocalDateTime getThoiGianKiemTra() {
+        return thoiGianKiemTra;
+    }
+
+    public void setThoiGianKiemTra(LocalDateTime thoiGianKiemTra) {
+        this.thoiGianKiemTra = thoiGianKiemTra;
+    }
+
+    public String getThoiGianKiemTraFormatted() {
+        return thoiGianKiemTraFormatted;
+    }
+
+    public void setThoiGianKiemTraFormatted(String thoiGianKiemTraFormatted) {
+        this.thoiGianKiemTraFormatted = thoiGianKiemTraFormatted;
+    }
+
+    public String getNguoiKiemTra() {
+        return nguoiKiemTra;
+    }
+
+    public void setNguoiKiemTra(String nguoiKiemTra) {
+        this.nguoiKiemTra = nguoiKiemTra;
+    }
+
+    public String getGhiChuKiemTra() {
+        return ghiChuKiemTra;
+    }
+
+    public void setGhiChuKiemTra(String ghiChuKiemTra) {
+        this.ghiChuKiemTra = ghiChuKiemTra;
+    }
+
+    public String getTrangThaiXacMinh() {
+        if (trangThaiXacMinh != null && !trangThaiXacMinh.isBlank()) {
+            return trangThaiXacMinh;
+        }
+        return isDaKiemTra() ? "Đã kiểm tra" : "Cần xác minh";
+    }
+
+    public void setTrangThaiXacMinh(String trangThaiXacMinh) {
+        this.trangThaiXacMinh = trangThaiXacMinh;
     }
 }
 

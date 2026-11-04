@@ -37,10 +37,35 @@ public class ShiftService implements CaTrucService {
             capNhatThongKeCaTruc(current);
             return current;
         }
+        // Nghiệp vụ chuẩn: Không tự động tạo ca hoặc gán người trực khi chỉ mở trang
+        return null;
+    }
 
-        // Nếu chưa có ca trực nào mở, tự động khởi tạo Ca trực hiện tại
-        NguoiDung defaultUser = nguoiDungRepository.findAll().stream().findFirst().orElse(null);
-        CaTruc newShift = new CaTruc("CA-HIEN-TAI", "Ca Trực Hiện Tại", defaultUser, LocalDateTime.now().minusHours(2));
+    /**
+     * Bắt đầu ca trực mới: Gắn trực tiếp với nhân viên đang đăng nhập.
+     * Ngăn chặn tạo nhiều ca DANG_TRUC cùng lúc.
+     */
+    @Transactional
+    public CaTruc batDauCaTruc(String tenCa, String username) {
+        Optional<CaTruc> currentOpt = caTrucRepository.findFirstByTrangThaiOrderByThoiGianBatDauDesc("DANG_TRUC");
+        if (currentOpt.isPresent()) {
+            throw new IllegalArgumentException("Hiện đã có ca trực [" + currentOpt.get().getTenCa() + "] đang hoạt động! Vui lòng chốt ca cũ trước.");
+        }
+
+        NguoiDung nguoiTruc = null;
+        if (username != null && !username.isBlank()) {
+            nguoiTruc = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+        }
+        if (nguoiTruc == null) {
+            nguoiTruc = nguoiDungRepository.findAll().stream()
+                    .filter(u -> !"KHACH_HANG".equalsIgnoreCase(u.getVaiTro()))
+                    .findFirst().orElse(null);
+        }
+
+        String maCa = "CA-" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd-HHmm"));
+        String name = (tenCa != null && !tenCa.isBlank()) ? tenCa.trim() : "Ca Trực Hiện Tại";
+        CaTruc newShift = new CaTruc(maCa, name, nguoiTruc, LocalDateTime.now());
+        newShift.setTrangThai("DANG_TRUC");
         newShift = caTrucRepository.save(newShift);
         capNhatThongKeCaTruc(newShift);
         return newShift;
@@ -88,6 +113,11 @@ public class ShiftService implements CaTrucService {
     @Override
     @Transactional
     public CaTruc banGiaoCaTruc(Long shiftId, String ghiChu) {
+        return banGiaoCaTruc(shiftId, ghiChu, null);
+    }
+
+    @Transactional
+    public CaTruc banGiaoCaTruc(Long shiftId, String ghiChu, Long nguoiNhanCaId) {
         CaTruc shift = caTrucRepository.findById(shiftId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ca trực ID: " + shiftId));
 
@@ -96,16 +126,27 @@ public class ShiftService implements CaTrucService {
         shift.setGhiChuBanGiao(ghiChu);
         capNhatThongKeCaTruc(shift);
 
-        // Mở ca mới ngay sau đó
-        NguoiDung defaultUser = shift.getNguoiTruc();
-        CaTruc nextShift = new CaTruc("CA-TIEP-THEO", "Ca Trực Kế Tiếp", defaultUser, LocalDateTime.now());
-        caTrucRepository.save(nextShift);
+        // Nghiệp vụ: Chốt ca cũ; nếu có người nhận ca được chọn thì tạo ca mới gán đúng người nhận ca đó.
+        // Tuyệt đối không tự gán lại người bàn giao làm người trực ca kế tiếp.
+        if (nguoiNhanCaId != null) {
+            NguoiDung nguoiNhan = nguoiDungRepository.findById(nguoiNhanCaId).orElse(null);
+            if (nguoiNhan != null) {
+                String maCaMoi = "CA-" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd-HHmm"));
+                CaTruc nextShift = new CaTruc(maCaMoi, "Ca Trực Kế Tiếp", nguoiNhan, LocalDateTime.now());
+                nextShift.setTrangThai("DANG_TRUC");
+                caTrucRepository.save(nextShift);
+            }
+        }
 
         return shift;
     }
 
     public CaTruc handoverShift(Long shiftId, String ghiChu) {
-        return banGiaoCaTruc(shiftId, ghiChu);
+        return banGiaoCaTruc(shiftId, ghiChu, null);
+    }
+
+    public CaTruc handoverShift(Long shiftId, String ghiChu, Long nguoiNhanCaId) {
+        return banGiaoCaTruc(shiftId, ghiChu, nguoiNhanCaId);
     }
 
     @Override

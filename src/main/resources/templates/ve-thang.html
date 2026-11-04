@@ -126,15 +126,23 @@
                                     <span class="font-monospace fw-bold text-dark" th:text="${t.giaTien != null ? #numbers.formatDecimal(t.giaTien, 0, 'COMMA', 0, 'POINT') + ' đ' : '--'}">100,000 đ</span>
                                 </td>
                                 <td>
-                                    <span th:if="${t.isConHan()}" class="badge-pro badge-success-pro" th:text="${t.getSoNgayConLai() + ' ngày'}">30 ngày</span>
-                                    <span th:unless="${t.isConHan()}" class="badge-pro badge-error-pro">Hết hạn</span>
+                                    <span th:if="${t.trangThai == 'CHO_THANH_TOAN'}" class="badge-pro badge-warning-pro">Chờ duyệt</span>
+                                    <span th:if="${t.trangThai != 'CHO_THANH_TOAN' && t.isConHan()}" class="badge-pro badge-success-pro" th:text="${t.getSoNgayConLai() + ' ngày'}">30 ngày</span>
+                                    <span th:if="${t.trangThai != 'CHO_THANH_TOAN' && !t.isConHan()}" class="badge-pro badge-error-pro">Hết hạn</span>
                                 </td>
                                 <td>
+                                    <span th:if="${t.trangThai == 'CHO_THANH_TOAN'}" class="badge-pro badge-warning-pro">Chờ thanh toán</span>
                                     <span th:if="${t.trangThai == 'HOAT_DONG' && t.isConHan()}" class="badge-pro badge-success-pro">Đang dùng</span>
                                     <span th:if="${t.trangThai == 'HOAT_DONG' && !t.isConHan()}" class="badge-pro badge-warning-pro">Quá hạn</span>
                                     <span th:if="${t.trangThai == 'KHOA'}" class="badge-pro badge-neutral-pro">Bị khóa</span>
                                 </td>
                                 <td class="text-end">
+                                    <form th:if="${t.trangThai == 'CHO_THANH_TOAN'}" action="/ve-thang/confirm-payment" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận đủ tiền và kích hoạt vé tháng này?');">
+                                        <input type="hidden" name="veThangId" th:value="${t.id}">
+                                        <button type="submit" class="btn-pro btn-primary-pro btn-sm-pro py-1 px-2 me-1" title="Xác nhận thu tiền & Kích hoạt vé">
+                                            <i class="fa-solid fa-check me-1"></i>Thu tiền
+                                        </button>
+                                    </form>
                                     <button type="button" class="btn-pro btn-outline-pro btn-sm-pro py-1 text-info me-1" 
                                             th:data-mathe="${t.maThe}"
                                             th:data-plate="${t.bienSoXe}"

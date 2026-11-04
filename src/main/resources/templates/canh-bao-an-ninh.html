@@ -64,10 +64,10 @@
                 <div class="tab-pane fade" th:classappend="${activeTab == 'overdue'} ? 'show active' : ''" id="overdue" role="tabpanel">
                     <div class="card-pro">
                         <div class="card-header-pro">
-                            <h3 class="card-title-pro text-danger">
-                                <i class="fa-solid fa-circle-exclamation text-danger"></i> Danh sách phương tiện lưu bãi > 24 giờ chưa xuất
+                            <h3 class="card-title-pro text-warning">
+                                <i class="fa-solid fa-clock-rotate-left text-warning"></i> Danh sách xe vé lượt gửi quá 24 giờ
                             </h3>
-                            <span class="badge-pro badge-error-pro">Cần kiểm tra an ninh</span>
+                            <span class="badge-pro badge-warning-pro">Cần xác minh</span>
                         </div>
 
                         <div class="table-responsive-pro">
@@ -79,14 +79,15 @@
                                         <th>Loại Xe</th>
                                         <th>Thời Gian Vào</th>
                                         <th>Cảnh Báo</th>
-                                        <th>Hình Thức</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Thông Tin Kiểm Tra</th>
                                         <th class="text-end">Thao Tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:if="${#lists.isEmpty(overdueVehicles)}">
                                         <td colspan="8" class="text-center py-4 text-success fw-semibold">
-                                            <i class="fa-solid fa-circle-check fa-lg me-1"></i> Bãi xe hiện tại không có phương tiện nào tồn bãi quá 24h!
+                                            <i class="fa-solid fa-circle-check fa-lg me-1"></i> Bãi xe hiện tại không có phương tiện nào gửi quá 24h cần xác minh!
                                         </td>
                                     </tr>
                                     <tr th:each="v : ${overdueVehicles}">
@@ -96,11 +97,39 @@
                                         </td>
                                         <td><span th:text="${v.loaiXe != null ? v.loaiXe.tenLoai : 'Chưa rõ'}">Ô tô</span></td>
                                         <td><small class="text-muted" th:text="${#temporals.format(v.thoiGianVao, 'HH:mm dd/MM/yyyy')}">10/10/2026</small></td>
-                                        <td><span class="badge-pro badge-error-pro">Quá 24 giờ</span></td>
-                                        <td><span class="badge-pro badge-neutral-pro" th:text="${v.veThang != null ? 'Vé tháng' : 'Vé lượt'}">Vé lượt</span></td>
-                                        <td class="text-end">
-                                            <a th:href="@{/gate(tab='checkout', query=${v.bienSoXe})}" class="btn-pro btn-danger-pro btn-sm-pro py-1">
-                                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Check-out ngay
+                                        <td><span class="badge-pro badge-warning-pro">Quá 24 giờ</span></td>
+                                        <td>
+                                            <span th:if="${v.daKiemTra}" class="badge-pro badge-success-pro">
+                                                <i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra
+                                            </span>
+                                            <span th:unless="${v.daKiemTra}" class="badge-pro badge-warning-pro">
+                                                <i class="fa-solid fa-circle-question me-1"></i>Cần xác minh
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div th:if="${v.daKiemTra}">
+                                                <small class="d-block text-dark fw-semibold">
+                                                    <i class="fa-regular fa-user text-muted me-1"></i><span th:text="${v.nguoiKiemTra ?: 'Nhân viên'}">Admin</span>
+                                                </small>
+                                                <small class="d-block text-muted">
+                                                    <i class="fa-regular fa-clock text-muted me-1"></i><span th:text="${#temporals.format(v.thoiGianKiemTra, 'HH:mm dd/MM/yyyy')}">10:00 29/10/2026</span>
+                                                </small>
+                                                <small th:if="${v.ghiChuKiemTra}" class="d-block text-secondary fst-italic text-truncate" style="max-width: 180px;" th:title="${v.ghiChuKiemTra}" th:text="'&quot;' + ${v.ghiChuKiemTra} + '&quot;'"></small>
+                                            </div>
+                                            <div th:unless="${v.daKiemTra}">
+                                                <small class="text-muted fst-italic">Chưa ghi nhận kiểm tra</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <button type="button" class="btn-pro btn-outline-pro btn-sm-pro py-1 me-1"
+                                                    th:data-id="${v.id}"
+                                                    th:data-plate="${v.bienSoXe}"
+                                                    th:data-note="${v.ghiChuKiemTra ?: ''}"
+                                                    onclick="openVerifyModal(this.getAttribute('data-id'), this.getAttribute('data-plate'), this.getAttribute('data-note'))">
+                                                <i class="fa-solid fa-clipboard-check me-1"></i><span th:text="${v.daKiemTra ? 'Cập nhật' : 'Xác minh'}">Xác minh</span>
+                                            </button>
+                                            <a th:href="@{/xe-ra(code=${v.maQR})}" class="btn-pro btn-danger-pro btn-sm-pro py-1">
+                                                <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Xuất xe
                                             </a>
                                         </td>
                                     </tr>
@@ -211,10 +240,72 @@
     </div>
 </div>
 
+<!-- Modal Xác Minh Xe Quá 24 Giờ -->
+<div class="modal fade" id="modalVerifyOverdue" tabindex="-1" aria-labelledby="modalVerifyOverdueLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <form action="/security-alerts/overdue/verify" method="post">
+                <div class="modal-header bg-light py-3 px-4 border-bottom">
+                    <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center gap-2 mb-0" id="modalVerifyOverdueLabel">
+                        <i class="fa-solid fa-clipboard-check text-warning fs-5"></i>
+                        <span>Ghi nhận kiểm tra xe quá 24h</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="veXeId" id="verifyVeXeId">
+                    <div class="p-3 mb-3 rounded-3" style="background-color: #f0f9ff; border: 1px solid #bae6fd;">
+                        <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom" style="border-color: #e0f2fe !important;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted small fw-semibold">Biển số xe:</span>
+                                <span class="px-2.5 py-1 fs-6 fw-bold text-dark bg-white border border-dark rounded font-monospace" id="verifyBienSo">---</span>
+                            </div>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2.5 py-1 fw-semibold">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i>Cần xác minh
+                            </span>
+                        </div>
+                        <div class="text-secondary small lh-base mb-0 d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-circle-info text-info mt-0.5 flex-shrink-0"></i>
+                            <span>Xe lưu bãi quá 24 giờ được coi là <strong>Cần xác minh</strong>. Nhân viên kiểm tra hiện trường thực tế để ghi nhận tình trạng, liên hệ chủ xe hoặc xác nhận vị trí đỗ.</span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="verifyGhiChu" class="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                            <i class="fa-regular fa-pen-to-square text-primary"></i>
+                            <span>Ghi chú kiểm tra:</span>
+                        </label>
+                        <textarea class="form-control" id="verifyGhiChu" name="ghiChu" rows="3" placeholder="VD: Xe đỗ đúng quy định khu A, đã liên hệ hẹn chủ xe chiều lấy..."></textarea>
+                        <div class="form-text text-muted small mt-1.5 d-flex align-items-center gap-1">
+                            <i class="fa-regular fa-clock text-secondary"></i>
+                            <span>Thời điểm và người kiểm tra được tự động ghi nhận theo tài khoản đang trực.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2.5 px-4 border-top d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3 shadow-xs">
+                        <i class="fa-solid fa-check me-1"></i>Lưu xác minh
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Backdrop & Scripts -->
 <div th:replace="~{fragments/navbar :: backdrop}"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/app.js"></script>
+<script>
+function openVerifyModal(id, plate, note) {
+    document.getElementById('verifyVeXeId').value = id;
+    document.getElementById('verifyBienSo').innerText = plate;
+    document.getElementById('verifyGhiChu').value = note || '';
+    const modalEl = document.getElementById('modalVerifyOverdue');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+</script>
 
 </body>
 </html>

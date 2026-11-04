@@ -377,15 +377,16 @@ public class GateController {
             VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThucThanhToan, anhRaData, ghiChu, bienSoThucTe, staff);
             
             if ("CHO_THANH_TOAN".equals(veXe.getTrangThaiThanhToan())) {
-                redirectAttributes.addFlashAttribute("successMessage",
+                redirectAttributes.addFlashAttribute("infoMessage",
                         "Đã tạo giao dịch chuyển khoản cho xe: " + veXe.getBienSoXe() +
                                 " | Số tiền: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ. Đang chờ nhân viên đối soát nhận tiền để hoàn tất xe ra.");
+                redirectAttributes.addFlashAttribute("pendingTicket", veXe);
             } else {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Xác nhận xe ra thành công! Biển số: " + veXe.getBienSoXe() +
                                 " | Phí: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ.");
+                redirectAttributes.addFlashAttribute("completedTicket", veXe);
             }
-            redirectAttributes.addFlashAttribute("completedTicket", veXe);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

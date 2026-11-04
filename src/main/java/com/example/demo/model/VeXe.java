@@ -89,6 +89,18 @@ public class VeXe {
     @Column(name = "ghi_chu", columnDefinition = "NVARCHAR(MAX)")
     private String ghiChu;
 
+    @Column(name = "da_kiem_tra")
+    private Boolean daKiemTra = false; // Trạng thái đã kiểm tra xe quá 24h
+
+    @Column(name = "thoi_gian_kiem_tra")
+    private LocalDateTime thoiGianKiemTra; // Thời điểm nhân viên kiểm tra thực tế tại bãi
+
+    @Column(name = "nguoi_kiem_tra", length = 100)
+    private String nguoiKiemTra; // Tên/username nhân viên ghi nhận kiểm tra
+
+    @Column(name = "ghi_chu_kiem_tra", columnDefinition = "NVARCHAR(MAX)")
+    private String ghiChuKiemTra; // Ghi chú xác minh tình trạng xe
+
     public String getTicketCode() {
         return maQR;
     }
@@ -317,5 +329,45 @@ public class VeXe {
 
     public void setGhiChu(String ghiChu) {
         this.ghiChu = ghiChu;
+    }
+
+    public Boolean getDaKiemTra() {
+        return daKiemTra != null ? daKiemTra : false;
+    }
+
+    public boolean isDaKiemTra() {
+        return Boolean.TRUE.equals(daKiemTra);
+    }
+
+    public void setDaKiemTra(Boolean daKiemTra) {
+        this.daKiemTra = daKiemTra;
+    }
+
+    public LocalDateTime getThoiGianKiemTra() {
+        return thoiGianKiemTra;
+    }
+
+    public void setThoiGianKiemTra(LocalDateTime thoiGianKiemTra) {
+        this.thoiGianKiemTra = thoiGianKiemTra;
+    }
+
+    public String getNguoiKiemTra() {
+        return nguoiKiemTra;
+    }
+
+    public void setNguoiKiemTra(String nguoiKiemTra) {
+        this.nguoiKiemTra = nguoiKiemTra;
+    }
+
+    public String getGhiChuKiemTra() {
+        return ghiChuKiemTra;
+    }
+
+    public void setGhiChuKiemTra(String ghiChuKiemTra) {
+        this.ghiChuKiemTra = ghiChuKiemTra;
+    }
+
+    public String getTrangThaiXacMinh() {
+        return isDaKiemTra() ? "Đã kiểm tra" : "Cần xác minh";
     }
 }

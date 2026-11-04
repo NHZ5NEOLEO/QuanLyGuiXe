@@ -3,8 +3,10 @@ package com.example.demo.service;
 import com.example.demo.model.DanhSachDen;
 import com.example.demo.model.VeXe;
 import com.example.demo.repository.DanhSachDenRepository;
+import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
 import com.example.demo.util.BienSoXeHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +21,19 @@ public class BlacklistService implements DanhSachDenService {
 
     private final DanhSachDenRepository danhSachDenRepository;
     private final VeXeRepository veXeRepository;
+    private final VeThangRepository veThangRepository;
 
-    public BlacklistService(DanhSachDenRepository danhSachDenRepository, VeXeRepository veXeRepository) {
+    @Autowired
+    public BlacklistService(DanhSachDenRepository danhSachDenRepository,
+                            VeXeRepository veXeRepository,
+                            VeThangRepository veThangRepository) {
         this.danhSachDenRepository = danhSachDenRepository;
         this.veXeRepository = veXeRepository;
+        this.veThangRepository = veThangRepository;
+    }
+
+    public BlacklistService(DanhSachDenRepository danhSachDenRepository, VeXeRepository veXeRepository) {
+        this(danhSachDenRepository, veXeRepository, null);
     }
 
     @Override
@@ -89,11 +100,48 @@ public class BlacklistService implements DanhSachDenService {
         LocalDateTime now = LocalDateTime.now();
         List<VeXe> activeVehicles = veXeRepository.findByTrangThaiOrderByThoiGianVaoDesc("Đang gửi");
         return activeVehicles.stream()
-                .filter(v -> Duration.between(v.getThoiGianVao(), now).toHours() >= gioiHanGio)
+                .filter(v -> v.getThoiGianVao() != null && Duration.between(v.getThoiGianVao(), now).toHours() >= gioiHanGio)
+                .filter(v -> !isVeThangHieuLuc(v))
                 .collect(Collectors.toList());
     }
 
     public List<VeXe> getOverdueVehicles(int hoursLimit) {
         return layDanhSachXeQuaGio(hoursLimit);
+    }
+
+    public boolean isVeThangHieuLuc(VeXe v) {
+        if (v == null) return false;
+        if (v.getVeThang() != null) {
+            return true;
+        }
+        if ("VE_THANG".equalsIgnoreCase(v.getHinhThucThanhToan())) {
+            return true;
+        }
+        if (v.getGhiChu() != null && v.getGhiChu().toLowerCase().contains("vé tháng")) {
+            return true;
+        }
+        if (veThangRepository != null && v.getBienSoXe() != null && !v.getBienSoXe().isBlank()) {
+            var opt = veThangRepository.findFirstByBienSoXe(v.getBienSoXe());
+            if (opt.isPresent() && opt.get().isConHan()) {
+                return true;
+            }
+            return veThangRepository.findAll().stream()
+                    .anyMatch(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), v.getBienSoXe()) && vt.isConHan());
+        }
+        return false;
+    }
+
+    @Transactional
+    public VeXe ghiNhanKiemTraXeQuaGio(Integer veXeId, String ghiChu, String nguoiKiemTra) {
+        if (veXeId == null) {
+            throw new IllegalArgumentException("Mã lượt gửi xe không được để trống!");
+        }
+        VeXe veXe = veXeRepository.findById(veXeId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin lượt gửi với ID: " + veXeId));
+        veXe.setDaKiemTra(true);
+        veXe.setThoiGianKiemTra(LocalDateTime.now());
+        veXe.setNguoiKiemTra(nguoiKiemTra != null && !nguoiKiemTra.isBlank() ? nguoiKiemTra : "Bảo vệ");
+        veXe.setGhiChuKiemTra(ghiChu != null && !ghiChu.isBlank() ? ghiChu.trim() : "Đã kiểm tra thực tế phương tiện tại bãi.");
+        return veXeRepository.save(veXe);
     }
 }

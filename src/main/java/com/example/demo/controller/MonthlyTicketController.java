@@ -95,4 +95,23 @@ public class MonthlyTicketController {
         }
         return "redirect:/ve-thang";
     }
+
+    @PostMapping({"/confirm-payment", "/xac-nhan-thanh-toan"})
+    public String confirmPayment(
+            @RequestParam("veThangId") Long veThangId,
+            java.security.Principal principal,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            String staff = principal != null ? principal.getName() : "admin";
+            VeThang vt = monthlyTicketService.xacNhanThanhToanVeThang(veThangId, staff);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã xác nhận thu tiền và kích hoạt vé tháng thành công! Mã thẻ: " + vt.getMaThe() +
+                    " | Biển số: " + vt.getBienSoXe() +
+                    " | Hiệu lực từ: " + vt.getNgayBatDau() + " đến: " + vt.getNgayHetHan());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/ve-thang";
+    }
 }

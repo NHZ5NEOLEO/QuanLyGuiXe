@@ -202,24 +202,28 @@ public class ApiGateController {
             return ResponseEntity.ok(resp);
         }
 
-        boolean isPaid = "Đã ra".equalsIgnoreCase(veXe.getTrangThai()) ||
-                         "Đã thanh toán".equalsIgnoreCase(veXe.getTrangThai()) ||
-                         veXe.getThoiGianRa() != null;
+        // Nghiệp vụ: Chỉ xác nhận đã thanh toán khi trạng thái thanh toán là DA_THANH_TOAN hoặc MIEN_PHI.
+        // Tuyệt đối không coi CHO_THANH_TOAN là đã thanh toán kể cả khi thoiGianRa khác null.
+        boolean isPaid = "DA_THANH_TOAN".equalsIgnoreCase(veXe.getTrangThaiThanhToan()) ||
+                         "MIEN_PHI".equalsIgnoreCase(veXe.getTrangThaiThanhToan());
+        boolean isPending = "CHO_THANH_TOAN".equalsIgnoreCase(veXe.getTrangThaiThanhToan());
 
         resp.put("found", true);
         resp.put("ticketId", veXe.getId());
         resp.put("plate", veXe.getBienSoXe());
         resp.put("paid", isPaid);
+        resp.put("pending", isPending);
         resp.put("trangThai", veXe.getTrangThai());
+        resp.put("trangThaiThanhToan", veXe.getTrangThaiThanhToan());
         resp.put("chiPhi", veXe.getChiPhi());
         resp.put("hinhThucThanhToan", veXe.getHinhThucThanhToan());
         return ResponseEntity.ok(resp);
     }
 
     /**
-     * API Xác nhận nhận tiền chuyển khoản ngân hàng / VietQR (Dành cho nhân viên trực cổng hoặc Webhook đã đối soát)
+     * API Xác nhận nhận tiền chuyển khoản ngân hàng / VietQR (Dành cho nhân viên trực cổng đối soát thủ công)
      */
-    @PostMapping({"/confirm-bank-transfer", "/simulate-vietqr-payment"})
+    @PostMapping("/confirm-bank-transfer")
     public ResponseEntity<?> confirmBankTransfer(@RequestBody Map<String, Object> payload, java.security.Principal principal) {
         try {
             Integer veXeId = null;

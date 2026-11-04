@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Tin Đánh Giá & Góp Ý - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Shared Sidebar -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Shared Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-box">
+                    <h2>Thông tin đánh giá & Góp ý</h2>
+                    <p>Theo dõi phản hồi và mức độ hài lòng của khách hàng về dịch vụ bãi xe</p>
+                </div>
+            </div>
+
+            <!-- Reusable Flash Notifications -->
+            <div th:replace="~{fragments/alerts :: flash-alerts}"></div>
+
+            <!-- Summary KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Tổng lượt đánh giá</div>
+                        <div class="kpi-value text-primary" th:text="${totalReviews}">0</div>
+                        <div class="kpi-subtext">Ý kiến từ khách hàng</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-blue">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Điểm trung bình</div>
+                        <div class="kpi-value text-warning">
+                            <span th:text="${avgRating}">5.0</span> <small class="fs-6 text-muted">/ 5</small>
+                        </div>
+                        <div class="kpi-subtext">
+                            <i class="fa-solid fa-star text-warning"></i>
+                            <i class="fa-solid fa-star text-warning"></i>
+                            <i class="fa-solid fa-star text-warning"></i>
+                            <i class="fa-solid fa-star text-warning"></i>
+                            <i class="fa-solid fa-star-half-stroke text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-orange">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Hài lòng (4-5 sao)</div>
+                        <div class="kpi-value text-success" th:text="${positiveCount}">0</div>
+                        <div class="kpi-subtext">Đánh giá tích cực</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-green">
+                        <i class="fa-solid fa-face-smile"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Cần cải thiện (1-3 sao)</div>
+                        <div class="kpi-value text-danger" th:text="${negativeCount}">0</div>
+                        <div class="kpi-subtext">Ý kiến cần khắc phục</div>
+                    </div>
+                    <div class="kpi-icon-circle" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar-pro">
+                <form action="/thong-tin-danh-gia" method="get" class="d-flex align-items-center gap-3 flex-wrap w-100">
+                    <div class="flex-grow-1 filter-search-md-col">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-pro border-start-0" 
+                                   title="Tìm theo họ tên, số điện thoại hoặc nội dung góp ý" aria-label="Tìm kiếm"
+                                   placeholder="Tìm theo họ tên, số điện thoại hoặc nội dung góp ý...">
+                        </div>
+                    </div>
+
+                    <div class="filter-select-sm-col">
+                        <select name="stars" class="form-select form-select-pro" title="Lọc theo số sao" aria-label="Lọc theo số sao">
+                            <option value="">-- Tất cả mức sao --</option>
+                            <option value="5" th:selected="${stars == 5}">⭐⭐⭐⭐⭐ (5 sao)</option>
+                            <option value="4" th:selected="${stars == 4}">⭐⭐⭐⭐ (4 sao)</option>
+                            <option value="3" th:selected="${stars == 3}">⭐⭐⭐ (3 sao)</option>
+                            <option value="2" th:selected="${stars == 2}">⭐⭐ (2 sao)</option>
+                            <option value="1" th:selected="${stars == 1}">⭐ (1 sao)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-select-sm-col">
+                        <select name="service" class="form-select form-select-pro" title="Lọc theo loại dịch vụ" aria-label="Lọc theo loại dịch vụ">
+                            <option value="">-- Tất cả dịch vụ --</option>
+                            <option value="TOC_DO" th:selected="${service == 'TOC_DO'}">Tốc độ & Tiện ích</option>
+                            <option value="AN_NINH" th:selected="${service == 'AN_NINH'}">An ninh & An toàn</option>
+                            <option value="GIA_CA" th:selected="${service == 'GIA_CA'}">Giá cả & Biểu phí</option>
+                            <option value="VE_SINH" th:selected="${service == 'VE_SINH'}">Vệ sinh & Chiếu sáng</option>
+                            <option value="CHUNG" th:selected="${service == 'CHUNG'}">Đóng góp chung</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-pro btn-primary-pro">
+                        <i class="fa-solid fa-filter"></i> Lọc
+                    </button>
+
+                    <a th:if="${keyword != null or stars != null or service != null}" href="/thong-tin-danh-gia" class="btn-pro btn-outline-pro text-muted">
+                        <i class="fa-solid fa-xmark"></i> Bỏ lọc
+                    </a>
+                </form>
+            </div>
+
+            <!-- Review List Table -->
+            <div class="card-pro">
+                <div class="card-header-pro">
+                    <h3 class="card-title-pro">
+                        <i class="fa-solid fa-list-check"></i> Danh sách đánh giá & Phản hồi (<span th:text="${#lists.size(reviews)}">0</span>)
+                    </h3>
+                </div>
+
+                <div class="table-responsive-pro">
+                    <table class="table-pro">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">STT</th>
+                                <th style="width: 220px;">Khách Hàng</th>
+                                <th style="width: 140px;">Đánh Giá</th>
+                                <th style="width: 160px;">Loại Dịch Vụ</th>
+                                <th>Nội Dung Góp Ý / Nhận Xét</th>
+                                <th style="width: 160px;">Thời Gian</th>
+                                <th style="width: 80px;" class="text-end">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(reviews)}">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="fa-regular fa-comment-dots fs-3 d-block mb-2 opacity-50"></i>
+                                    Chưa có dữ liệu đánh giá nào phù hợp với bộ lọc tìm kiếm.
+                                </td>
+                            </tr>
+                            <tr th:each="r, stat : ${reviews}">
+                                <td class="text-muted fw-semibold" th:text="${stat.count}">1</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar-circle avatar-sm" th:text="${r.hoTen != null and r.hoTen.length() > 0 ? #strings.substring(r.hoTen, 0, 1).toUpperCase() : 'K'}">
+                                            K
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark" th:text="${r.hoTen != null and r.hoTen != '' ? r.hoTen : 'Khách hàng ẩn danh'}">Nguyễn Văn An</div>
+                                            <small class="text-muted" th:text="${r.soDienThoai != null and r.soDienThoai != '' ? r.soDienThoai : 'Không để lại SĐT'}">0912345678</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-nowrap" th:title="${r.soSao + ' sao'}">
+                                        <span th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="fa-solid fa-star text-warning" th:if="${i <= (r.soSao != null ? r.soSao : 5)}"></i>
+                                            <i class="fa-regular fa-star text-muted" th:unless="${i <= (r.soSao != null ? r.soSao : 5)}"></i>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${r.loaiDichVu == 'AN_NINH'}" class="badge-pro badge-primary-pro"><i class="fa-solid fa-shield-halved me-1"></i>An ninh</span>
+                                    <span th:if="${r.loaiDichVu == 'TOC_DO'}" class="badge-pro badge-success-pro"><i class="fa-solid fa-bolt me-1"></i>Tốc độ</span>
+                                    <span th:if="${r.loaiDichVu == 'GIA_CA'}" class="badge-pro badge-warning-pro"><i class="fa-solid fa-tag me-1"></i>Giá cả</span>
+                                    <span th:if="${r.loaiDichVu == 'VE_SINH'}" class="badge-pro badge-info-pro"><i class="fa-solid fa-broom me-1"></i>Vệ sinh</span>
+                                    <span th:if="${r.loaiDichVu != 'AN_NINH' and r.loaiDichVu != 'TOC_DO' and r.loaiDichVu != 'GIA_CA' and r.loaiDichVu != 'VE_SINH'}" class="badge-pro badge-neutral-pro">Chung</span>
+                                </td>
+                                <td>
+                                    <div class="text-dark fw-medium lh-base" th:text="${r.noiDung}">Nội dung đánh giá rất tốt.</div>
+                                </td>
+                                <td>
+                                    <small class="text-muted" th:text="${r.thoiGian != null ? #temporals.format(r.thoiGian, 'HH:mm dd/MM/yyyy') : '---'}">10:00 28/10/2026</small>
+                                </td>
+                                <td class="text-end">
+                                    <form action="/thong-tin-danh-gia/delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
+                                        <input type="hidden" name="id" th:value="${r.id}">
+                                        <button type="submit" class="btn-pro btn-outline-pro btn-sm-pro py-1 px-2 text-danger border-0" title="Xóa đánh giá">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        <!-- Reusable Operational Footer -->
+        <div th:replace="~{fragments/footer :: app-footer}"></div>
+    </div>
+</div>
+
+<!-- Backdrop & Scripts -->
+<div th:replace="~{fragments/navbar :: backdrop}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>
+

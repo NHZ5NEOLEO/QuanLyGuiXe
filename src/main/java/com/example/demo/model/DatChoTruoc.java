@@ -37,7 +37,7 @@ public class DatChoTruoc {
     private Double tienCoc = 20000.0;
 
     @Column(name = "da_thanh_toan_coc")
-    private Boolean daThanhToanCoc = true; // Tiền cọc đã được xác minh thành công
+    private Boolean daThanhToanCoc = false; // Mặc định chưa thanh toán cọc khi chưa có giao dịch đối soát xác nhận
 
     @Column(name = "ma_giao_dich_coc", length = 100)
     private String maGiaoDichCoc; // Mã giao dịch đặt cọc VietQR
@@ -60,7 +60,7 @@ public class DatChoTruoc {
         this.thoiGianHetHan = thoiGianHetHan;
         this.tienCoc = tienCoc;
         this.trangThai = trangThai;
-        this.daThanhToanCoc = true;
+        this.daThanhToanCoc = false;
     }
 
     public Long getId() {

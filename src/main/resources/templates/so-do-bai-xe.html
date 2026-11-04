@@ -489,7 +489,7 @@
                         <span class="small fw-bold">
                             <i class="fa-solid fa-triangle-exclamation me-2"></i>CẢNH BÁO: PHƯƠNG TIỆN GỬI QUÁ 24 GIỜ (<span id="overdueCountHeader" th:text="${overdueCount != null ? overdueCount : 0}">0</span> xe tồn bãi)
                         </span>
-                        <span class="badge bg-white text-danger fw-bold">Cần kiểm tra an ninh</span>
+                        <span class="badge bg-white text-dark fw-bold">Cần xác minh</span>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -524,8 +524,11 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-danger-subtle text-danger border border-danger">
-                                                <i class="fa-solid fa-triangle-exclamation me-1"></i>Quá 24 giờ
+                                            <span th:if="${ov.daKiemTra}" class="badge bg-success-subtle text-success border border-success">
+                                                <i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra
+                                            </span>
+                                            <span th:unless="${ov.daKiemTra}" class="badge bg-warning-subtle text-warning-emphasis border border-warning">
+                                                <i class="fa-solid fa-circle-question me-1"></i>Cần xác minh
                                             </span>
                                         </td>
                                         <td class="text-center text-nowrap">
@@ -533,6 +536,10 @@
                                                 <button type="button" class="btn btn-sm btn-action btn-outline-primary shadow-xs" 
                                                         th:onclick="'viewTicketDetail(' + ${ov.id} + ')'" title="Xem chi tiết lượt gửi">
                                                     <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-action btn-outline-warning shadow-xs"
+                                                        th:onclick="'openVerifyModalFromMap(' + ${ov.id} + ')'" title="Ghi nhận kiểm tra xe">
+                                                    <i class="fa-solid fa-clipboard-check me-1"></i><span th:text="${ov.daKiemTra ? 'Đã KT' : 'Xác minh'}">Xác minh</span>
                                                 </button>
                                                 <a th:href="@{'/xe-ra?code=' + ${ov.maQR}}" class="btn btn-sm btn-action btn-outline-danger shadow-xs" title="Tiến hành thủ tục cho xe ra">
                                                     <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Xe ra
@@ -672,8 +679,9 @@
                                               th:text="${vx.thoiLuongText}">1 giờ 25 phút</span>
                                     </td>
                                     <td>
-                                        <span th:if="${vx.qua24h and !vx.laVeThang}" class="badge bg-danger text-white">
-                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>Quá 24 giờ
+                                        <span th:if="${vx.qua24h and !vx.laVeThang}" class="badge" th:classappend="${vx.daKiemTra ? 'bg-success-subtle text-success border border-success' : 'bg-warning-subtle text-warning-emphasis border border-warning'}">
+                                            <i class="fa-solid me-1" th:classappend="${vx.daKiemTra ? 'fa-circle-check' : 'fa-circle-question'}"></i>
+                                            <span th:text="${vx.daKiemTra ? 'Đã kiểm tra' : 'Cần xác minh'}"></span>
                                         </span>
                                         <span th:unless="${vx.qua24h and !vx.laVeThang}" class="badge bg-success-subtle text-success border border-success">
                                             <i class="fa-solid fa-circle-dot me-1"></i>Đang gửi
@@ -771,6 +779,10 @@
                                 <th class="bg-light text-muted">Trạng thái:</th>
                                 <td id="modalTrangThai">—</td>
                             </tr>
+                            <tr id="modalRowKiemTra" class="d-none">
+                                <th class="bg-light text-muted">Xác minh KT:</th>
+                                <td id="modalThongTinKiemTra">—</td>
+                            </tr>
                             <tr>
                                 <th class="bg-light text-muted">Hình thức vé:</th>
                                 <td id="modalHinhThucVe">—</td>
@@ -779,11 +791,66 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
+            <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <a href="#" id="modalBtnCheckOut" class="btn btn-sm btn-danger shadow-xs">
-                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Xử lý xe ra
-                </a>
+                <div class="d-flex gap-2">
+                    <button type="button" id="modalBtnVerify" class="btn btn-sm btn-warning text-dark shadow-xs d-none">
+                        <i class="fa-solid fa-clipboard-check me-1"></i> Xác minh xe
+                    </button>
+                    <a href="#" id="modalBtnCheckOut" class="btn btn-sm btn-danger shadow-xs">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Xử lý xe ra
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL GHI NHẬN KIỂM TRA XE QUÁ 24H TỪ SƠ ĐỒ BÃI -->
+<div class="modal fade" id="modalVerifyOverdueFromMap" tabindex="-1" aria-labelledby="modalVerifyOverdueFromMapLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-light py-3 px-4 border-bottom">
+                <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center gap-2 mb-0" id="modalVerifyOverdueFromMapLabel">
+                    <i class="fa-solid fa-clipboard-check text-warning fs-5"></i>
+                    <span>Ghi nhận kiểm tra xe quá 24h</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="mapVerifyVeXeId">
+                <div class="p-3 mb-3 rounded-3" style="background-color: #f0f9ff; border: 1px solid #bae6fd;">
+                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom" style="border-color: #e0f2fe !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Biển số:</span>
+                            <span class="px-2.5 py-1 fs-6 fw-bold text-dark bg-white border border-dark rounded font-monospace" id="mapVerifyBienSo">---</span>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2.5 py-1 fw-semibold">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>Cần xác minh
+                        </span>
+                    </div>
+                    <div class="text-secondary small lh-base mb-0 d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-circle-info text-info mt-0.5 flex-shrink-0"></i>
+                        <span>Phương tiện vé lượt lưu bãi quá 24h. Nhân viên xác nhận tình trạng thực tế để quản lý bãi xe an toàn.</span>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label for="mapVerifyGhiChu" class="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                        <i class="fa-regular fa-pen-to-square text-primary"></i>
+                        <span>Ghi chú kiểm tra:</span>
+                    </label>
+                    <textarea class="form-control" id="mapVerifyGhiChu" rows="3" placeholder="VD: Đã kiểm tra thực tế, xe khóa cổ, không có dấu hiệu bất thường..."></textarea>
+                    <div class="form-text text-muted small mt-1.5 d-flex align-items-center gap-1">
+                        <i class="fa-regular fa-clock text-secondary"></i>
+                        <span>Thông tin người kiểm tra và thời điểm sẽ được lưu tự động.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2.5 px-4 border-top d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-sm btn-primary px-3 shadow-xs" onclick="submitMapVerify()">
+                    <i class="fa-solid fa-check me-1"></i>Lưu xác minh
+                </button>
             </div>
         </div>
     </div>
@@ -1023,6 +1090,11 @@ function renderOverdueSection(overdueList) {
 
     let rows = '';
     validOverdue.forEach((ov, idx) => {
+        const isChecked = Boolean(ov.daKiemTra);
+        const statusBadge = isChecked
+            ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>${ov.nguoiKiemTra ? `<div class="text-xxs text-muted mt-1"><i class="fa-regular fa-user me-1"></i>${ov.nguoiKiemTra}</div>` : ''}`
+            : `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-circle-question me-1"></i>Cần xác minh</span>`;
+
         rows += `
             <tr>
                 <td class="fw-semibold text-muted">${idx + 1}</td>
@@ -1040,15 +1112,14 @@ function renderOverdueSection(overdueList) {
                         <i class="fa-solid fa-clock me-1"></i>${ov.thoiLuongText || 'Quá 24h'}
                     </span>
                 </td>
-                <td>
-                    <span class="badge bg-danger-subtle text-danger border border-danger">
-                        <i class="fa-solid fa-triangle-exclamation me-1"></i>Quá 24 giờ
-                    </span>
-                </td>
+                <td>${statusBadge}</td>
                 <td class="text-center text-nowrap">
                     <div class="d-inline-flex align-items-center justify-content-center gap-1">
                         <button type="button" class="btn btn-sm btn-action btn-outline-primary" onclick="viewTicketDetail(${ov.id})" title="Xem chi tiết lượt gửi">
                             <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                        </button>
+                        <button type="button" class="btn btn-sm btn-action btn-outline-warning" onclick="openVerifyModalFromMap(${ov.id})" title="Ghi nhận kiểm tra xe">
+                            <i class="fa-solid fa-clipboard-check me-1"></i>${isChecked ? 'Đã KT' : 'Xác minh'}
                         </button>
                         <a href="/xe-ra?code=${encodeURIComponent(ov.maQR || ov.bienSoXe)}" class="btn btn-sm btn-action btn-outline-danger" title="Tiến hành thủ tục cho xe ra">
                             <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Xe ra
@@ -1149,9 +1220,13 @@ function renderTablePage() {
     pageItems.forEach((vx, index) => {
         const stt = startIdx + index + 1;
         const is24h = (vx.qua24h === true && !vx.laVeThang);
-        const statusBadge = is24h 
-            ? `<span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation me-1"></i>Quá 24 giờ</span>` 
-            : `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-dot me-1"></i>Đang gửi</span>`;
+        const isChecked = Boolean(vx.daKiemTra);
+        let statusBadge = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-dot me-1"></i>Đang gửi</span>`;
+        if (is24h) {
+            statusBadge = isChecked
+                ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>`
+                : `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-circle-question me-1"></i>Cần xác minh</span>`;
+        }
         
         const durationBadge = is24h
             ? `<span class="badge bg-danger text-white fw-bold">${vx.thoiLuongText || 'Quá 24h'}</span>`
@@ -1262,11 +1337,37 @@ function viewTicketDetail(ticketId) {
     document.getElementById('modalThoiLuong').innerText = v.thoiLuongText || 'Vừa vào';
     document.getElementById('modalHinhThucVe').innerText = v.laVeThang ? 'Thuê bao vé tháng' : 'Vé vãng lai theo lượt';
 
+    const is24h = (v.qua24h && !v.laVeThang);
     const statusEl = document.getElementById('modalTrangThai');
-    if (v.qua24h) {
-        statusEl.innerHTML = `<span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation me-1"></i>Tồn bãi > 24 giờ</span>`;
+    const rowKt = document.getElementById('modalRowKiemTra');
+    const thongTinKt = document.getElementById('modalThongTinKiemTra');
+    const btnVerify = document.getElementById('modalBtnVerify');
+
+    if (is24h) {
+        if (v.daKiemTra) {
+            statusEl.innerHTML = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>`;
+            if (rowKt) {
+                rowKt.classList.remove('d-none');
+                thongTinKt.innerHTML = `<div><strong>Người KT:</strong> ${v.nguoiKiemTra || 'Nhân viên'}</div>
+                                       <div><strong>Thời điểm:</strong> ${v.thoiGianKiemTraFormatted || '---'}</div>
+                                       ${v.ghiChuKiemTra ? `<div class="mt-1 text-muted fst-italic">"${v.ghiChuKiemTra}"</div>` : ''}`;
+            }
+        } else {
+            statusEl.innerHTML = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-circle-question me-1"></i>Cần xác minh (> 24 giờ)</span>`;
+            if (rowKt) rowKt.classList.add('d-none');
+        }
+        if (btnVerify) {
+            btnVerify.classList.remove('d-none');
+            btnVerify.onclick = function() {
+                const detModal = bootstrap.Modal.getInstance(document.getElementById('ticketDetailModal'));
+                if (detModal) detModal.hide();
+                openVerifyModalFromMap(v.id);
+            };
+        }
     } else {
         statusEl.innerHTML = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-dot me-1"></i>Đang gửi bình thường</span>`;
+        if (rowKt) rowKt.classList.add('d-none');
+        if (btnVerify) btnVerify.classList.add('d-none');
     }
 
     const imgEl = document.getElementById('modalVehicleImg');
@@ -1287,6 +1388,52 @@ function viewTicketDetail(ticketId) {
 
     const modal = new bootstrap.Modal(document.getElementById('ticketDetailModal'));
     modal.show();
+}
+
+function openVerifyModalFromMap(ticketId) {
+    const v = currentVehicles.find(x => x.id === ticketId);
+    if (!v) return;
+    document.getElementById('mapVerifyVeXeId').value = v.id;
+    document.getElementById('mapVerifyBienSo').innerText = v.bienSoXe || '---';
+    document.getElementById('mapVerifyGhiChu').value = v.ghiChuKiemTra || '';
+    const modal = new bootstrap.Modal(document.getElementById('modalVerifyOverdueFromMap'));
+    modal.show();
+}
+
+function submitMapVerify() {
+    const veXeId = document.getElementById('mapVerifyVeXeId').value;
+    const ghiChu = document.getElementById('mapVerifyGhiChu').value;
+    if (!veXeId) return;
+
+    fetch('/api/parking-map/verify-overdue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ veXeId: parseInt(veXeId), ghiChu: ghiChu })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const v = currentVehicles.find(x => x.id === parseInt(veXeId));
+            if (v) {
+                v.daKiemTra = true;
+                v.nguoiKiemTra = data.nguoiKiemTra || 'Bảo vệ';
+                v.ghiChuKiemTra = data.ghiChuKiemTra || ghiChu;
+                v.thoiGianKiemTraFormatted = data.thoiGianKiemTra || 'Vừa xong';
+            }
+            renderOverdueSection(currentVehicles.filter(x => x.qua24h && !x.laVeThang));
+            applyFiltersAndRender();
+            const modalEl = document.getElementById('modalVerifyOverdueFromMap');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            showLiveAlert(data.message || 'Đã ghi nhận kiểm tra xe quá 24h thành công!');
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi lưu xác minh');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Lỗi kết nối khi gửi yêu cầu xác minh');
+    });
 }
 
 // NÚT LÀM MỚI DỮ LIỆU

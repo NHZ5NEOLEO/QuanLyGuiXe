@@ -60,12 +60,10 @@ public class FeeCalculationServiceTest {
 
         FeeCalculationResult result = feeCalculationService.calculate(xeMay, vao, ra, false, false);
 
-        // 3 ngày x (4000 + 6000) + 4000 = 34000 + Phụ phí lưu kho > 24h (3 x 15000 = 45000) = 79000
-        assertEquals(79000.0, result.getSoTienThanhToan());
-        assertEquals(45000.0, result.getPhuPhiLuuKho());
-        assertEquals(3, result.getSoNgayVuot24h());
+        // 3 ngày x (4000 + 6000) + 4000 = 34000, không tự ý cộng phụ phí ngoài biểu giá niêm yết
+        assertEquals(34000.0, result.getSoTienThanhToan());
+        assertEquals(0.0, result.getPhuPhiLuuKho());
         assertTrue(result.getQuyTacApDung().contains("nhiều ngày"));
-        assertTrue(result.getQuyTacApDung().contains("Phụ phí lưu kho"));
     }
 
     @Test

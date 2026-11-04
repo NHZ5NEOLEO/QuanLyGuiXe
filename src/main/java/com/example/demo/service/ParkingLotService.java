@@ -11,6 +11,7 @@ import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
 import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
+import com.example.demo.util.BienSoXeHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -60,10 +61,18 @@ public class ParkingLotService implements BaiDoXeService {
             boolean isMonthly = vx.getVeThang() != null
                     || "VE_THANG".equalsIgnoreCase(vx.getHinhThucThanhToan())
                     || (vx.getGhiChu() != null && vx.getGhiChu().toLowerCase().contains("tháng"))
-                    || (vx.getBienSoXe() != null && veThangRepository.findFirstByBienSoXe(vx.getBienSoXe()).isPresent());
+                    || (vx.getBienSoXe() != null && isBienSoCoVeThangConHan(vx.getBienSoXe()));
             dto.setLaVeThang(isMonthly);
             dto.setTrangThai(vx.getTrangThai() != null ? vx.getTrangThai() : "Đang gửi");
             dto.setGhiChu(vx.getGhiChu());
+            dto.setDaKiemTra(Boolean.TRUE.equals(vx.getDaKiemTra()));
+            dto.setThoiGianKiemTra(vx.getThoiGianKiemTra());
+            if (vx.getThoiGianKiemTra() != null) {
+                dto.setThoiGianKiemTraFormatted(vx.getThoiGianKiemTra().format(DATE_TIME_FORMATTER));
+            }
+            dto.setNguoiKiemTra(vx.getNguoiKiemTra());
+            dto.setGhiChuKiemTra(vx.getGhiChuKiemTra());
+            dto.setTrangThaiXacMinh(Boolean.TRUE.equals(vx.getDaKiemTra()) ? "Đã kiểm tra" : "Cần xác minh");
 
             // Định dạng ngày giờ và tính thời lượng đã đỗ
             if (vx.getThoiGianVao() != null) {
@@ -308,5 +317,15 @@ public class ParkingLotService implements BaiDoXeService {
     @Override
     public long demViTriDaDat() {
         return 0L;
+    }
+
+    private boolean isBienSoCoVeThangConHan(String bienSoXe) {
+        if (veThangRepository == null || bienSoXe == null || bienSoXe.isBlank()) return false;
+        var opt = veThangRepository.findFirstByBienSoXe(bienSoXe);
+        if (opt.isPresent() && opt.get().isConHan()) {
+            return true;
+        }
+        return veThangRepository.findAll().stream()
+                .anyMatch(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), bienSoXe) && vt.isConHan());
     }
 }

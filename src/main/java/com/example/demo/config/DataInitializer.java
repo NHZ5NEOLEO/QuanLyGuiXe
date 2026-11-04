@@ -25,6 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DanhSachDenRepository danhSachDenRepository;
     private final PhuongTienRepository phuongTienRepository;
     private final ViTriDoRepository viTriDoRepository;
+    private final DanhGiaRepository danhGiaRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(
@@ -37,6 +38,7 @@ public class DataInitializer implements CommandLineRunner {
             DanhSachDenRepository danhSachDenRepository,
             PhuongTienRepository phuongTienRepository,
             ViTriDoRepository viTriDoRepository,
+            DanhGiaRepository danhGiaRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.loaiXeRepository = loaiXeRepository;
@@ -48,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
         this.danhSachDenRepository = danhSachDenRepository;
         this.phuongTienRepository = phuongTienRepository;
         this.viTriDoRepository = viTriDoRepository;
+        this.danhGiaRepository = danhGiaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -173,6 +176,15 @@ public class DataInitializer implements CommandLineRunner {
             PhuongTien pt6 = new PhuongTien("29T1-54321", xeMay, "Vũ Thùy Linh", "0956789012", "Yamaha Grande - Khách vãng lai");
             PhuongTien pt7 = new PhuongTien("43B1-99881", xeMay, "Hoàng Văn Nam", "0967890123", "Honda Wave Alpha");
             phuongTienRepository.saveAll(List.of(pt1, pt2, pt3, pt4, pt5, pt6, pt7));
+        }
+
+        // 8. Khởi tạo Đánh giá mẫu từ khách hàng
+        if (danhGiaRepository.count() == 0) {
+            DanhGia dg1 = new DanhGia("Nguyễn Văn An", "0912345678", 5, "Bãi xe hiện đại, nhận diện biển số rất nhanh và bảo vệ thân thiện.", "TOC_DO");
+            DanhGia dg2 = new DanhGia("Trần Thị Bích", "0988776655", 5, "Hầm gửi xe sạch sẽ, an ninh tốt, camera đối soát biển số rõ nét.", "AN_NINH");
+            DanhGia dg3 = new DanhGia("Lê Hoàng Long", "0903112233", 4, "Giá vé hợp lý, thủ tục thanh toán chuyển khoản QR nhanh gọn.", "GIA_CA");
+            DanhGia dg4 = new DanhGia("Phạm Minh Đức", "0977112233", 3, "Giờ cao điểm chiều làn ra hơi đông, nên mở thêm luồng ra linh hoạt.", "TOC_DO");
+            danhGiaRepository.saveAll(List.of(dg1, dg2, dg3, dg4));
         }
     }
 }

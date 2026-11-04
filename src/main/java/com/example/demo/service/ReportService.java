@@ -11,6 +11,7 @@ import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
 import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
+import com.example.demo.util.BienSoXeHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -197,7 +198,10 @@ public class ReportService implements BaoCaoService {
     public long demXeQuaHan() {
         LocalDateTime threshold = LocalDateTime.now().minusHours(24);
         List<VeXe> active = veXeRepository.findByTrangThaiOrderByThoiGianVaoDesc("Đang gửi");
-        return active.stream().filter(v -> v.getThoiGianVao().isBefore(threshold)).count();
+        return active.stream()
+                .filter(v -> v.getThoiGianVao() != null && v.getThoiGianVao().isBefore(threshold))
+                .filter(v -> !isVeThangHieuLuc(v))
+                .count();
     }
 
     public long getOverdueCount() {
@@ -354,11 +358,28 @@ public class ReportService implements BaoCaoService {
         List<VeXe> active = veXeRepository.findByTrangThaiOrderByThoiGianVaoDesc("Đang gửi");
         return active.stream()
                 .filter(v -> v.getThoiGianVao() != null && v.getThoiGianVao().isBefore(threshold))
+                .filter(v -> !isVeThangHieuLuc(v))
                 .limit(gioiHan)
                 .toList();
     }
 
     public List<VeXe> getOverdueVehicles(int limit) {
         return layDanhSachXeQuaHan(limit);
+    }
+
+    private boolean isVeThangHieuLuc(VeXe v) {
+        if (v == null) return false;
+        if (v.getVeThang() != null) return true;
+        if ("VE_THANG".equalsIgnoreCase(v.getHinhThucThanhToan())) return true;
+        if (v.getGhiChu() != null && v.getGhiChu().toLowerCase().contains("vé tháng")) return true;
+        if (veThangRepository != null && v.getBienSoXe() != null && !v.getBienSoXe().isBlank()) {
+            var opt = veThangRepository.findFirstByBienSoXe(v.getBienSoXe());
+            if (opt.isPresent() && opt.get().isConHan()) {
+                return true;
+            }
+            return veThangRepository.findAll().stream()
+                    .anyMatch(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), v.getBienSoXe()) && vt.isConHan());
+        }
+        return false;
     }
 }

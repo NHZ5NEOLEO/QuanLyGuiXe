@@ -103,11 +103,18 @@
             <span>Bảng giá gửi xe</span>
         </a>
 
-        <!-- 10. Quản lý nhân viên (Chỉ dành cho ADMIN) -->
-        <a th:if="${session.userRole == null or session.userRole == 'ADMIN'}" 
-           th:href="@{/nhan-vien}" th:classappend="${activePage == 'staff'} ? 'active' : ''" class="sidebar-link" title="Quản lý tài khoản nhân viên bảo vệ">
+        <!-- 10. Quản lý người dùng (Chỉ dành cho ADMIN) -->
+        <a th:if="${session.userRole == null or session.userRole == 'ADMIN' or session.userRole == 'NHAN_VIEN'}" 
+           th:href="@{/nhan-vien}" th:classappend="${activePage == 'staff' or activePage == 'users' or activePage == 'nguoi-dung'} ? 'active' : ''" class="sidebar-link" title="Quản lý tài khoản quản trị viên, nhân viên và khách hàng">
             <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
-            <span>Quản lý nhân viên</span>
+            <span>Quản lý người dùng</span>
+        </a>
+
+        <!-- 11. Thông tin đánh giá & Góp ý (Chỉ dành cho ADMIN) -->
+        <a th:if="${session.userRole == null or session.userRole == 'ADMIN' or session.userRole == 'NHAN_VIEN'}" 
+           th:href="@{/thong-tin-danh-gia}" th:classappend="${activePage == 'reviews' or activePage == 'thong-tin-danh-gia'} ? 'active' : ''" class="sidebar-link" title="Xem đánh giá và phản hồi của khách hàng">
+            <i class="fa-solid fa-star-half-stroke text-warning" aria-hidden="true"></i>
+            <span>Thông tin đánh giá</span>
         </a>
     </div>
 
