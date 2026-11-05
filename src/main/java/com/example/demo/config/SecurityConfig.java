@@ -67,13 +67,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/gate/check-qr-paid", "/api/parking/qr/**").permitAll()
 
                 // 5. Trang và API chỉ dành riêng cho Quản trị viên (ADMIN)
-                .requestMatchers("/staff", "/staff/**", "/nhan-vien", "/nhan-vien/**", "/nguoi-dung", "/nguoi-dung/**", "/users", "/users/**", "/quan-ly-nguoi-dung", "/quan-ly-nguoi-dung/**", "/quan-ly-nhan-vien", "/quan-ly-nhan-vien/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/thong-tin-danh-gia", "/thong-tin-danh-gia/**", "/danh-gia-khach-hang", "/danh-gia-khach-hang/**", "/reviews", "/reviews/**", "/quan-ly-danh-gia", "/quan-ly-danh-gia/**", "/danh-gia-he-thong", "/danh-gia-he-thong/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/staff", "/staff/**", "/nhan-vien", "/nhan-vien/**", "/nguoi-dung", "/nguoi-dung/**", "/users", "/users/**", "/quan-ly-nguoi-dung", "/quan-ly-nguoi-dung/**", "/quan-ly-nhan-vien", "/quan-ly-nhan-vien/**").hasRole("ADMIN")
+                .requestMatchers("/thong-tin-danh-gia", "/thong-tin-danh-gia/**", "/danh-gia-khach-hang", "/danh-gia-khach-hang/**", "/reviews", "/reviews/**", "/quan-ly-danh-gia", "/quan-ly-danh-gia/**", "/danh-gia-he-thong", "/danh-gia-he-thong/**").hasRole("ADMIN")
                 .requestMatchers("/price-settings/**", "/bang-gia/**").hasRole("ADMIN")
                 .requestMatchers("/settings/**", "/cai-dat/**").hasRole("ADMIN")
                 .requestMatchers("/reports/**", "/thong-ke/**", "/api/reports/**").hasRole("ADMIN")
                 .requestMatchers("/phuong-tien/**", "/vehicles/**", "/api/vehicles/**").hasRole("ADMIN")
                 .requestMatchers("/tong-quan", "/tong-quan/**", "/dashboard", "/dashboard/**", "/index").hasRole("ADMIN")
+                .requestMatchers("/parking-map", "/parking-map/**", "/so-do-bai-xe", "/so-do-bai-xe/**", "/quan-ly-do-xe", "/quan-ly-do-xe/**").hasRole("ADMIN")
 
                 // 6. Trang & API Nghiệp vụ trực cổng & Vận hành bãi đỗ (ADMIN + NHAN_VIEN)
                 // Nghiêm ngặt: Tất cả API tạo lượt gửi xe (check-in) và xác nhận checkout phải yêu cầu nhân viên/admin đăng nhập
@@ -83,7 +84,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/parking/check-in", "/api/parking/check-out").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/active-vehicles/**", "/xe-trong-bai/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/history/**", "/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/parking-map", "/parking-map/**", "/so-do-bai-xe", "/so-do-bai-xe/**", "/quan-ly-do-xe", "/quan-ly-do-xe/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/security-alerts/**", "/canh-bao-an-ninh/**", "/shift/**", "/ca-truc/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/api/tickets/**", "/api/parking/**", "/api/parking-map/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
 

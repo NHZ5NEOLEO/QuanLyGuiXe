@@ -198,17 +198,11 @@
                 <!-- Form Bàn Giao Ca Trực (Ẩn khi in ấn) -->
                 <form action="/shift/handover" method="post" class="border-top pt-3 d-print-none">
                     <input type="hidden" name="shiftId" th:value="${currentShift.id}">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label-pro">Nhân viên nhận ca tiếp theo (tùy chọn):</label>
-                            <select name="nguoiNhanCaId" class="form-select form-select-pro">
-                                <option value="">-- Chưa chỉ định (Người tiếp theo tự nhận ca khi bắt đầu) --</option>
-                                <option th:each="st : ${staffList}" th:value="${st.id}" th:text="${st.hoTen + ' (' + st.tenDangNhap + ')'}"></option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label-pro">Ghi chú bàn giao ca (Tình trạng bãi xe, số tiền mặt giao ca...):</label>
-                            <textarea class="form-control form-control-pro" name="ghiChuBanGiao" rows="1" placeholder="Ví dụ: Đã bàn giao đủ tiền mặt, bãi xe ổn định, không có sự cố phát sinh."></textarea>
+                    <div class="mb-3">
+                        <label class="form-label-pro">Ghi chú bàn giao ca (Tình trạng bãi xe, số tiền mặt giao ca...):</label>
+                        <textarea class="form-control form-control-pro" name="ghiChuBanGiao" rows="2" placeholder="Ví dụ: Đã bàn giao đủ tiền mặt, bãi xe ổn định, không có sự cố phát sinh."></textarea>
+                        <div class="form-text text-muted small mt-1">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i>Khi bàn giao, hệ thống sẽ chốt số liệu ca hiện tại. Nhân viên nhận ca tiếp theo sẽ tự đăng nhập để bắt đầu ca mới.
                         </div>
                     </div>
                     <div class="d-flex justify-content-end gap-2">

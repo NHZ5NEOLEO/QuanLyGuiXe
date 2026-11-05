@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,7 +231,66 @@ public class PortalController {
         Map<String, Object> resp = new HashMap<>();
         resp.put("bienSoXe", !displayPlate.isEmpty() ? displayPlate : rawPlate.toUpperCase());
 
-        // 1. Kiểm tra xe đang gửi trong bãi (hỗ trợ mã vé QR hoặc biển số xe)
+        // 1. Kiểm tra trạng thái đăng nhập và phân quyền bảo mật mã đối soát
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isLoggedIn = auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+
+        boolean canViewFullTicket = false;
+        boolean isUserRegisteredPlate = false;
+        String userPlateNotice = null;
+
+        if (isLoggedIn && auth != null) {
+            String username = auth.getName();
+            boolean isStaffOrAdmin = auth.getAuthorities().stream().anyMatch(a ->
+                    "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_NHAN_VIEN".equals(a.getAuthority()));
+
+            if (isStaffOrAdmin) {
+                // Quản trị viên và Nhân viên trực cổng được xem mã đối soát đầy đủ
+                canViewFullTicket = true;
+            } else {
+                // Khách hàng cá nhân: Chỉ được xem mã vé của các biển số xe đã đăng ký vé tháng của tài khoản này
+                Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(username);
+                if (userOpt.isPresent()) {
+                    NguoiDung user = userOpt.get();
+                    String phone = user.getSoDienThoai();
+                    List<VeThang> userTickets = new ArrayList<>();
+                    if (phone != null && !phone.isBlank()) {
+                        Optional<KhachHang> khOpt = khachHangRepository.findBySoDienThoai(phone.trim());
+                        if (khOpt.isPresent()) {
+                            userTickets.addAll(veThangRepository.findByKhachHangIdOrderByNgayBatDauDesc(khOpt.get().getId()));
+                        }
+                        if (userTickets.isEmpty()) {
+                            userTickets.addAll(veThangRepository.findByKhachHangSoDienThoaiOrderByNgayBatDauDesc(phone.trim()));
+                        }
+                    }
+
+                    for (VeThang vtUser : userTickets) {
+                        if (vtUser.getBienSoXe() != null) {
+                            String userPlateKey = vtUser.getBienSoXe().replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                            if (userPlateKey.equals(cleanKey)) {
+                                isUserRegisteredPlate = true;
+                                canViewFullTicket = true;
+                                userPlateNotice = "Đây là biển số xe mà bạn đã đăng ký vé tháng";
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!isUserRegisteredPlate) {
+                        userPlateNotice = "Biển số này không thuộc vé tháng của tài khoản bạn. Mã vé được ẩn để bảo mật.";
+                    }
+                }
+            }
+        } else {
+            userPlateNotice = "Mã vé được bảo mật. Vui lòng đăng nhập tài khoản để xem mã vé.";
+        }
+
+        resp.put("isLoggedIn", isLoggedIn);
+        resp.put("canViewFullTicket", canViewFullTicket);
+        resp.put("isUserRegisteredPlate", isUserRegisteredPlate);
+        resp.put("userPlateNotice", userPlateNotice);
+
+        // 2. Kiểm tra xe đang gửi trong bãi (hỗ trợ mã vé QR hoặc biển số xe)
         Optional<VeXe> xeDangGuiOpt = Optional.empty();
         if (rawPlate.toUpperCase().startsWith("QR") || rawPlate.contains("-")) {
             xeDangGuiOpt = veXeRepository.findByMaQR(rawPlate);
@@ -273,13 +333,15 @@ public class PortalController {
                 resp.put("thoiGianVao", "—");
                 resp.put("thoiLuong", "Không xác định");
             }
-            resp.put("maQR", vx.getMaQR() != null ? vx.getMaQR() : "—");
+            String rawMaQR = vx.getMaQR() != null ? vx.getMaQR() : "—";
+            resp.put("maQR", canViewFullTicket ? rawMaQR : maskTicketCode(rawMaQR));
+            resp.put("maQRDyDu", canViewFullTicket);
             resp.put("loaiXe", vx.getLoaiXe() != null ? vx.getLoaiXe().getTenLoai() : "Phương tiện");
         } else {
             resp.put("dangGui", false);
         }
 
-        // 2. Kiểm tra vé tháng (hỗ trợ mã thẻ vé tháng hoặc biển số)
+        // 3. Kiểm tra vé tháng (hỗ trợ mã thẻ vé tháng hoặc biển số)
         Optional<VeThang> vtOpt = Optional.empty();
         if (rawPlate.toUpperCase().startsWith("VT-") || rawPlate.contains("-")) {
             vtOpt = veThangRepository.findByMaThe(rawPlate);
@@ -309,8 +371,8 @@ public class PortalController {
         if (vtOpt.isPresent()) {
             VeThang vt = vtOpt.get();
             resp.put("coVeThang", true);
-            resp.put("maThe", vt.getMaThe());
-            resp.put("chuXe", vt.getKhachHang() != null ? vt.getKhachHang().getHoTen() : "Cư dân");
+            resp.put("maThe", canViewFullTicket ? vt.getMaThe() : maskTicketCode(vt.getMaThe()));
+            resp.put("chuXe", canViewFullTicket ? (vt.getKhachHang() != null ? vt.getKhachHang().getHoTen() : "Cư dân") : "Chủ xe vé tháng");
             resp.put("ngayHetHan", vt.getNgayHetHan() != null ? vt.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "—");
             resp.put("conHan", vt.isConHan());
             resp.put("loaiXeVeThang", vt.getLoaiXe() != null ? vt.getLoaiXe().getTenLoai() : "");
@@ -496,5 +558,21 @@ public class PortalController {
             return m5.group(1) + "-" + m5.group(2) + " " + m5.group(3);
         }
         return cleanPlate;
+    }
+
+    /**
+     * Che giấu mã vé điện tử / mã thẻ để bảo vệ an toàn đối soát khi chưa xác thực chủ phương tiện
+     */
+    private String maskTicketCode(String code) {
+        if (code == null || code.isBlank() || "—".equals(code.trim())) {
+            return "—";
+        }
+        String trimmed = code.trim();
+        if (trimmed.toUpperCase().startsWith("QR-")) {
+            return "QR-••••••••••••";
+        } else if (trimmed.toUpperCase().startsWith("VT-")) {
+            return "VT-••••••••";
+        }
+        return "••••••••••••";
     }
 }

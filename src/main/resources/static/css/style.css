@@ -2600,3 +2600,10 @@ textarea:focus-visible,
     pointer-events: none;
 }
 
+.hover-primary {
+    transition: color 0.15s ease-in-out;
+}
+.hover-primary:hover {
+    color: #2563eb !important;
+}
+

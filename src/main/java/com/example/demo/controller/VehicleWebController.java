@@ -33,6 +33,8 @@ public class VehicleWebController {
     @GetMapping
     public String listVehicles(
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         List<VehicleDto> vehicles;
@@ -44,12 +46,14 @@ public class VehicleWebController {
 
         List<LoaiXe> loaiXes = loaiXeRepository.findAll();
 
-        model.addAttribute("vehicles", vehicles);
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("keyword", keyword);
         model.addAttribute("totalCount", vehicles.size());
         model.addAttribute("activePage", "vehicles");
         model.addAttribute("pageTitle", "Quản lý phương tiện");
+
+        List<VehicleDto> paged = com.example.demo.util.PaginationHelper.paginate(vehicles, page, size, model);
+        model.addAttribute("vehicles", paged);
 
         return "phuong-tien/danh-sach";
     }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -37,6 +38,23 @@ public class ShiftController {
         model.addAttribute("pageTitle", "Bàn giao ca trực");
 
         return "ca-truc";
+    }
+
+    @PostMapping({"/start", "/bat-dau"})
+    public String startShift(
+            @RequestParam(value = "tenCa", required = false) String tenCa,
+            Principal principal,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            String username = (principal != null) ? principal.getName() : null;
+            CaTruc newShift = shiftService.batDauCaTruc(tenCa, username);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã bắt đầu ca trực [" + newShift.getTenCa() + "] thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/ca-truc";
     }
 
     @PostMapping("/handover")

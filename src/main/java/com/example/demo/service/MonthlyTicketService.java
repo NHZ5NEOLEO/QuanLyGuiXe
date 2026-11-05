@@ -265,7 +265,7 @@ public class MonthlyTicketService implements VeThangService {
         // Chính sách: Gia hạn trước khi hết hạn thì nối thời gian mới từ ngày hết hạn hiện tại.
         // Gia hạn sau khi hết hạn thì tính từ ngày gia hạn.
         boolean isExpired = (currentEnd == null || today.isAfter(currentEnd));
-        LocalDate newStart = isExpired ? today : currentEnd;
+        LocalDate newStart = (isExpired || currentEnd == null) ? today : currentEnd;
         LocalDate newEnd = newStart.plusMonths(soThang);
 
         if (isExpired) {

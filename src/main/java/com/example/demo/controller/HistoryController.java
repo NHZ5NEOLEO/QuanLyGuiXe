@@ -71,6 +71,8 @@ public class HistoryController {
             @RequestParam(value = "loaiXeId", required = false) Long loaiXeId,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         LocalDate parsedStart = parseDate(startDate);
@@ -111,7 +113,6 @@ public class HistoryController {
             }
         }
 
-        model.addAttribute("historyList", historyList);
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("keyword", keyword);
         model.addAttribute("trangThai", trangThai);
@@ -124,6 +125,9 @@ public class HistoryController {
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("activePage", "tickets");
         model.addAttribute("pageTitle", "Quản lý vé xe");
+
+        List<VeXe> pagedList = com.example.demo.util.PaginationHelper.paginate(historyList, page, size, model);
+        model.addAttribute("historyList", pagedList);
 
         return "ve-xe/danh-sach";
     }

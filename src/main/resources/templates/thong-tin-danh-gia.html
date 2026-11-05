@@ -93,6 +93,7 @@
             <!-- Filter Bar -->
             <div class="filter-bar-pro">
                 <form action="/thong-tin-danh-gia" method="get" class="d-flex align-items-center gap-3 flex-wrap w-100">
+                    <input type="hidden" name="page" value="1">
                     <div class="flex-grow-1 filter-search-md-col">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted">
@@ -210,6 +211,9 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang danh sách đánh giá -->
+                <div th:replace="~{layout/fragments/pagination :: pagination}"></div>
             </div>
         </main>
         <!-- Reusable Operational Footer -->

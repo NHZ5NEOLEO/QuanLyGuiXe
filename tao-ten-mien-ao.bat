@@ -21,28 +21,32 @@ set "HOSTS_FILE=%WINDIR%\System32\drivers\etc\hosts"
 echo Đang kiểm tra và thêm các tên miền .localhost vào file hosts...
 echo.
 
-:: 1. baixe.localhost
+:: 1. guixe.localhost & guixe
+findstr /i "guixe.localhost" "%HOSTS_FILE%" >nul || (
+    echo 127.0.0.1   guixe.localhost >> "%HOSTS_FILE%"
+    echo [+] Đã thêm: http://guixe.localhost
+)
+findstr /i "\<guixe\>" "%HOSTS_FILE%" >nul || (
+    echo 127.0.0.1   guixe >> "%HOSTS_FILE%"
+    echo [+] Đã thêm: http://guixe
+)
+
+:: 2. baixe.localhost
 findstr /i "baixe.localhost" "%HOSTS_FILE%" >nul || (
     echo 127.0.0.1   baixe.localhost >> "%HOSTS_FILE%"
     echo [+] Đã thêm: http://baixe.localhost
 )
 
-:: 2. quanlyguixe.localhost
+:: 3. quanlyguixe.localhost
 findstr /i "quanlyguixe.localhost" "%HOSTS_FILE%" >nul || (
     echo 127.0.0.1   quanlyguixe.localhost >> "%HOSTS_FILE%"
     echo [+] Đã thêm: http://quanlyguixe.localhost
 )
 
-:: 3. parking.localhost
+:: 4. parking.localhost
 findstr /i "parking.localhost" "%HOSTS_FILE%" >nul || (
     echo 127.0.0.1   parking.localhost >> "%HOSTS_FILE%"
     echo [+] Đã thêm: http://parking.localhost
-)
-
-:: 4. guixe.localhost
-findstr /i "guixe.localhost" "%HOSTS_FILE%" >nul || (
-    echo 127.0.0.1   guixe.localhost >> "%HOSTS_FILE%"
-    echo [+] Đã thêm: http://guixe.localhost
 )
 
 :: 5. smartparking.localhost
@@ -54,10 +58,11 @@ findstr /i "smartparking.localhost" "%HOSTS_FILE%" >nul || (
 echo.
 echo ======================================================================
 echo >>> CẤU HÌNH HOÀN TẤT! Bạn có thể mở trình duyệt và truy cập ngay:
-echo     1. http://baixe.localhost/gui-xe
-echo     2. http://quanlyguixe.localhost/gui-xe
-echo     3. http://parking.localhost/gui-xe
-echo     4. http://guixe.localhost/gui-xe
+echo     1. http://guixe.localhost/ (hoặc http://guixe)
+echo     2. http://guixe.localhost/home
+echo     3. http://guixe.localhost/gui-xe
+echo     4. http://guixe.localhost/nhan-xe
+echo     5. http://baixe.localhost/
 echo.
 echo     (Tất cả tên miền .localhost đều hỗ trợ Camera & an toàn bảo mật 100%%)
 echo ======================================================================

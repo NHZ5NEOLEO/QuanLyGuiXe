@@ -24,7 +24,7 @@
             <div class="col-lg-5 login-hero-side">
                 <div>
                     <!-- Logo & Brand Header -->
-                    <div class="d-flex align-items-center gap-3 mb-4">
+                    <a th:href="@{/home}" class="d-flex align-items-center gap-3 mb-4 text-decoration-none" title="Quay lại Trang chủ">
                         <div class="login-hero-icon">
                             <i class="fa-solid fa-square-parking"></i>
                         </div>
@@ -34,7 +34,7 @@
                             </span>
                             <div class="h5 fw-bold text-white mb-0 mt-1">QUẢN LÝ GỬI XE</div>
                         </div>
-                    </div>
+                    </a>
 
                     <h2 class="h4 fw-bold text-white lh-base mb-3">
                         Đăng Ký Tài Khoản Tiện Lợi &amp; Nhanh Chóng
@@ -99,6 +99,14 @@
             <!-- CỘT PHẢI: FORM ĐĂNG KÝ TÀI KHOẢN -->
             <div class="col-lg-7 login-form-side">
                 
+                <!-- Nút quay lại trang chủ -->
+                <div class="mb-3">
+                    <a th:href="@{/home}" class="text-muted small text-decoration-none hover-primary d-inline-flex align-items-center gap-1.5 fw-semibold" title="Quay lại Cổng tra cứu trang chủ">
+                        <i class="fa-solid fa-arrow-left text-primary"></i>
+                        <span>Quay lại trang chủ</span>
+                    </a>
+                </div>
+
                 <!-- Thanh chuyển đổi nhanh Đăng nhập / Đăng ký -->
                 <div class="auth-segmented-control mb-4">
                     <a th:href="@{/login}" class="auth-tab-btn">Đăng Nhập</a>

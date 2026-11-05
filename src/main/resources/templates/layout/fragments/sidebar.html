@@ -12,13 +12,13 @@
 <!-- ========================================================================= -->
 <aside th:fragment="sidebar" class="app-sidebar" role="navigation" aria-label="Điều hướng chính">
     <!-- Brand Header -->
-    <div class="sidebar-brand">
+    <a th:href="${session.userRole == 'NHAN_VIEN' ? '/gui-xe' : '/tong-quan'}" class="sidebar-brand text-decoration-none">
         <div class="brand-icon-box">
             <i class="fa-solid fa-square-parking" aria-hidden="true"></i>
         </div>
         <div class="brand-text">
             <div class="d-flex align-items-center gap-2">
-                <span class="title">PARKING</span>
+                <span class="title" style="font-size: 0.92rem; white-space: nowrap;">QUẢN LÝ GỬI XE</span>
                 <span class="badge sidebar-role-badge"
                       th:classappend="${session.userRole == 'NHAN_VIEN'} ? 'bg-success text-white' : 'bg-primary text-white'"
                       th:text="${session.userRole != null ? (session.userRole == 'NHAN_VIEN' ? 'NHÂN VIÊN' : session.userRole) : 'ADMIN'}">ADMIN</span>
@@ -29,7 +29,7 @@
         <button type="button" class="btn btn-sm text-secondary d-lg-none ms-auto border-0 p-1" onclick="toggleMobileSidebar(false)" aria-label="Đóng menu">
             <i class="fa-solid fa-xmark fs-5 text-white" aria-hidden="true"></i>
         </button>
-    </div>
+    </a>
 
     <!-- Navigation Menu -->
     <div class="sidebar-nav">
@@ -61,8 +61,9 @@
             <span>Xe đang trong bãi</span>
         </a>
 
-        <!-- 4b. Quản lý đỗ xe (4 Phân khu: 2 Bánh, 4 Bánh, Xe Đạp, Tồn > 24H) -->
-        <a th:href="@{/quan-ly-do-xe}" th:classappend="${activePage == 'quan-ly-do-xe' or activePage == 'parking-map' or activePage == 'so-do-bai-xe'} ? 'active' : ''" class="sidebar-link" title="Quản lý hiện trạng các phân khu đỗ xe">
+        <!-- 4b. Quản lý đỗ xe (Chỉ dành cho ADMIN) -->
+        <a th:if="${session.userRole == null or session.userRole == 'ADMIN'}"
+           th:href="@{/quan-ly-do-xe}" th:classappend="${activePage == 'quan-ly-do-xe' or activePage == 'parking-map' or activePage == 'so-do-bai-xe'} ? 'active' : ''" class="sidebar-link" title="Quản lý hiện trạng các phân khu đỗ xe">
             <i class="fa-solid fa-square-parking text-primary" aria-hidden="true"></i>
             <span>Quản lý đỗ xe</span>
         </a>
@@ -71,6 +72,12 @@
         <a th:href="@{/ve-xe}" th:classappend="${activePage == 'tickets' or activePage == 'history'} ? 'active' : ''" class="sidebar-link" th:title="${session.userRole == 'NHAN_VIEN' ? 'Tra cứu thông tin vé khi khách quên vé/mất vé' : 'Danh sách, tra cứu và in vé xe'}">
             <i class="fa-solid fa-ticket text-info" aria-hidden="true"></i>
             <span th:text="${session.userRole == 'NHAN_VIEN' ? 'Tra cứu vé xe' : 'Quản lý vé xe'}">Quản lý vé xe</span>
+        </a>
+
+        <!-- 5b. Cảnh báo an ninh (Xe gửi quá 24h & Danh sách đen) -->
+        <a th:href="@{/canh-bao-an-ninh}" th:classappend="${activePage == 'security-alerts' or activePage == 'canh-bao-an-ninh'} ? 'active' : ''" class="sidebar-link" title="Xử lý xe gửi quá 24 giờ và danh sách đen an ninh">
+            <i class="fa-solid fa-triangle-exclamation text-danger" aria-hidden="true"></i>
+            <span>Cảnh báo an ninh</span>
         </a>
 
         <!-- 6. Quản lý phương tiện (Chỉ dành cho ADMIN) -->
@@ -104,17 +111,23 @@
         </a>
 
         <!-- 10. Quản lý người dùng (Chỉ dành cho ADMIN) -->
-        <a th:if="${session.userRole == null or session.userRole == 'ADMIN' or session.userRole == 'NHAN_VIEN'}" 
+        <a th:if="${session.userRole == null or session.userRole == 'ADMIN'}" 
            th:href="@{/nhan-vien}" th:classappend="${activePage == 'staff' or activePage == 'users' or activePage == 'nguoi-dung'} ? 'active' : ''" class="sidebar-link" title="Quản lý tài khoản quản trị viên, nhân viên và khách hàng">
             <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
             <span>Quản lý người dùng</span>
         </a>
 
         <!-- 11. Thông tin đánh giá & Góp ý (Chỉ dành cho ADMIN) -->
-        <a th:if="${session.userRole == null or session.userRole == 'ADMIN' or session.userRole == 'NHAN_VIEN'}" 
+        <a th:if="${session.userRole == null or session.userRole == 'ADMIN'}" 
            th:href="@{/thong-tin-danh-gia}" th:classappend="${activePage == 'reviews' or activePage == 'thong-tin-danh-gia'} ? 'active' : ''" class="sidebar-link" title="Xem đánh giá và phản hồi của khách hàng">
             <i class="fa-solid fa-star-half-stroke text-warning" aria-hidden="true"></i>
             <span>Thông tin đánh giá</span>
+        </a>
+
+        <!-- 12. Cổng tra cứu công khai -->
+        <a th:href="@{/home}" class="sidebar-link text-info" title="Xem trang chủ và cổng tra cứu công khai" target="_blank">
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            <span>Cổng tra cứu công khai</span>
         </a>
     </div>
 

@@ -29,6 +29,8 @@ public class ActiveVehiclesController {
     public String activeVehicles(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "loaiXeId", required = false) Long loaiXeId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         List<VeXe> allActive = veXeRepository.searchHistory(null, "Đang gửi", loaiXeId, null, null);
@@ -75,7 +77,6 @@ public class ActiveVehiclesController {
             }
         }
 
-        model.addAttribute("activeList", activeList);
         model.addAttribute("durations", durations);
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("totalActive", activeList.size());
@@ -86,6 +87,9 @@ public class ActiveVehiclesController {
         model.addAttribute("loaiXeId", loaiXeId);
         model.addAttribute("pageTitle", "Danh sách xe đang gửi");
         model.addAttribute("activePage", "active-vehicles");
+
+        List<VeXe> pagedList = com.example.demo.util.PaginationHelper.paginate(activeList, page, size, model);
+        model.addAttribute("activeList", pagedList);
 
         return "xe-trong-bai";
     }

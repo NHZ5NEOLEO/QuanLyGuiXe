@@ -25,6 +25,8 @@ public class ReviewController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "stars", required = false) Integer stars,
             @RequestParam(value = "service", required = false) String service,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         List<DanhGia> all = danhGiaRepository.findAll();
@@ -63,7 +65,6 @@ public class ReviewController {
         long positiveCount = all.stream().filter(d -> d.getSoSao() != null && d.getSoSao() >= 4).count();
         long negativeCount = all.stream().filter(d -> d.getSoSao() != null && d.getSoSao() <= 3).count();
 
-        model.addAttribute("reviews", filtered);
         model.addAttribute("totalReviews", totalReviews);
         model.addAttribute("avgRating", String.format("%.1f", avgRating));
         model.addAttribute("positiveCount", positiveCount);
@@ -73,6 +74,9 @@ public class ReviewController {
         model.addAttribute("service", service);
         model.addAttribute("pageTitle", "Thông tin đánh giá & Góp ý");
         model.addAttribute("activePage", "reviews");
+
+        List<DanhGia> paged = com.example.demo.util.PaginationHelper.paginate(filtered, page, size, model);
+        model.addAttribute("reviews", paged);
 
         return "thong-tin-danh-gia";
     }

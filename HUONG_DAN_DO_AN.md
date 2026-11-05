@@ -99,7 +99,7 @@ com.example.demo
 - **Bước 2 (Giới thiệu Cổng Dịch Vụ Công Khai - Eco Smart Parking Portal)**:
   - Khách hàng trên điện thoại có thể tra cứu xe (`29A-12345`), đặt chỗ đỗ xe trước (`#prebook`) với tiền cọc VietQR 20.000đ và gửi đánh giá 5 sao.
 - **Bước 3 (Đăng nhập và Chế độ Dark Mode Quản Trị)**:
-  - Truy cập `http://baixe.localhost/login` (hoặc `http://localhost/login`) -> Đăng nhập bằng `admin` / `admin123`.
+  - Truy cập `http://guixe.localhost/login` (hoặc `http://localhost/login`) -> Đăng nhập bằng `admin` / `admin123`.
   - Bấm vào icon **Mặt trăng / Mặt trời** trên thanh Topbar để chuyển đổi giao diện Dark Mode bảo vệ mắt.
 - **Bước 4 (Trình diễn Dashboard, 4 Biểu Đồ và Giờ Cao Điểm)**:
   - 5 thẻ KPI Realtime (Xe trong bãi, Chỗ trống, Vào/Ra, Doanh thu ngày, Xe tồn bãi > 24h).
@@ -132,7 +132,7 @@ com.example.demo
    .\mvnw.cmd spring-boot:run
    ```
 3. **Mở trình duyệt**:
-   - Cổng thông tin khách hàng: `http://baixe.localhost/` (hoặc `http://localhost/`)
-   - Khách quét mã gửi xe cổng vào: `http://baixe.localhost/khach-gui-xe`
-   - Khách quét mã nhận xe cổng ra: `http://baixe.localhost/khach-nhan-xe`
-   - Đăng nhập quản trị: `http://baixe.localhost/login` (admin / admin123)
+   - Cổng thông tin khách hàng: `http://guixe.localhost/` (hoặc `http://localhost/`)
+   - Khách quét mã gửi xe cổng vào: `http://guixe.localhost/khach-gui-xe`
+   - Khách quét mã nhận xe cổng ra: `http://guixe.localhost/khach-nhan-xe`
+   - Đăng nhập quản trị: `http://guixe.localhost/login` (admin / admin123)

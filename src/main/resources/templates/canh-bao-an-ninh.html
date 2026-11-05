@@ -100,7 +100,7 @@
                                         <td><span class="badge-pro badge-warning-pro">Quá 24 giờ</span></td>
                                         <td>
                                             <span th:if="${v.daKiemTra}" class="badge-pro badge-success-pro">
-                                                <i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra
+                                                <i class="fa-solid fa-circle-check me-1"></i>Đã xác minh
                                             </span>
                                             <span th:unless="${v.daKiemTra}" class="badge-pro badge-warning-pro">
                                                 <i class="fa-solid fa-circle-question me-1"></i>Cần xác minh
@@ -117,7 +117,7 @@
                                                 <small th:if="${v.ghiChuKiemTra}" class="d-block text-secondary fst-italic text-truncate" style="max-width: 180px;" th:title="${v.ghiChuKiemTra}" th:text="'&quot;' + ${v.ghiChuKiemTra} + '&quot;'"></small>
                                             </div>
                                             <div th:unless="${v.daKiemTra}">
-                                                <small class="text-muted fst-italic">Chưa ghi nhận kiểm tra</small>
+                                                <small class="text-muted fst-italic">Chưa xác minh</small>
                                             </div>
                                         </td>
                                         <td class="text-end text-nowrap">

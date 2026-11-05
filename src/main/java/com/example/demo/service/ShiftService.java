@@ -52,15 +52,11 @@ public class ShiftService implements CaTrucService {
             throw new IllegalArgumentException("Hiện đã có ca trực [" + currentOpt.get().getTenCa() + "] đang hoạt động! Vui lòng chốt ca cũ trước.");
         }
 
-        NguoiDung nguoiTruc = null;
-        if (username != null && !username.isBlank()) {
-            nguoiTruc = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Không xác định được nhân viên đang đăng nhập để bắt đầu ca trực!");
         }
-        if (nguoiTruc == null) {
-            nguoiTruc = nguoiDungRepository.findAll().stream()
-                    .filter(u -> !"KHACH_HANG".equalsIgnoreCase(u.getVaiTro()))
-                    .findFirst().orElse(null);
-        }
+        NguoiDung nguoiTruc = nguoiDungRepository.findByTenDangNhap(username)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản nhân viên: " + username));
 
         String maCa = "CA-" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd-HHmm"));
         String name = (tenCa != null && !tenCa.isBlank()) ? tenCa.trim() : "Ca Trực Hiện Tại";
@@ -113,11 +109,6 @@ public class ShiftService implements CaTrucService {
     @Override
     @Transactional
     public CaTruc banGiaoCaTruc(Long shiftId, String ghiChu) {
-        return banGiaoCaTruc(shiftId, ghiChu, null);
-    }
-
-    @Transactional
-    public CaTruc banGiaoCaTruc(Long shiftId, String ghiChu, Long nguoiNhanCaId) {
         CaTruc shift = caTrucRepository.findById(shiftId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ca trực ID: " + shiftId));
 
@@ -126,19 +117,14 @@ public class ShiftService implements CaTrucService {
         shift.setGhiChuBanGiao(ghiChu);
         capNhatThongKeCaTruc(shift);
 
-        // Nghiệp vụ: Chốt ca cũ; nếu có người nhận ca được chọn thì tạo ca mới gán đúng người nhận ca đó.
-        // Tuyệt đối không tự gán lại người bàn giao làm người trực ca kế tiếp.
-        if (nguoiNhanCaId != null) {
-            NguoiDung nguoiNhan = nguoiDungRepository.findById(nguoiNhanCaId).orElse(null);
-            if (nguoiNhan != null) {
-                String maCaMoi = "CA-" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd-HHmm"));
-                CaTruc nextShift = new CaTruc(maCaMoi, "Ca Trực Kế Tiếp", nguoiNhan, LocalDateTime.now());
-                nextShift.setTrangThai("DANG_TRUC");
-                caTrucRepository.save(nextShift);
-            }
-        }
-
+        // Nghiệp vụ: Chốt ca cũ và lưu ghi chú. Không tự mở ca tiếp theo;
+        // Nhân viên nhận ca sau sẽ tự đăng nhập để bắt đầu ca mới.
         return shift;
+    }
+
+    @Transactional
+    public CaTruc banGiaoCaTruc(Long shiftId, String ghiChu, Long nguoiNhanCaId) {
+        return banGiaoCaTruc(shiftId, ghiChu);
     }
 
     public CaTruc handoverShift(Long shiftId, String ghiChu) {

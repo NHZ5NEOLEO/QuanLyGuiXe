@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân trang dữ liệu</title>
+</head>
+<body>
+
+<!-- Reusable Pagination Bar Fragment -->
+<div th:fragment="pagination" th:if="${totalItems != null and totalItems > 0}" 
+     class="card-footer bg-white border-top py-3 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <!-- Thông tin tổng số bản ghi -->
+    <div class="small text-muted">
+        Hiển thị <span class="fw-semibold text-dark" th:text="${fromIndex}">1</span> - 
+        <span class="fw-semibold text-dark" th:text="${toIndex}">10</span> 
+        trong tổng số <span class="fw-bold text-primary" th:text="${totalItems}">50</span> bản ghi
+    </div>
+
+    <!-- Cụm điều hướng trang -->
+    <nav th:if="${totalPages > 1}" aria-label="Page navigation">
+        <ul class="pagination pagination-sm mb-0" 
+            th:with="startPage=${T(java.lang.Math).max(1, currentPage - 2)}, endPage=${T(java.lang.Math).min(totalPages, currentPage + 2)}">
+            <!-- Trang đầu -->
+            <li class="page-item" th:classappend="${currentPage <= 1} ? 'disabled' : ''">
+                <a class="page-link" href="javascript:void(0)" th:onclick="'changeAppPage(1)'" title="Trang đầu">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+            </li>
+            <!-- Trang trước -->
+            <li class="page-item" th:classappend="${currentPage <= 1} ? 'disabled' : ''">
+                <a class="page-link" href="javascript:void(0)" th:onclick="'changeAppPage(' + ${currentPage - 1} + ')'" title="Trang trước">
+                    <i class="fa-solid fa-angle-left"></i>
+                </a>
+            </li>
+
+            <!-- Dải số trang: hiển thị quanh currentPage -->
+            <li th:if="${startPage > 1}" class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            <li th:each="p : ${#numbers.sequence(startPage, endPage)}" 
+                class="page-item" th:classappend="${p == currentPage} ? 'active' : ''">
+                <a class="page-link fw-semibold" href="javascript:void(0)" 
+                   th:onclick="'changeAppPage(' + ${p} + ')'" 
+                   th:text="${p}">1</a>
+            </li>
+            <li th:if="${endPage < totalPages}" class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+
+            <!-- Trang sau -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages} ? 'disabled' : ''">
+                <a class="page-link" href="javascript:void(0)" th:onclick="'changeAppPage(' + ${currentPage + 1} + ')'" title="Trang sau">
+                    <i class="fa-solid fa-angle-right"></i>
+                </a>
+            </li>
+            <!-- Trang cuối -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages} ? 'disabled' : ''">
+                <a class="page-link" href="javascript:void(0)" th:onclick="'changeAppPage(' + ${totalPages} + ')'" title="Trang cuối">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <script>
+        if (typeof window.changeAppPage !== 'function') {
+            window.changeAppPage = function(pageNum) {
+                if (!pageNum || pageNum < 1) return;
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', pageNum);
+                window.location.href = url.toString();
+            };
+        }
+    </script>
+</div>
+
+</body>
+</html>
+

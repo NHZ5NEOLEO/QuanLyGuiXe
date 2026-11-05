@@ -77,7 +77,7 @@ public class EmailService {
                             </p>
                         </div>
                         <div class="footer">
-                            Email tự động được gửi từ máy chủ bảo mật mailbox.org &bull; Hệ Thống Quản Lý Gửi Xe
+                            Email tự động được gửi từ hệ thống bảo mật &bull; Hệ Thống Quản Lý Gửi Xe
                         </div>
                     </div>
                 </body>

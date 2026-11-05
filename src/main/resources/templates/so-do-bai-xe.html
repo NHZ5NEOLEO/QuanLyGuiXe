@@ -525,7 +525,7 @@
                                         </td>
                                         <td>
                                             <span th:if="${ov.daKiemTra}" class="badge bg-success-subtle text-success border border-success">
-                                                <i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra
+                                                <i class="fa-solid fa-circle-check me-1"></i>Đã xác minh
                                             </span>
                                             <span th:unless="${ov.daKiemTra}" class="badge bg-warning-subtle text-warning-emphasis border border-warning">
                                                 <i class="fa-solid fa-circle-question me-1"></i>Cần xác minh
@@ -538,8 +538,8 @@
                                                     <i class="fa-solid fa-eye me-1"></i>Chi tiết
                                                 </button>
                                                 <button type="button" class="btn btn-sm btn-action btn-outline-warning shadow-xs"
-                                                        th:onclick="'openVerifyModalFromMap(' + ${ov.id} + ')'" title="Ghi nhận kiểm tra xe">
-                                                    <i class="fa-solid fa-clipboard-check me-1"></i><span th:text="${ov.daKiemTra ? 'Đã KT' : 'Xác minh'}">Xác minh</span>
+                                                        th:onclick="'openVerifyModalFromMap(' + ${ov.id} + ')'" title="Ghi nhận xác minh xe">
+                                                    <i class="fa-solid fa-clipboard-check me-1"></i><span th:text="${ov.daKiemTra ? 'Đã XM' : 'Xác minh'}">Xác minh</span>
                                                 </button>
                                                 <a th:href="@{'/xe-ra?code=' + ${ov.maQR}}" class="btn btn-sm btn-action btn-outline-danger shadow-xs" title="Tiến hành thủ tục cho xe ra">
                                                     <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Xe ra
@@ -681,7 +681,7 @@
                                     <td>
                                         <span th:if="${vx.qua24h and !vx.laVeThang}" class="badge" th:classappend="${vx.daKiemTra ? 'bg-success-subtle text-success border border-success' : 'bg-warning-subtle text-warning-emphasis border border-warning'}">
                                             <i class="fa-solid me-1" th:classappend="${vx.daKiemTra ? 'fa-circle-check' : 'fa-circle-question'}"></i>
-                                            <span th:text="${vx.daKiemTra ? 'Đã kiểm tra' : 'Cần xác minh'}"></span>
+                                            <span th:text="${vx.daKiemTra ? 'Đã xác minh' : 'Cần xác minh'}"></span>
                                         </span>
                                         <span th:unless="${vx.qua24h and !vx.laVeThang}" class="badge bg-success-subtle text-success border border-success">
                                             <i class="fa-solid fa-circle-dot me-1"></i>Đang gửi
@@ -837,12 +837,12 @@
                 <div class="mb-2">
                     <label for="mapVerifyGhiChu" class="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
                         <i class="fa-regular fa-pen-to-square text-primary"></i>
-                        <span>Ghi chú kiểm tra:</span>
+                        <span>Ghi chú xác minh:</span>
                     </label>
-                    <textarea class="form-control" id="mapVerifyGhiChu" rows="3" placeholder="VD: Đã kiểm tra thực tế, xe khóa cổ, không có dấu hiệu bất thường..."></textarea>
+                    <textarea class="form-control" id="mapVerifyGhiChu" rows="3" placeholder="VD: Đã xác minh thực tế, xe khóa cổ, không có dấu hiệu bất thường..."></textarea>
                     <div class="form-text text-muted small mt-1.5 d-flex align-items-center gap-1">
                         <i class="fa-regular fa-clock text-secondary"></i>
-                        <span>Thông tin người kiểm tra và thời điểm sẽ được lưu tự động.</span>
+                        <span>Thông tin người xác minh và thời điểm sẽ được lưu tự động.</span>
                     </div>
                 </div>
             </div>
@@ -1092,7 +1092,7 @@ function renderOverdueSection(overdueList) {
     validOverdue.forEach((ov, idx) => {
         const isChecked = Boolean(ov.daKiemTra);
         const statusBadge = isChecked
-            ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>${ov.nguoiKiemTra ? `<div class="text-xxs text-muted mt-1"><i class="fa-regular fa-user me-1"></i>${ov.nguoiKiemTra}</div>` : ''}`
+            ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã xác minh</span>${ov.nguoiKiemTra ? `<div class="text-xxs text-muted mt-1"><i class="fa-regular fa-user me-1"></i>${ov.nguoiKiemTra}</div>` : ''}`
             : `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-circle-question me-1"></i>Cần xác minh</span>`;
 
         rows += `
@@ -1224,7 +1224,7 @@ function renderTablePage() {
         let statusBadge = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-dot me-1"></i>Đang gửi</span>`;
         if (is24h) {
             statusBadge = isChecked
-                ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>`
+                ? `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã xác minh</span>`
                 : `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-circle-question me-1"></i>Cần xác minh</span>`;
         }
         
@@ -1345,10 +1345,10 @@ function viewTicketDetail(ticketId) {
 
     if (is24h) {
         if (v.daKiemTra) {
-            statusEl.innerHTML = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã kiểm tra</span>`;
+            statusEl.innerHTML = `<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i>Đã xác minh</span>`;
             if (rowKt) {
                 rowKt.classList.remove('d-none');
-                thongTinKt.innerHTML = `<div><strong>Người KT:</strong> ${v.nguoiKiemTra || 'Nhân viên'}</div>
+                thongTinKt.innerHTML = `<div><strong>Người XM:</strong> ${v.nguoiKiemTra || 'Nhân viên'}</div>
                                        <div><strong>Thời điểm:</strong> ${v.thoiGianKiemTraFormatted || '---'}</div>
                                        ${v.ghiChuKiemTra ? `<div class="mt-1 text-muted fst-italic">"${v.ghiChuKiemTra}"</div>` : ''}`;
             }

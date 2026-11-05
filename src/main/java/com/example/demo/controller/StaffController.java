@@ -28,6 +28,8 @@ public class StaffController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "role", required = false) String role,
             @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         List<NguoiDung> users = nguoiDungRepository.findAll();
@@ -59,7 +61,6 @@ public class StaffController {
         long staffCount = nguoiDungRepository.findAll().stream().filter(u -> "NHAN_VIEN".equalsIgnoreCase(u.getVaiTro())).count();
         long customerCount = nguoiDungRepository.findAll().stream().filter(u -> "KHACH_HANG".equalsIgnoreCase(u.getVaiTro())).count();
 
-        model.addAttribute("users", users);
         model.addAttribute("keyword", keyword);
         model.addAttribute("role", role);
         model.addAttribute("status", status);
@@ -70,6 +71,9 @@ public class StaffController {
         model.addAttribute("customerCount", customerCount);
         model.addAttribute("pageTitle", "Quản lý người dùng");
         model.addAttribute("activePage", "staff");
+
+        List<NguoiDung> paged = com.example.demo.util.PaginationHelper.paginate(users, page, size, model);
+        model.addAttribute("users", paged);
 
         return "nhan-vien";
     }

@@ -83,6 +83,7 @@
                                     <span class="fw-semibold text-dark"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Mẫu xe trong bãi:</span>
                                     <button type="button" onclick="setPlate('33M2-5678')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2.5 rounded-2">33M2-5678 (Xe máy)</button>
                                     <button type="button" onclick="setPlate('30A-123.45')" class="badge bg-light text-dark border text-decoration-none font-monospace py-1 px-2.5 rounded-2">30A-123.45 (Ô tô)</button>
+                                    <button type="button" onclick="setPlate('29B1-88888')" class="badge bg-light text-primary border border-primary text-decoration-none font-monospace py-1 px-2.5 rounded-2">29B1-88888 (Vé tháng cư dân)</button>
                                 </div>
                             </div>
                         </div>
@@ -149,6 +150,26 @@
                                 </div>
                             </div>
 
+                            <!-- 1. Thông báo khi biển số đã đăng ký vé tháng của tài khoản đang đăng nhập -->
+                            <div id="resUserPlateNoticeBox" class="p-3 mx-4 mt-3 alert alert-success d-flex align-items-center gap-2.5 rounded-3 mb-0 d-none">
+                                <i class="fa-solid fa-circle-check text-success fs-4 flex-shrink-0"></i>
+                                <div class="small">
+                                    <strong class="d-block text-success-emphasis">Xác thực tài khoản chính chủ:</strong>
+                                    <span id="resUserPlateNoticeText">Đây là biển số xe mà bạn đã đăng ký vé tháng.</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Thông báo khi chưa đăng nhập hoặc không phải xe vé tháng của mình -->
+                            <div id="resMaskNoticeBox" class="p-3 mx-4 mt-3 alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 rounded-3 mb-0 d-none">
+                                <div class="d-flex align-items-center gap-2 small">
+                                    <i class="fa-solid fa-shield-halved text-warning fs-5 flex-shrink-0"></i>
+                                    <span id="resMaskNoticeText">Mã vé được che để bảo mật thông tin.</span>
+                                </div>
+                                <a id="resLoginLink" th:href="@{/login}" class="btn btn-sm btn-primary text-nowrap rounded-pill px-3 py-1 fw-bold text-decoration-none">
+                                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Đăng nhập
+                                </a>
+                            </div>
+
                             <!-- Card Body: Thời gian & Vị trí -->
                             <div class="p-4 p-md-4">
                                 <div class="row g-3 mb-4">
@@ -194,13 +215,16 @@
                                     <!-- Mã vé định danh -->
                                     <div class="col-sm-6">
                                         <div class="p-3 rounded-3 bg-light border h-100">
-                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">
-                                                <i class="fa-solid fa-qrcode text-info me-1"></i>Mã vé điện tử
+                                            <div class="text-xs fw-bold text-muted text-uppercase mb-1 d-flex align-items-center justify-content-between">
+                                                <span><i class="fa-solid fa-qrcode text-info me-1"></i>Mã vé điện tử</span>
+                                                <span id="resMaTicketLockBadge" class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 text-2xs d-none">
+                                                    <i class="fa-solid fa-lock me-1"></i>Bảo mật
+                                                </span>
                                             </div>
                                             <div class="fs-6 fw-bold text-dark font-monospace" id="resMaTicket">
                                                 --
                                             </div>
-                                            <div class="text-xs text-muted mt-1">Mã đối soát khi nhận xe</div>
+                                            <div class="text-xs text-muted mt-1" id="resMaTicketHint">Mã đối soát khi nhận xe</div>
                                         </div>
                                     </div>
                                 </div>
@@ -401,7 +425,57 @@
                     document.getElementById('resThoiGianVao').textContent = data.thoiGianVao || (data.dangGui ? 'Hôm nay' : 'Không có lượt gửi hiện tại');
                     document.getElementById('resThoiLuong').textContent = data.thoiLuong || (data.dangGui ? 'Đang tính...' : '—');
                     document.getElementById('resViTri').textContent = data.viTri || 'Khu vực tự do';
-                    document.getElementById('resMaTicket').textContent = data.maQR || (data.coVeThang ? data.maThe : '—');
+                    
+                    // Xử lý bảo mật hiển thị mã vé
+                    const ticketEl = document.getElementById('resMaTicket');
+                    const lockBadge = document.getElementById('resMaTicketLockBadge');
+                    const ticketHint = document.getElementById('resMaTicketHint');
+                    const userPlateNoticeBox = document.getElementById('resUserPlateNoticeBox');
+                    const userPlateNoticeText = document.getElementById('resUserPlateNoticeText');
+                    const maskNoticeBox = document.getElementById('resMaskNoticeBox');
+                    const maskNoticeText = document.getElementById('resMaskNoticeText');
+                    const loginLink = document.getElementById('resLoginLink');
+
+                    const displayTicket = data.maQR || (data.coVeThang ? data.maThe : '—');
+                    ticketEl.textContent = displayTicket;
+
+                    if (data.isUserRegisteredPlate) {
+                        // Người dùng đã đăng nhập và tra cứu đúng biển số vé tháng của chính mình
+                        userPlateNoticeBox.classList.remove('d-none');
+                        userPlateNoticeText.textContent = data.userPlateNotice || 'Đây là biển số xe mà bạn đã đăng ký vé tháng.';
+                        maskNoticeBox.classList.add('d-none');
+                        lockBadge.classList.add('d-none');
+                        ticketEl.classList.remove('text-muted');
+                        ticketEl.classList.add('text-success');
+                        ticketHint.textContent = 'Mã đối soát hợp lệ của bạn';
+                        ticketHint.className = 'text-xs text-success mt-1 fw-semibold';
+                    } else if (data.canViewFullTicket) {
+                        // Quản trị viên / Bảo vệ trực cổng
+                        userPlateNoticeBox.classList.add('d-none');
+                        maskNoticeBox.classList.add('d-none');
+                        lockBadge.classList.add('d-none');
+                        ticketEl.classList.remove('text-muted', 'text-success');
+                        ticketHint.textContent = 'Mã đối soát khi nhận xe';
+                        ticketHint.className = 'text-xs text-muted mt-1';
+                    } else {
+                        // Chưa đăng nhập HOẶC đã đăng nhập nhưng tra biển số xe khác
+                        userPlateNoticeBox.classList.add('d-none');
+                        maskNoticeBox.classList.remove('d-none');
+                        lockBadge.classList.remove('d-none');
+                        ticketEl.classList.remove('text-success');
+                        ticketEl.classList.add('text-muted');
+
+                        if (data.isLoggedIn) {
+                            maskNoticeText.textContent = 'Biển số này không thuộc vé tháng của tài khoản bạn. Mã vé được ẩn để bảo mật thông tin.';
+                            if (loginLink) loginLink.classList.add('d-none');
+                            ticketHint.textContent = 'Chỉ chủ xe vé tháng mới có thể xem mã đầy đủ';
+                        } else {
+                            maskNoticeText.textContent = 'Mã vé được che để bảo mật thông tin. Đăng nhập để xem mã vé nếu bạn là chủ vé tháng.';
+                            if (loginLink) loginLink.classList.remove('d-none');
+                            ticketHint.textContent = 'Đăng nhập để xem mã vé đầy đủ';
+                        }
+                        ticketHint.className = 'text-xs text-warning mt-1';
+                    }
 
                     // Monthly info block
                     const monthlyBlock = document.getElementById('resMonthlyBlock');

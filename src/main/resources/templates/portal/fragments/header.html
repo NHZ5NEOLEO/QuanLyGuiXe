@@ -54,6 +54,16 @@
                             <i class="fa-solid fa-star me-2 text-primary opacity-90"></i><span>Đánh giá dịch vụ</span>
                         </a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link portal-nav-link text-primary fw-semibold" th:href="@{/tong-quan}">
+                            <i class="fa-solid fa-chart-pie me-2 opacity-90"></i><span>Bàn Quản Trị</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('NHAN_VIEN')">
+                        <a class="nav-link portal-nav-link text-success fw-semibold" th:href="@{/gui-xe}">
+                            <i class="fa-solid fa-door-open me-2 opacity-90"></i><span>Bàn Trực Cổng</span>
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Action Buttons: Login / Register / User profile -->
@@ -100,10 +110,16 @@
                                 </a>
                             </li>
                             <li sec:authorize="hasAnyRole('ADMIN', 'NHAN_VIEN')"><hr class="dropdown-divider my-1"></li>
-                            <li sec:authorize="hasAnyRole('ADMIN', 'NHAN_VIEN')">
-                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-warning fw-semibold" th:href="@{/tong-quan}">
-                                    <i class="fa-solid fa-gauge-high"></i>
-                                    <span>Phân hệ quản trị</span>
+                            <li sec:authorize="hasRole('ADMIN')">
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-primary fw-semibold" th:href="@{/tong-quan}">
+                                    <i class="fa-solid fa-chart-pie"></i>
+                                    <span>Bàn Quản Trị (Dashboard)</span>
+                                </a>
+                            </li>
+                            <li sec:authorize="hasRole('NHAN_VIEN')">
+                                <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-success fw-semibold" th:href="@{/gui-xe}">
+                                    <i class="fa-solid fa-door-open"></i>
+                                    <span>Bàn Trực Cổng (Quản lý gửi xe)</span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider my-1"></li>

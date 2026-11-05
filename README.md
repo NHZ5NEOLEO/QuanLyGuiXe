@@ -60,6 +60,6 @@ Mở terminal tại thư mục gốc của dự án:
 ```
 
 ### 4. Truy cập hệ thống
-- **URL**: `http://localhost/` hoặc `http://baixe.localhost/`
+- **URL**: `http://localhost/` hoặc `http://guixe.localhost/` (hoặc `http://baixe.localhost/`)
 - **Tài khoản quản trị viên (Admin)**: `admin` / `admin123`
 - **Tài khoản nhân viên trực cổng (Bảo vệ)**: `baove` / `123456`

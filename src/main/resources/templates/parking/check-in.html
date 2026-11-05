@@ -857,18 +857,18 @@
                         <div class="alert alert-info py-2 mb-2">
                             <div class="fw-bold mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Giải pháp xử lý ngay:</div>
                             <ol class="mb-0 ps-3">
-                                <li>Nhấn nút màu xanh bên dưới để mở bằng <strong>http://baixe.localhost/gui-xe</strong> hoặc <strong>http://localhost/gui-xe</strong> &rarr; Camera sẽ mở được ngay lập tức!</li>
+                                <li>Nhấn nút màu xanh bên dưới để mở bằng <strong>http://guixe.localhost/gui-xe</strong> hoặc <strong>http://localhost/gui-xe</strong> &rarr; Camera sẽ mở được ngay lập tức!</li>
                                 <li class="mt-1">Hoặc bấm nút <strong>"Xe mẫu vào"</strong> / <strong>"Tải ảnh"</strong> để kiểm thử camera nhận diện biển số tự động.</li>
                             </ol>
                         </div>
                     </div>`,
                     showCancelButton: true,
-                    confirmButtonText: '<i class="fa-solid fa-arrow-right me-1"></i> Mở bằng http://baixe.localhost/gui-xe',
+                    confirmButtonText: '<i class="fa-solid fa-arrow-right me-1"></i> Mở bằng http://guixe.localhost/gui-xe',
                     cancelButtonText: 'Đóng (Dùng Xe mẫu / Tải ảnh)',
                     confirmButtonColor: '#2563eb'
                 }).then((res) => {
                     if (res.isConfirmed) {
-                        window.location.href = 'http://baixe.localhost/gui-xe';
+                        window.location.href = 'http://guixe.localhost/gui-xe';
                     }
                 });
                 return;

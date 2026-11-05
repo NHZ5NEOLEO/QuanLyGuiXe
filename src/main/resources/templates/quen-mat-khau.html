@@ -24,7 +24,7 @@
             <div class="col-lg-5 login-hero-side">
                 <div>
                     <!-- Logo & Brand Header -->
-                    <div class="d-flex align-items-center gap-3 mb-4">
+                    <a th:href="@{/home}" class="d-flex align-items-center gap-3 mb-4 text-decoration-none" title="Quay lại Trang chủ">
                         <div class="login-hero-icon">
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
@@ -34,13 +34,13 @@
                             </span>
                             <div class="h5 fw-bold text-white mb-0 mt-1">QUẢN LÝ GỬI XE</div>
                         </div>
-                    </div>
+                    </a>
 
                     <h2 class="h4 fw-bold text-white lh-base mb-3">
                         Khôi Phục &amp; Đặt Lại Mật Khẩu An Toàn
                     </h2>
                     <p class="text-white text-opacity-75 small mb-4 lh-relaxed">
-                        Tích hợp máy chủ bảo mật mailbox.org để gửi mã xác thực OTP tức thời và bảo vệ dữ liệu tài khoản của bạn.
+                        Hệ thống tự động gửi mã xác thực OTP tức thời qua email và bảo vệ tuyệt đối an toàn tài khoản của bạn.
                     </p>
 
                     <!-- Feature Highlights -->
@@ -90,9 +90,14 @@
             <div class="col-lg-7 login-form-side">
                 
                 <div class="mb-3">
-                    <a th:href="@{/login}" class="text-muted small text-decoration-none hover-primary mb-2 d-inline-flex align-items-center gap-1.5 fw-semibold">
-                        <i class="fa-solid fa-arrow-left"></i> Quay lại đăng nhập
-                    </a>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <a th:href="@{/login}" class="text-muted small text-decoration-none hover-primary d-inline-flex align-items-center gap-1.5 fw-semibold">
+                            <i class="fa-solid fa-arrow-left"></i> Quay lại đăng nhập
+                        </a>
+                        <a th:href="@{/home}" class="text-muted small text-decoration-none hover-primary d-inline-flex align-items-center gap-1.5 fw-semibold" title="Quay lại Trang chủ">
+                            <i class="fa-solid fa-house text-primary"></i> Quay lại trang chủ
+                        </a>
+                    </div>
                     <h1 class="h3 fw-bold text-dark mb-1 mt-1">Quên Mật Khẩu</h1>
                     <p class="text-muted small mb-0" id="stepSubTitle">
                         Nhập email hoặc tên đăng nhập của bạn để nhận mã xác thực OTP qua email.
@@ -261,7 +266,7 @@
                 <!-- Security Footnote -->
                 <div class="text-center text-2xs text-muted pt-2 border-top">
                     <i class="fa-solid fa-shield-halved text-success me-1"></i>
-                    <span>Tích hợp cổng thư bảo mật mailbox.org &bull; An toàn 24/7</span>
+                    <span>Hệ thống bảo mật đa lớp &bull; Xác thực OTP an toàn 24/7</span>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -53,6 +53,7 @@
             <div class="card border-0 shadow-sm rounded-3 bg-white mb-4">
                 <div class="card-body p-3">
                     <form th:action="@{/vehicles}" method="get" class="d-flex align-items-center gap-2 flex-wrap">
+                        <input type="hidden" name="page" value="1">
                         <div class="input-group flex-grow-1">
                             <span class="input-group-text bg-light text-muted border-end-0">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -143,6 +144,9 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang danh sách phương tiện -->
+                <div th:replace="~{layout/fragments/pagination :: pagination}"></div>
             </div>
         </main>
 

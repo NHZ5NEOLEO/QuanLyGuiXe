@@ -29,17 +29,21 @@ public class MonthlyTicketController {
     @GetMapping
     public String listMonthlyTickets(
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model
     ) {
         List<VeThang> tickets = monthlyTicketService.searchVeThang(keyword);
         List<LoaiXe> loaiXes = parkingLotService.getAllLoaiXe();
 
-        model.addAttribute("tickets", tickets);
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("keyword", keyword);
         model.addAttribute("totalActive", monthlyTicketService.countActivePasses());
         model.addAttribute("activePage", "monthly-tickets");
         model.addAttribute("pageTitle", "Quản lý vé tháng");
+
+        List<VeThang> paged = com.example.demo.util.PaginationHelper.paginate(tickets, page, size, model);
+        model.addAttribute("tickets", paged);
 
         return "ve-thang";
     }

@@ -142,6 +142,7 @@
                 </div>
                 <div class="card-body p-3">
                     <form th:action="@{/ve-xe}" method="get" class="row g-2 align-items-end">
+                        <input type="hidden" name="page" value="1">
                         <!-- Keyword -->
                         <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small fw-bold text-muted mb-1" for="keyword">Biển số xe / Mã vé (QR)</label>
@@ -173,10 +174,10 @@
                             </select>
                         </div>
 
-                        <!-- Date Start (dd/MM/yyyy) -->
+                        <!-- Date Start -->
                         <div class="col-xxl-2 col-xl-2 col-lg-4 col-md-6">
                             <label class="form-label small fw-bold text-muted mb-1" for="startDate">
-                                Từ ngày <span class="text-primary fw-normal">(dd/mm/yyyy)</span>
+                                Từ ngày
                             </label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light text-muted border-end-0">
@@ -187,10 +188,10 @@
                             </div>
                         </div>
 
-                        <!-- Date End (dd/MM/yyyy) -->
+                        <!-- Date End -->
                         <div class="col-xxl-2 col-xl-2 col-lg-4 col-md-6">
                             <label class="form-label small fw-bold text-muted mb-1" for="endDate">
-                                Đến ngày <span class="text-primary fw-normal">(dd/mm/yyyy)</span>
+                                Đến ngày
                             </label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light text-muted border-end-0">
@@ -358,6 +359,9 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang danh sách vé xe -->
+                <div th:replace="~{layout/fragments/pagination :: pagination}"></div>
             </div>
         </main>
 
