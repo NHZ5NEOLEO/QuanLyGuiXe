@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -39,6 +40,7 @@ public class AuthController {
     private final NguoiDungRepository nguoiDungRepository;
     private final KhachHangRepository khachHangRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public AuthController(NguoiDungRepository nguoiDungRepository, 
                           KhachHangRepository khachHangRepository,
@@ -110,7 +112,10 @@ public class AuthController {
             return "redirect:/dang-nhap";
         }
 
-        var userOpt = nguoiDungRepository.findByTenDangNhap(username.trim().toLowerCase());
+        String clean = username.trim();
+        var userOpt = nguoiDungRepository.findByTenDangNhap(clean)
+                .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
         if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getMatKhau())) {
             redirectAttributes.addAttribute("error", "true");
             return "redirect:/dang-nhap";
@@ -141,6 +146,7 @@ public class AuthController {
 
         HttpSession session = request.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
+        securityContextRepository.saveContext(sc, request, response);
         session.setAttribute("currentUser", user);
         session.setAttribute("userId", user.getId());
         session.setAttribute("userName", user.getHoTen());
@@ -243,6 +249,7 @@ public class AuthController {
 
         HttpSession session = request.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
+        securityContextRepository.saveContext(sc, request, null);
         session.setAttribute("currentUser", user);
         session.setAttribute("userId", user.getId());
         session.setAttribute("userName", user.getHoTen());

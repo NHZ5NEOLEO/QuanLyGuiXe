@@ -2,12 +2,17 @@ package com.example.demo.config;
 
 import com.example.demo.model.NguoiDung;
 import com.example.demo.repository.NguoiDungRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,6 +20,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -43,6 +50,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .securityContext(sc -> sc
+                .securityContextRepository(new HttpSessionSecurityContextRepository())
+                .requireExplicitSave(false)
+            )
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**")
             )
@@ -97,11 +108,18 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     String username = authentication.getName();
-                    var userOpt = nguoiDungRepository.findByTenDangNhap(username);
+                    String clean = username != null ? username.trim() : "";
+                    var userOpt = nguoiDungRepository.findByTenDangNhap(clean)
+                            .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                            .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
                     String role = "ADMIN";
+                    HttpSession session = request.getSession(true);
+                    SecurityContext sc = SecurityContextHolder.getContext();
+                    session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
+                    new HttpSessionSecurityContextRepository().saveContext(sc, request, response);
+
                     if (userOpt.isPresent()) {
                         NguoiDung nd = userOpt.get();
-                        HttpSession session = request.getSession(true);
                         session.setAttribute("currentUser", nd);
                         session.setAttribute("userId", nd.getId());
                         session.setAttribute("userName", nd.getHoTen());
@@ -110,7 +128,7 @@ public class SecurityConfig {
                         role = nd.getVaiTro();
                     } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_NHAN_VIEN"))) {
                         role = "NHAN_VIEN";
-                        request.getSession().setAttribute("userRole", "NHAN_VIEN");
+                        session.setAttribute("userRole", "NHAN_VIEN");
                     }
 
                     // Ưu tiên chuyển hướng về SavedRequest nếu người dùng đang truy cập một trang được bảo vệ
@@ -170,6 +188,35 @@ public class SecurityConfig {
                 .permitAll()
             );
 
+        // Bộ lọc tự động khôi phục SecurityContext từ Session (nếu session có userId/currentUser nhưng SecurityContext chưa đồng bộ)
+        http.addFilterBefore((jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res, jakarta.servlet.FilterChain chain) -> {
+            HttpServletRequest httpReq = (HttpServletRequest) req;
+            Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (existingAuth == null || !existingAuth.isAuthenticated() || "anonymousUser".equals(existingAuth.getPrincipal())) {
+                HttpSession sess = httpReq.getSession(false);
+                if (sess != null) {
+                    Long uid = (Long) sess.getAttribute("userId");
+                    NguoiDung u = null;
+                    if (sess.getAttribute("currentUser") instanceof NguoiDung nd) {
+                        u = nd;
+                    } else if (uid != null) {
+                        u = nguoiDungRepository.findById(uid).orElse(null);
+                    }
+                    if (u != null && Boolean.TRUE.equals(u.getTrangThai())) {
+                        String roleName = u.getVaiTro() != null ? u.getVaiTro() : "ADMIN";
+                        String roleWithPrefix = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
+                        UsernamePasswordAuthenticationToken restoredAuth = new UsernamePasswordAuthenticationToken(
+                                u.getTenDangNhap(), null, List.of(new SimpleGrantedAuthority(roleWithPrefix)));
+                        SecurityContext newSc = SecurityContextHolder.createEmptyContext();
+                        newSc.setAuthentication(restoredAuth);
+                        SecurityContextHolder.setContext(newSc);
+                        sess.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, newSc);
+                    }
+                }
+            }
+            chain.doFilter(req, res);
+        }, AuthorizationFilter.class);
+
         return http.build();
     }
 
@@ -179,7 +226,13 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(username)
+            if (username == null || username.trim().isEmpty()) {
+                throw new UsernameNotFoundException("Tên đăng nhập không được để trống!");
+            }
+            String clean = username.trim();
+            NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(clean)
+                    .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                    .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
                     .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản: " + username));
 
             if (!Boolean.TRUE.equals(nguoiDung.getTrangThai())) {

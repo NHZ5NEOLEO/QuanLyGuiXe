@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,10 +91,10 @@
                         </div>
 
                         <!-- Form Đăng Ký Vé Tháng (Hiển thị đầy đủ hoặc mờ khi chưa login) -->
-                        <div class="portal-card p-4 p-md-4 mb-4 position-relative" th:classappend="${!isLoggedIn} ? 'opacity-75' : ''">
+                        <div class="portal-card p-4 p-md-4 mb-4 position-relative" th:classappend="${!isLoggedIn and session.currentUser == null and session.userId == null} ? 'opacity-75' : ''">
                             
                             <!-- Lớp phủ cảnh báo nếu chưa đăng nhập -->
-                            <div th:if="${!isLoggedIn}" class="auth-overlay-backdrop position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center rounded-3">
+                            <div th:if="${!isLoggedIn and session.currentUser == null and session.userId == null}" class="auth-overlay-backdrop position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center rounded-3">
                                 <div class="bg-white p-3 p-md-4 rounded-3 shadow border text-center max-w-400">
                                     <i class="fa-solid fa-lock text-primary fa-2x mb-2"></i>
                                     <h5 class="fw-bold text-dark mb-1">Vui lòng đăng nhập để tiếp tục</h5>
@@ -119,7 +119,7 @@
                                             <i class="fa-solid fa-user"></i>
                                             <span>Nhóm 1 &mdash; Thông tin người đăng ký</span>
                                         </div>
-                                        <span th:if="${isLoggedIn}" class="badge bg-success-subtle text-success border border-success-subtle text-2xs">
+                                        <span th:if="${isLoggedIn or session.currentUser != null or session.userId != null}" class="badge bg-success-subtle text-success border border-success-subtle text-2xs">
                                             <i class="fa-solid fa-link me-1"></i>Đồng bộ từ tài khoản
                                         </span>
                                     </div>
@@ -708,7 +708,7 @@
             sumTotalPrice.textContent = formatCurrency(total);
         }
 
-        const isUserLoggedIn = /*[[${isLoggedIn}]]*/ false;
+        const isUserLoggedIn = /*[[${isLoggedIn or session.currentUser != null or session.userId != null}]]*/ false;
 
         function fillQuickLogin(u, p) {
             document.getElementById('qlUsername').value = u;

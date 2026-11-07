@@ -12,6 +12,8 @@ import com.example.demo.repository.LoaiXeRepository;
 import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -177,23 +179,23 @@ public class PortalController {
      * Yêu cầu người dùng phải có tài khoản và đăng nhập để đăng ký vé tháng.
      */
     @GetMapping({"/dang-ky-ve-thang", "/ve-thang/dang-ky", "/portal/ve-thang"})
-    public String dangKyVeThangPage(Model model) {
+    public String dangKyVeThangPage(Model model, HttpServletRequest request) {
         List<LoaiXe> loaiXes = loaiXeRepository.findAll();
         model.addAttribute("loaiXes", loaiXes);
         model.addAttribute("pageTitle", "Đăng ký vé tháng trực tuyến");
         model.addAttribute("activeNav", "ve-thang");
 
-        // Kiểm tra trạng thái đăng nhập
+        // Kiểm tra trạng thái đăng nhập linh hoạt (cả SecurityContext và Session)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
+        boolean isLoggedIn = userOpt.isPresent();
         model.addAttribute("isLoggedIn", isLoggedIn);
 
-        if (isLoggedIn && auth != null) {
-            String username = auth.getName();
-            NguoiDung currentUser = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+        if (userOpt.isPresent()) {
+            NguoiDung currentUser = userOpt.get();
             model.addAttribute("currentUser", currentUser);
-            if (currentUser != null && currentUser.getSoDienThoai() != null && !currentUser.getSoDienThoai().isBlank()) {
-                KhachHang currentCustomer = khachHangRepository.findBySoDienThoai(currentUser.getSoDienThoai()).orElse(null);
+            if (currentUser.getSoDienThoai() != null && !currentUser.getSoDienThoai().isBlank()) {
+                KhachHang currentCustomer = khachHangRepository.findBySoDienThoai(currentUser.getSoDienThoai().trim()).orElse(null);
                 model.addAttribute("currentCustomer", currentCustomer);
             }
         }
@@ -217,7 +219,10 @@ public class PortalController {
      */
     @GetMapping("/portal/api/lookup")
     @ResponseBody
-    public ResponseEntity<?> lookupVehicle(@RequestParam("plate") String plate) {
+    public ResponseEntity<?> lookupVehicle(
+            @RequestParam("plate") String plate,
+            HttpServletRequest request
+    ) {
         if (plate == null || plate.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập biển số xe!"));
         }
@@ -231,54 +236,52 @@ public class PortalController {
         Map<String, Object> resp = new HashMap<>();
         resp.put("bienSoXe", !displayPlate.isEmpty() ? displayPlate : rawPlate.toUpperCase());
 
-        // 1. Kiểm tra trạng thái đăng nhập và phân quyền bảo mật mã đối soát
+        // 1. Kiểm tra trạng thái đăng nhập và phân quyền bảo mật mã đối soát linh hoạt
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
+        boolean isLoggedIn = userOpt.isPresent() || (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal()));
 
         boolean canViewFullTicket = false;
         boolean isUserRegisteredPlate = false;
         String userPlateNotice = null;
 
-        if (isLoggedIn && auth != null) {
-            String username = auth.getName();
-            boolean isStaffOrAdmin = auth.getAuthorities().stream().anyMatch(a ->
-                    "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_NHAN_VIEN".equals(a.getAuthority()));
+        if (isLoggedIn) {
+            boolean isStaffOrAdmin = (auth != null && auth.getAuthorities().stream().anyMatch(a ->
+                    "ROLE_ADMIN".equals(a.getAuthority()) || "ROLE_NHAN_VIEN".equals(a.getAuthority())))
+                    || (userOpt.isPresent() && ("ADMIN".equalsIgnoreCase(userOpt.get().getVaiTro()) || "NHAN_VIEN".equalsIgnoreCase(userOpt.get().getVaiTro())));
 
             if (isStaffOrAdmin) {
                 // Quản trị viên và Nhân viên trực cổng được xem mã đối soát đầy đủ
                 canViewFullTicket = true;
-            } else {
+            } else if (userOpt.isPresent()) {
                 // Khách hàng cá nhân: Chỉ được xem mã vé của các biển số xe đã đăng ký vé tháng của tài khoản này
-                Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(username);
-                if (userOpt.isPresent()) {
-                    NguoiDung user = userOpt.get();
-                    String phone = user.getSoDienThoai();
-                    List<VeThang> userTickets = new ArrayList<>();
-                    if (phone != null && !phone.isBlank()) {
-                        Optional<KhachHang> khOpt = khachHangRepository.findBySoDienThoai(phone.trim());
-                        if (khOpt.isPresent()) {
-                            userTickets.addAll(veThangRepository.findByKhachHangIdOrderByNgayBatDauDesc(khOpt.get().getId()));
-                        }
-                        if (userTickets.isEmpty()) {
-                            userTickets.addAll(veThangRepository.findByKhachHangSoDienThoaiOrderByNgayBatDauDesc(phone.trim()));
-                        }
+                NguoiDung user = userOpt.get();
+                String phone = user.getSoDienThoai();
+                List<VeThang> userTickets = new ArrayList<>();
+                if (phone != null && !phone.isBlank()) {
+                    Optional<KhachHang> khOpt = khachHangRepository.findBySoDienThoai(phone.trim());
+                    if (khOpt.isPresent()) {
+                        userTickets.addAll(veThangRepository.findByKhachHangIdOrderByNgayBatDauDesc(khOpt.get().getId()));
                     }
+                    if (userTickets.isEmpty()) {
+                        userTickets.addAll(veThangRepository.findByKhachHangSoDienThoaiOrderByNgayBatDauDesc(phone.trim()));
+                    }
+                }
 
-                    for (VeThang vtUser : userTickets) {
-                        if (vtUser.getBienSoXe() != null) {
-                            String userPlateKey = vtUser.getBienSoXe().replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
-                            if (userPlateKey.equals(cleanKey)) {
-                                isUserRegisteredPlate = true;
-                                canViewFullTicket = true;
-                                userPlateNotice = "Đây là biển số xe mà bạn đã đăng ký vé tháng";
-                                break;
-                            }
+                for (VeThang vtUser : userTickets) {
+                    if (vtUser.getBienSoXe() != null) {
+                        String userPlateKey = vtUser.getBienSoXe().replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                        if (userPlateKey.equals(cleanKey)) {
+                            isUserRegisteredPlate = true;
+                            canViewFullTicket = true;
+                            userPlateNotice = "Đây là biển số xe mà bạn đã đăng ký vé tháng";
+                            break;
                         }
                     }
+                }
 
-                    if (!isUserRegisteredPlate) {
-                        userPlateNotice = "Biển số này không thuộc vé tháng của tài khoản bạn. Mã vé được ẩn để bảo mật.";
-                    }
+                if (!isUserRegisteredPlate) {
+                    userPlateNotice = "Biển số này không thuộc vé tháng của tài khoản bạn. Mã vé được ẩn để bảo mật.";
                 }
             }
         } else {
@@ -395,11 +398,15 @@ public class PortalController {
      */
     @PostMapping("/portal/api/register-monthly")
     @ResponseBody
-    public ResponseEntity<?> registerMonthlyOnline(@RequestBody Map<String, Object> req) {
+    public ResponseEntity<?> registerMonthlyOnline(
+            @RequestBody Map<String, Object> req,
+            HttpServletRequest request
+    ) {
         try {
-            // 0. Bắt buộc kiểm tra đăng nhập tài khoản
+            // 0. Bắt buộc kiểm tra đăng nhập tài khoản (hỗ trợ cả SecurityContext và Session)
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
+            if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                         "success", false,
                         "requireLogin", true,
@@ -407,8 +414,7 @@ public class PortalController {
                 ));
             }
 
-            String username = auth.getName();
-            NguoiDung currentUser = nguoiDungRepository.findByTenDangNhap(username).orElse(null);
+            NguoiDung currentUser = userOpt.get();
 
             String hoTen = req.getOrDefault("hoTen", "").toString().trim();
             String sdt = req.getOrDefault("sdt", "").toString().trim();
@@ -574,5 +580,40 @@ public class PortalController {
             return "VT-••••••••";
         }
         return "••••••••••••";
+    }
+
+    /**
+     * Xác định người dùng hiện tại từ SecurityContext hoặc Session linh hoạt
+     */
+    private Optional<NguoiDung> resolveCurrentUser(Authentication auth, HttpServletRequest request) {
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String name = auth.getName();
+            if (name != null && !name.isBlank()) {
+                String clean = name.trim();
+                Optional<NguoiDung> u = nguoiDungRepository.findByTenDangNhap(clean)
+                        .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                        .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
+                if (u.isPresent()) {
+                    return u;
+                }
+            }
+        }
+        HttpSession session = request != null ? request.getSession(false) : null;
+        if (session != null) {
+            Long uid = (Long) session.getAttribute("userId");
+            if (uid != null) {
+                Optional<NguoiDung> u = nguoiDungRepository.findById(uid);
+                if (u.isPresent()) return u;
+            }
+            if (session.getAttribute("currentUser") instanceof NguoiDung u) {
+                return Optional.of(u);
+            }
+            String userLogin = (String) session.getAttribute("userLogin");
+            if (userLogin != null && !userLogin.isBlank()) {
+                return nguoiDungRepository.findByTenDangNhap(userLogin.trim())
+                        .or(() -> nguoiDungRepository.findBySoDienThoai(userLogin.trim()));
+            }
+        }
+        return Optional.empty();
     }
 }

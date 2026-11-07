@@ -8,9 +8,13 @@ import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,12 +61,7 @@ public class ProfileController {
     @GetMapping({"/tai-khoan", "/ho-so", "/portal/ho-so", "/portal/profile"})
     public String profilePage(Model model, HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return "redirect:/login";
-        }
-
-        String username = auth.getName();
-        Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(username);
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
         if (userOpt.isEmpty()) {
             return "redirect:/login";
         }
@@ -120,15 +119,11 @@ public class ProfileController {
             @RequestParam(value = "cccd", required = false) String cccd,
             @RequestParam(value = "diaChi", required = false) String diaChi,
             RedirectAttributes redirectAttributes,
+            HttpServletRequest request,
             HttpSession session
     ) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return "redirect:/login";
-        }
-
-        String username = auth.getName();
-        Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(username);
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
         if (userOpt.isEmpty()) {
             return "redirect:/login";
         }
@@ -209,15 +204,11 @@ public class ProfileController {
             @RequestParam(value = "matKhauHienTai", required = false) String matKhauHienTai,
             @RequestParam(value = "matKhauMoi", required = false) String matKhauMoi,
             @RequestParam(value = "xacNhanMatKhau", required = false) String xacNhanMatKhau,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request
     ) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return "redirect:/login";
-        }
-
-        String username = auth.getName();
-        Optional<NguoiDung> userOpt = nguoiDungRepository.findByTenDangNhap(username);
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
         if (userOpt.isEmpty()) {
             return "redirect:/login";
         }
@@ -255,6 +246,67 @@ public class ProfileController {
 
         redirectAttributes.addFlashAttribute("passwordSuccess", "Đổi mật khẩu thành công! Mật khẩu mới đã được kích hoạt.");
         return "redirect:/tai-khoan#tab-password";
+    }
+
+    /**
+     * Xác định và giải quyết người dùng hiện tại an toàn, hỗ trợ:
+     * 1. Authentication principal (tên đăng nhập, số điện thoại, email)
+     * 2. Session attributes (userId, currentUser, userLogin) nếu SecurityContext tạm thời bị mất
+     */
+    private Optional<NguoiDung> resolveCurrentUser(Authentication auth, HttpServletRequest request) {
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String name = auth.getName();
+            if (name != null && !name.isBlank()) {
+                String clean = name.trim();
+                Optional<NguoiDung> u = nguoiDungRepository.findByTenDangNhap(clean)
+                        .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                        .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
+                if (u.isPresent()) {
+                    return u;
+                }
+            }
+        }
+        HttpSession session = request != null ? request.getSession(false) : null;
+        if (session != null) {
+            Long uid = (Long) session.getAttribute("userId");
+            if (uid != null) {
+                Optional<NguoiDung> u = nguoiDungRepository.findById(uid);
+                if (u.isPresent()) {
+                    ensureSecurityContext(u.get(), request);
+                    return u;
+                }
+            }
+            if (session.getAttribute("currentUser") instanceof NguoiDung u) {
+                ensureSecurityContext(u, request);
+                return Optional.of(u);
+            }
+            String userLogin = (String) session.getAttribute("userLogin");
+            if (userLogin != null && !userLogin.isBlank()) {
+                Optional<NguoiDung> u = nguoiDungRepository.findByTenDangNhap(userLogin.trim())
+                        .or(() -> nguoiDungRepository.findBySoDienThoai(userLogin.trim()));
+                if (u.isPresent()) {
+                    ensureSecurityContext(u.get(), request);
+                    return u;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private void ensureSecurityContext(NguoiDung user, HttpServletRequest request) {
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing == null || !existing.isAuthenticated() || "anonymousUser".equals(existing.getPrincipal())) {
+            String role = "ROLE_" + user.getVaiTro();
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    user.getTenDangNhap(), null, List.of(new SimpleGrantedAuthority(role)));
+            SecurityContext sc = SecurityContextHolder.createEmptyContext();
+            sc.setAuthentication(auth);
+            SecurityContextHolder.setContext(sc);
+            if (request != null) {
+                HttpSession session = request.getSession(true);
+                session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
+            }
+        }
     }
 }
 

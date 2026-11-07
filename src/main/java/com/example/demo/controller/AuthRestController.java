@@ -110,12 +110,13 @@ public class AuthRestController {
                 List.of(new SimpleGrantedAuthority(role))
         );
 
+        HttpSession session = request.getSession(true);
         SecurityContext sc = SecurityContextHolder.createEmptyContext();
         sc.setAuthentication(auth);
         SecurityContextHolder.setContext(sc);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
         securityContextRepository.saveContext(sc, request, response);
 
-        HttpSession session = request.getSession(true);
         session.setAttribute("currentUser", user);
         session.setAttribute("userId", user.getId());
         session.setAttribute("userName", user.getHoTen());
@@ -149,7 +150,10 @@ public class AuthRestController {
             throw new BadRequestException("Tên đăng nhập và mật khẩu không được để trống!");
         }
 
-        NguoiDung user = nguoiDungRepository.findByTenDangNhap(username.trim().toLowerCase())
+        String clean = username.trim();
+        NguoiDung user = nguoiDungRepository.findByTenDangNhap(clean)
+                .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
+                .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
                 .orElseThrow(() -> new BadRequestException("Tên đăng nhập hoặc mật khẩu không chính xác!"));
 
         // So khớp mật khẩu qua PasswordEncoder (hỗ trợ cả BCrypt và plain text tương thích ngược)
@@ -175,12 +179,13 @@ public class AuthRestController {
                 List.of(new SimpleGrantedAuthority(role))
         );
 
+        HttpSession session = request.getSession(true);
         SecurityContext sc = SecurityContextHolder.createEmptyContext();
         sc.setAuthentication(auth);
         SecurityContextHolder.setContext(sc);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
         securityContextRepository.saveContext(sc, request, response);
 
-        HttpSession session = request.getSession(true);
         session.setAttribute("currentUser", user);
         session.setAttribute("userId", user.getId());
         session.setAttribute("userName", user.getHoTen());

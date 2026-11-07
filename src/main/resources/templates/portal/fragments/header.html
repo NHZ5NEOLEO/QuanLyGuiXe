@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,12 +54,12 @@
                             <i class="fa-solid fa-star me-2 text-primary opacity-90"></i><span>Đánh giá dịch vụ</span>
                         </a>
                     </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'')') or session.userRole == 'ADMIN'}">
                         <a class="nav-link portal-nav-link text-primary fw-semibold" th:href="@{/tong-quan}">
                             <i class="fa-solid fa-chart-pie me-2 opacity-90"></i><span>Bàn Quản Trị</span>
                         </a>
                     </li>
-                    <li class="nav-item" sec:authorize="hasRole('NHAN_VIEN')">
+                    <li class="nav-item" th:if="${#authorization.expression('hasRole(''NHAN_VIEN'')') or session.userRole == 'NHAN_VIEN'}">
                         <a class="nav-link portal-nav-link text-success fw-semibold" th:href="@{/gui-xe}">
                             <i class="fa-solid fa-door-open me-2 opacity-90"></i><span>Bàn Trực Cổng</span>
                         </a>
@@ -68,7 +68,7 @@
 
                 <!-- Action Buttons: Login / Register / User profile -->
                 <div class="d-flex align-items-center gap-2 pt-2 pt-lg-0 ms-lg-2 flex-shrink-0">
-                    <div sec:authorize="!isAuthenticated()" class="portal-auth-group">
+                    <div th:if="${#authorization.expression('!isAuthenticated()') and session.currentUser == null and session.userId == null}" class="portal-auth-group">
                         <a th:href="@{/dang-ky}" class="btn-portal-register" title="Đăng ký tài khoản mới">
                             <i class="fa-solid fa-user-plus"></i>
                             <span>Đăng ký</span>
@@ -79,10 +79,10 @@
                         </a>
                     </div>
 
-                    <div sec:authorize="isAuthenticated()" class="dropdown flex-shrink-0">
+                    <div th:if="${#authorization.expression('isAuthenticated()') or session.currentUser != null or session.userId != null}" class="dropdown flex-shrink-0">
                         <button class="btn btn-light border d-inline-flex align-items-center gap-2 py-1 px-3 rounded-pill dropdown-toggle shadow-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa-solid fa-circle-user text-primary fs-5"></i>
-                            <span class="fw-semibold small text-dark" sec:authentication="name">Tài khoản</span>
+                            <span class="fw-semibold small text-dark" th:text="${session.userName != null ? session.userName : (#authentication != null and #authentication.name != 'anonymousUser' ? #authentication.name : 'Tài khoản')}">Tài khoản</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-1 py-1">
                             <li>
@@ -109,14 +109,14 @@
                                     <span>Tra cứu xe trong bãi</span>
                                 </a>
                             </li>
-                            <li sec:authorize="hasAnyRole('ADMIN', 'NHAN_VIEN')"><hr class="dropdown-divider my-1"></li>
-                            <li sec:authorize="hasRole('ADMIN')">
+                            <li th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''NHAN_VIEN'')') or session.userRole == 'ADMIN' or session.userRole == 'NHAN_VIEN'}"><hr class="dropdown-divider my-1"></li>
+                            <li th:if="${#authorization.expression('hasRole(''ADMIN'')') or session.userRole == 'ADMIN'}">
                                 <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-primary fw-semibold" th:href="@{/tong-quan}">
                                     <i class="fa-solid fa-chart-pie"></i>
                                     <span>Bàn Quản Trị (Dashboard)</span>
                                 </a>
                             </li>
-                            <li sec:authorize="hasRole('NHAN_VIEN')">
+                            <li th:if="${#authorization.expression('hasRole(''NHAN_VIEN'')') or session.userRole == 'NHAN_VIEN'}">
                                 <a class="dropdown-item small py-2 d-flex align-items-center gap-2 text-success fw-semibold" th:href="@{/gui-xe}">
                                     <i class="fa-solid fa-door-open"></i>
                                     <span>Bàn Trực Cổng (Quản lý gửi xe)</span>
