@@ -235,7 +235,9 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("Tên đăng nhập không được để trống!");
             }
             String clean = username.trim();
+            String normalized = normalizeUsername(clean);
             NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(clean)
+                    .or(() -> (!normalized.isEmpty() && !normalized.equalsIgnoreCase(clean)) ? nguoiDungRepository.findByTenDangNhap(normalized) : java.util.Optional.empty())
                     .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
                     .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
                     .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
@@ -254,6 +256,14 @@ public class SecurityConfig {
                     List.of(new SimpleGrantedAuthority(role))
             );
         };
+    }
+
+    private String normalizeUsername(String input) {
+        if (input == null) return "";
+        String trimmed = input.trim();
+        String nfd = java.text.Normalizer.normalize(trimmed.toLowerCase(), java.text.Normalizer.Form.NFD);
+        String noAccents = nfd.replaceAll("\\p{M}", "").replace("đ", "d").replace("Đ", "d");
+        return noAccents.replaceAll("[^a-z0-9_.-]", "");
     }
 
     /**

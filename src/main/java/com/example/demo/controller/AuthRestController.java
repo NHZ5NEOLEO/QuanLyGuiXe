@@ -58,7 +58,9 @@ public class AuthRestController {
         if (username == null || username.trim().isEmpty()) {
             throw new BadRequestException("Tên đăng nhập không được để trống!");
         }
-        username = username.trim().toLowerCase();
+        String cleanUsername = normalizeUsername(username);
+        if (cleanUsername.isEmpty()) cleanUsername = username.trim().toLowerCase();
+        username = cleanUsername;
         if (username.length() < 3) {
             throw new BadRequestException("Tên đăng nhập phải có ít nhất 3 ký tự!");
         }
@@ -289,5 +291,13 @@ public class AuthRestController {
             resp.put("isCustomer", "KHACH_HANG".equalsIgnoreCase(user.getVaiTro()) || "CU_DAN".equalsIgnoreCase(user.getVaiTro()));
         }
         return ResponseEntity.ok(resp);
+    }
+
+    private String normalizeUsername(String input) {
+        if (input == null) return "";
+        String trimmed = input.trim();
+        String nfd = java.text.Normalizer.normalize(trimmed.toLowerCase(), java.text.Normalizer.Form.NFD);
+        String noAccents = nfd.replaceAll("\\p{M}", "").replace("đ", "d").replace("Đ", "d");
+        return noAccents.replaceAll("[^a-z0-9_.-]", "");
     }
 }

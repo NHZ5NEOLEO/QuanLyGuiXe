@@ -39,6 +39,7 @@ public class StaffController {
             users = users.stream()
                     .filter(u -> (u.getHoTen() != null && u.getHoTen().toLowerCase().contains(kw)) ||
                                  (u.getTenDangNhap() != null && u.getTenDangNhap().toLowerCase().contains(kw)) ||
+                                 (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw)) ||
                                  (u.getSoDienThoai() != null && u.getSoDienThoai().contains(kw)))
                     .collect(Collectors.toList());
         }
@@ -85,6 +86,7 @@ public class StaffController {
             @RequestParam("matKhau") String matKhau,
             @RequestParam(value = "vaiTro", defaultValue = "NHAN_VIEN") String vaiTro,
             @RequestParam(value = "soDienThoai", required = false) String soDienThoai,
+            @RequestParam(value = "email", required = false) String email,
             RedirectAttributes redirectAttributes
     ) {
         try {
@@ -93,21 +95,27 @@ public class StaffController {
                 return "redirect:/nhan-vien";
             }
 
-            if (nguoiDungRepository.findByTenDangNhap(tenDangNhap.trim()).isPresent()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập '" + tenDangNhap.trim() + "' đã tồn tại!");
+            String cleanUsername = normalizeUsername(tenDangNhap);
+            if (cleanUsername.isEmpty()) cleanUsername = tenDangNhap.trim().toLowerCase();
+
+            if (nguoiDungRepository.findByTenDangNhap(cleanUsername).isPresent()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập '" + cleanUsername + "' đã tồn tại!");
                 return "redirect:/nhan-vien";
             }
 
             NguoiDung user = new NguoiDung(
-                    tenDangNhap.trim(),
+                    cleanUsername,
                     passwordEncoder.encode(matKhau.trim()),
                     hoTen.trim(),
                     vaiTro.trim().toUpperCase(),
                     soDienThoai != null ? soDienThoai.trim() : ""
             );
+            if (email != null && !email.isBlank()) {
+                user.setEmail(email.trim());
+            }
             nguoiDungRepository.save(user);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm nhân viên [" + hoTen + "] thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Thêm người dùng [" + hoTen + "] thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
@@ -119,27 +127,49 @@ public class StaffController {
             @RequestParam("id") Long id,
             @RequestParam("hoTen") String hoTen,
             @RequestParam("vaiTro") String vaiTro,
+            @RequestParam(value = "tenDangNhap", required = false) String tenDangNhap,
             @RequestParam(value = "soDienThoai", required = false) String soDienThoai,
+            @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "matKhauMoi", required = false) String matKhauMoi,
             RedirectAttributes redirectAttributes
     ) {
         try {
             NguoiDung user = nguoiDungRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên ID: " + id));
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng ID: " + id));
 
             user.setHoTen(hoTen.trim());
             user.setVaiTro(vaiTro.trim().toUpperCase());
+            if (tenDangNhap != null && !tenDangNhap.trim().isEmpty()) {
+                String cleanUsername = normalizeUsername(tenDangNhap);
+                if (cleanUsername.isEmpty()) cleanUsername = tenDangNhap.trim().toLowerCase();
+                if (!cleanUsername.equalsIgnoreCase(user.getTenDangNhap())) {
+                    if (nguoiDungRepository.findByTenDangNhap(cleanUsername).isPresent()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập '" + cleanUsername + "' đã được sử dụng!");
+                        return "redirect:/nhan-vien";
+                    }
+                    user.setTenDangNhap(cleanUsername);
+                }
+            }
             if (soDienThoai != null) user.setSoDienThoai(soDienThoai.trim());
+            if (email != null) user.setEmail(email.trim());
             if (matKhauMoi != null && !matKhauMoi.trim().isEmpty()) {
                 user.setMatKhau(passwordEncoder.encode(matKhauMoi.trim()));
             }
 
             nguoiDungRepository.save(user);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin nhân viên thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin người dùng thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/nhan-vien";
+    }
+
+    private String normalizeUsername(String input) {
+        if (input == null) return "";
+        String trimmed = input.trim();
+        String nfd = java.text.Normalizer.normalize(trimmed.toLowerCase(), java.text.Normalizer.Form.NFD);
+        String noAccents = nfd.replaceAll("\\p{M}", "").replace("đ", "d").replace("Đ", "d");
+        return noAccents.replaceAll("[^a-z0-9_.-]", "");
     }
 
     @PostMapping("/toggle")

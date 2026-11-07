@@ -151,7 +151,7 @@
                         <thead>
                             <tr>
                                 <th>Họ và Tên</th>
-                                <th>Tên Đăng Nhập</th>
+                                <th>Tên Đăng Nhập / Email</th>
                                 <th>Vai Trò</th>
                                 <th>Số Điện Thoại</th>
                                 <th>Trạng Thái</th>
@@ -174,7 +174,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="font-monospace fw-bold text-primary" th:text="${u.tenDangNhap}">admin</span>
+                                    <div class="font-monospace fw-bold text-primary" th:text="${u.tenDangNhap}">admin</div>
+                                    <div th:if="${u.email != null and !u.email.isBlank()}" class="text-xs text-muted">
+                                        <i class="fa-regular fa-envelope me-1 text-secondary"></i><span th:text="${u.email}">user@example.com</span>
+                                    </div>
+                                    <div th:if="${u.email == null or u.email.isBlank()}" class="text-2xs text-muted fst-italic">
+                                        Chưa gắn email
+                                    </div>
                                 </td>
                                 <td>
                                     <span th:if="${u.vaiTro == 'ADMIN'}" class="badge-pro badge-primary-pro">Quản trị viên (Admin)</span>
@@ -196,7 +202,9 @@
                                                 th:data-name="${u.hoTen}"
                                                 th:data-role="${u.vaiTro}"
                                                 th:data-phone="${u.soDienThoai}"
-                                                onclick="openEditStaffModal(this.dataset.id, this.dataset.name, this.dataset.role, this.dataset.phone)"
+                                                th:data-username="${u.tenDangNhap}"
+                                                th:data-email="${u.email}"
+                                                onclick="openEditStaffModal(this.dataset.id, this.dataset.name, this.dataset.role, this.dataset.phone, this.dataset.username, this.dataset.email)"
                                                 title="Chỉnh sửa thông tin">
                                             <i class="fa-solid fa-pen-to-square"></i> Sửa
                                         </button>
@@ -264,6 +272,11 @@
                         </select>
                     </div>
 
+                    <div class="form-group-pro">
+                        <label class="form-label-pro" for="addStaffEmail">Email tài khoản</label>
+                        <input type="email" id="addStaffEmail" name="email" class="form-control form-control-pro" placeholder="VD: user@example.com" autocomplete="off">
+                    </div>
+
                     <div class="form-group-pro mb-0">
                         <label class="form-label-pro">Số điện thoại liên hệ</label>
                         <input type="text" name="soDienThoai" class="form-control form-control-pro" placeholder="VD: 0912345678">
@@ -296,6 +309,16 @@
                     <div class="form-group-pro">
                         <label class="form-label-pro" for="editStaffHoTen">Họ và tên <span class="required">*</span></label>
                         <input type="text" name="hoTen" id="editStaffHoTen" class="form-control form-control-pro" placeholder="Nhập họ và tên..." title="Họ và tên người dùng" required>
+                    </div>
+
+                    <div class="form-group-pro">
+                        <label class="form-label-pro" for="editStaffTenDangNhap">Tên đăng nhập <span class="required">*</span></label>
+                        <input type="text" name="tenDangNhap" id="editStaffTenDangNhap" class="form-control form-control-pro font-monospace" placeholder="Nhập tên đăng nhập..." title="Tên đăng nhập" required autocomplete="off">
+                    </div>
+
+                    <div class="form-group-pro">
+                        <label class="form-label-pro" for="editStaffEmail">Email tài khoản</label>
+                        <input type="email" name="email" id="editStaffEmail" class="form-control form-control-pro" placeholder="VD: user@example.com" title="Email tài khoản" autocomplete="off">
                     </div>
 
                     <div class="form-group-pro">
@@ -333,11 +356,13 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/app.js"></script>
 <script>
-    function openEditStaffModal(id, hoTen, vaiTro, sdt) {
+    function openEditStaffModal(id, hoTen, vaiTro, sdt, tenDangNhap, email) {
         document.getElementById('editStaffId').value = id;
         document.getElementById('editStaffHoTen').value = hoTen || '';
         document.getElementById('editStaffVaiTro').value = vaiTro || 'NHAN_VIEN';
         document.getElementById('editStaffSdt').value = (sdt && sdt !== 'null') ? sdt : '';
+        document.getElementById('editStaffTenDangNhap').value = (tenDangNhap && tenDangNhap !== 'null') ? tenDangNhap : '';
+        document.getElementById('editStaffEmail').value = (email && email !== 'null') ? email : '';
         const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
         modal.show();
     }

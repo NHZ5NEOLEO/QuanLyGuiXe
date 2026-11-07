@@ -10,7 +10,7 @@ public class NguoiDung {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 100, columnDefinition = "NVARCHAR(100)")
     private String tenDangNhap;
 
     @Column(nullable = false, length = 100)
@@ -25,7 +25,7 @@ public class NguoiDung {
     @Column(length = 20)
     private String soDienThoai;
 
-    @Column(length = 120)
+    @Column(length = 150, columnDefinition = "NVARCHAR(150)")
     private String email;
 
     private Boolean trangThai = true;

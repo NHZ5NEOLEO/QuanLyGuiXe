@@ -198,7 +198,10 @@ public class AuthController {
             model.addAttribute("errorMessage", "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
             return "dang-ky";
         }
-        username = username.trim().toLowerCase();
+        String cleanUsername = normalizeUsername(username);
+        if (cleanUsername.isEmpty()) cleanUsername = username.trim().toLowerCase();
+        username = cleanUsername;
+
         if (username.length() < 3) {
             model.addAttribute("errorMessage", "Tên đăng nhập phải có ít nhất 3 ký tự!");
             return "dang-ky";
@@ -227,6 +230,9 @@ public class AuthController {
         // Tạo NguoiDung vai trò KHACH_HANG với mật khẩu BCrypt
         String encodedPassword = passwordEncoder.encode(password);
         NguoiDung user = new NguoiDung(username, encodedPassword, fullName.trim(), "KHACH_HANG", phone.trim());
+        if (email != null && !email.isBlank()) {
+            user.setEmail(email.trim());
+        }
         nguoiDungRepository.save(user);
 
         // Tạo hoặc cập nhật KhachHang
@@ -288,5 +294,13 @@ public class AuthController {
         response.addCookie(rmCookie);
 
         return "redirect:/login?logout=true";
+    }
+
+    private String normalizeUsername(String input) {
+        if (input == null) return "";
+        String trimmed = input.trim();
+        String nfd = java.text.Normalizer.normalize(trimmed.toLowerCase(), java.text.Normalizer.Form.NFD);
+        String noAccents = nfd.replaceAll("\\p{M}", "").replace("đ", "d").replace("Đ", "d");
+        return noAccents.replaceAll("[^a-z0-9_.-]", "");
     }
 }

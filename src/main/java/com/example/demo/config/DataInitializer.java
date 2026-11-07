@@ -27,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ViTriDoRepository viTriDoRepository;
     private final DanhGiaRepository danhGiaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public DataInitializer(
             LoaiXeRepository loaiXeRepository,
@@ -39,7 +40,8 @@ public class DataInitializer implements CommandLineRunner {
             PhuongTienRepository phuongTienRepository,
             ViTriDoRepository viTriDoRepository,
             DanhGiaRepository danhGiaRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            org.springframework.jdbc.core.JdbcTemplate jdbcTemplate
     ) {
         this.loaiXeRepository = loaiXeRepository;
         this.khuVucRepository = khuVucRepository;
@@ -52,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
         this.viTriDoRepository = viTriDoRepository;
         this.danhGiaRepository = danhGiaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -144,6 +147,53 @@ public class DataInitializer implements CommandLineRunner {
                     u.setMatKhau(passwordEncoder.encode(u.getMatKhau()));
                     nguoiDungRepository.save(u);
                 }
+            }
+        }
+
+        // 4b. Tự động khắc phục lỗi tên đăng nhập có dấu chấm hỏi "hu?" thành "hue" và đồng bộ email
+        try {
+            if (jdbcTemplate != null) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE NguoiDung ALTER COLUMN ten_dang_nhap NVARCHAR(100) NOT NULL");
+                } catch (Exception ignored) {}
+                try {
+                    jdbcTemplate.execute("ALTER TABLE NguoiDung ALTER COLUMN email NVARCHAR(150) NULL");
+                } catch (Exception ignored) {}
+                jdbcTemplate.update("UPDATE NguoiDung SET ten_dang_nhap = 'hue' WHERE ten_dang_nhap = 'hu?' OR ten_dang_nhap LIKE '%?%'");
+                jdbcTemplate.update("UPDATE NguoiDung SET email = 'huter0handsome@gmail.com' WHERE so_dien_thoai = '0938361105' AND (email IS NULL OR email = '')");
+            }
+        } catch (Exception ignored) {}
+
+        for (NguoiDung u : nguoiDungRepository.findAll()) {
+            boolean updated = false;
+            if (u.getTenDangNhap() != null && (u.getTenDangNhap().contains("?") || "hu?".equalsIgnoreCase(u.getTenDangNhap()))) {
+                String cleanUsername = u.getTenDangNhap().replace("?", "e");
+                if (cleanUsername.isBlank() || "e".equals(cleanUsername)) cleanUsername = "hue";
+                u.setTenDangNhap(cleanUsername);
+                updated = true;
+            }
+            if ("0938361105".equals(u.getSoDienThoai())) {
+                if (u.getTenDangNhap() == null || u.getTenDangNhap().contains("?") || "hu?".equalsIgnoreCase(u.getTenDangNhap())) {
+                    u.setTenDangNhap("hue");
+                    updated = true;
+                }
+                if (u.getEmail() == null || u.getEmail().isBlank()) {
+                    u.setEmail("huter0handsome@gmail.com");
+                    updated = true;
+                }
+            }
+            if ((u.getEmail() == null || u.getEmail().isBlank()) && u.getSoDienThoai() != null && !u.getSoDienThoai().isBlank()) {
+                khachHangRepository.findBySoDienThoai(u.getSoDienThoai().trim()).ifPresent(kh -> {
+                    if (kh.getEmail() != null && !kh.getEmail().isBlank()) {
+                        u.setEmail(kh.getEmail().trim());
+                    }
+                });
+                if (u.getEmail() != null && !u.getEmail().isBlank()) {
+                    updated = true;
+                }
+            }
+            if (updated) {
+                nguoiDungRepository.save(u);
             }
         }
 
