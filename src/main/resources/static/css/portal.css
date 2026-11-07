@@ -1525,5 +1525,15 @@ body.portal-body {
     z-index: 5;
 }
 
+/* ==========================================================================
+   SPACING UTILITIES FOR ICONS & BADGES
+   ========================================================================== */
+.me-1\.5 { margin-right: 0.45rem !important; }
+.ms-1\.5 { margin-left: 0.45rem !important; }
+.gap-1\.5 { gap: 0.45rem !important; }
+.py-1\.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+.px-1\.5 { padding-left: 0.375rem !important; padding-right: 0.375rem !important; }
+
+
 
 
