@@ -1,6 +1,7 @@
 package com.example.demo.config;
 
 import com.example.demo.model.NguoiDung;
+import com.example.demo.repository.KhachHangRepository;
 import com.example.demo.repository.NguoiDungRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -35,9 +36,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final NguoiDungRepository nguoiDungRepository;
+    private final KhachHangRepository khachHangRepository;
 
-    public SecurityConfig(NguoiDungRepository nguoiDungRepository) {
+    public SecurityConfig(NguoiDungRepository nguoiDungRepository, KhachHangRepository khachHangRepository) {
         this.nguoiDungRepository = nguoiDungRepository;
+        this.khachHangRepository = khachHangRepository;
     }
 
     /**
@@ -111,7 +114,9 @@ public class SecurityConfig {
                     String clean = username != null ? username.trim() : "";
                     var userOpt = nguoiDungRepository.findByTenDangNhap(clean)
                             .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
-                            .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
+                            .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
+                            .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
+                                    .flatMap(khItem -> nguoiDungRepository.findBySoDienThoai(khItem.getSoDienThoai())));
                     String role = "ADMIN";
                     HttpSession session = request.getSession(true);
                     SecurityContext sc = SecurityContextHolder.getContext();
@@ -233,6 +238,8 @@ public class SecurityConfig {
             NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(clean)
                     .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
                     .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
+                    .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
+                            .flatMap(khItem -> nguoiDungRepository.findBySoDienThoai(khItem.getSoDienThoai())))
                     .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản: " + username));
 
             if (!Boolean.TRUE.equals(nguoiDung.getTrangThai())) {

@@ -115,7 +115,9 @@ public class AuthController {
         String clean = username.trim();
         var userOpt = nguoiDungRepository.findByTenDangNhap(clean)
                 .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
-                .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
+                .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
+                .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
+                        .flatMap(khItem -> nguoiDungRepository.findBySoDienThoai(khItem.getSoDienThoai())));
         if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getMatKhau())) {
             redirectAttributes.addAttribute("error", "true");
             return "redirect:/dang-nhap";

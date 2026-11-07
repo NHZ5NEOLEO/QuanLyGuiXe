@@ -592,7 +592,9 @@ public class PortalController {
                 String clean = name.trim();
                 Optional<NguoiDung> u = nguoiDungRepository.findByTenDangNhap(clean)
                         .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
-                        .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean));
+                        .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
+                        .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
+                                .flatMap(kh -> nguoiDungRepository.findBySoDienThoai(kh.getSoDienThoai())));
                 if (u.isPresent()) {
                     return u;
                 }

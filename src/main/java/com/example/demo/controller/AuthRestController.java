@@ -91,6 +91,9 @@ public class AuthRestController {
 
         // 2. Tạo tài khoản người dùng NguoiDung với vai trò KHACH_HANG
         NguoiDung user = new NguoiDung(username, encodedPassword, fullName, "KHACH_HANG", phone);
+        if (email != null && !email.isBlank()) {
+            user.setEmail(email.trim());
+        }
         nguoiDungRepository.save(user);
 
         // 3. Tạo hoặc liên kết hồ sơ khách hàng KhachHang
@@ -154,7 +157,15 @@ public class AuthRestController {
         NguoiDung user = nguoiDungRepository.findByTenDangNhap(clean)
                 .or(() -> nguoiDungRepository.findBySoDienThoai(clean))
                 .or(() -> nguoiDungRepository.findFirstByEmailIgnoreCase(clean))
+                .or(() -> khachHangRepository.findFirstByEmailIgnoreCase(clean)
+                        .flatMap(khItem -> nguoiDungRepository.findBySoDienThoai(khItem.getSoDienThoai())))
                 .orElseThrow(() -> new BadRequestException("Tên đăng nhập hoặc mật khẩu không chính xác!"));
+
+        // Tự động bổ sung email vào NguoiDung nếu trước đó chỉ lưu ở bảng KhachHang
+        if ((user.getEmail() == null || user.getEmail().isBlank()) && clean.contains("@")) {
+            user.setEmail(clean);
+            nguoiDungRepository.save(user);
+        }
 
         // So khớp mật khẩu qua PasswordEncoder (hỗ trợ cả BCrypt và plain text tương thích ngược)
         if (!passwordEncoder.matches(password, user.getMatKhau())) {

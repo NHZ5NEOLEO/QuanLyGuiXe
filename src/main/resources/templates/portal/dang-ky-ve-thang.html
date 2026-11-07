@@ -74,7 +74,7 @@
                             </div>
                             <h3 class="h5 fw-bold text-dark mb-2">Bắt Buộc Có Tài Khoản Để Đăng Ký Vé Tháng</h3>
                             <p class="text-muted small mx-auto mb-4 mw-580">
-                                Để bảo mật thông tin và thuận tiện đối soát thanh toán VietQR, quý khách cần có tài khoản khách hàng / cư dân để đăng ký vé tháng. Nếu chưa có tài khoản, vui lòng đăng ký tài khoản mới bên dưới.
+                                Để bảo mật thông tin và thuận tiện đối soát thanh toán VietQR, quý khách cần có tài khoản để đăng ký vé tháng. Nếu chưa có tài khoản, vui lòng đăng ký tài khoản mới bên dưới.
                             </p>
 
                             <!-- 2 Lựa chọn rõ ràng: Đăng nhập hoặc Đăng ký -->
@@ -417,14 +417,14 @@
         </div>
     </div>
 
-    <!-- MODAL 1: ĐĂNG NHẬP NHANH DÀNH CHO CƯ DÂN / KHÁCH HÀNG -->
+    <!-- MODAL 1: ĐĂNG NHẬP NHANH TÀI KHOẢN -->
     <div class="modal fade" id="quickLoginModal" tabindex="-1" aria-labelledby="quickLoginModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header bg-primary text-white py-3 border-0">
                     <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2" id="quickLoginModalLabel">
                         <i class="fa-solid fa-arrow-right-to-bracket fs-5"></i>
-                        <span>Đăng Nhập Tài Khoản Khách Hàng / Cư Dân</span>
+                        <span>Đăng Nhập Tài Khoản</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
@@ -434,7 +434,7 @@
 
                     <!-- 1-Click Fast Fill for Testing -->
                     <div class="p-2.5 bg-light rounded-3 border mb-3 text-center">
-                        <div class="text-2xs text-muted mb-1.5"><i class="fa-solid fa-bolt text-warning me-1"></i>Tài khoản cư dân mẫu:</div>
+                        <div class="text-2xs text-muted mb-1.5"><i class="fa-solid fa-bolt text-warning me-1"></i>Tài khoản mẫu:</div>
                         <button type="button" class="btn btn-sm btn-outline-primary py-1 px-3 text-xs fw-semibold rounded-pill" onclick="fillQuickLogin('khachhang', '123456')">
                             khachhang / 123456
                         </button>
@@ -450,7 +450,7 @@
                             <input type="password" class="form-control portal-form-control" id="qlPassword" required placeholder="Nhập mật khẩu">
                         </div>
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-xs mb-2" id="btnQuickLogin">
-                            <span id="btnQlText"><i class="fa-solid fa-arrow-right-to-bracket me-1.5"></i>Đăng Nhập Ngay</span>
+                            <span id="btnQlText">Đăng Nhập Ngay</span>
                             <span id="btnQlSpinner" class="d-none"><span class="spinner-border spinner-border-sm me-1.5"></span>Đang đăng nhập...</span>
                         </button>
                     </form>
@@ -466,14 +466,14 @@
         </div>
     </div>
 
-    <!-- MODAL 2: ĐĂNG KÝ TÀI KHOẢN NHANH DÀNH CHO CƯ DÂN / KHÁCH HÀNG -->
+    <!-- MODAL 2: ĐĂNG KÝ TÀI KHOẢN NHANH -->
     <div class="modal fade" id="quickRegisterModal" tabindex="-1" aria-labelledby="quickRegisterModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header bg-success text-white py-3 border-0">
                     <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2" id="quickRegisterModalLabel">
                         <i class="fa-solid fa-user-plus fs-5"></i>
-                        <span>Đăng Ký Tài Khoản Khách Hàng / Cư Dân Mới</span>
+                        <span>Đăng Ký Tài Khoản Mới</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
