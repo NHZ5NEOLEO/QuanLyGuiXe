@@ -980,7 +980,7 @@
                             </div>
                             <div class="d-flex justify-content-between py-1 border-bottom">
                                 <span class="text-muted">Khu vực đỗ:</span>
-                                <b class="text-dark">Khu vực chung</b>
+                                <b class="text-dark" th:text="${newTicket != null ? newTicket.getMaViTri() : 'Khu vực xe hai bánh'}">Khu vực xe hai bánh</b>
                             </div>
                             <div class="d-flex justify-content-between py-1">
                                 <span class="text-muted">Thời gian vào:</span>

@@ -325,7 +325,7 @@ public class PortalController {
             VeXe vx = xeDangGuiOpt.get();
             resp.put("dangGui", true);
             resp.put("bienSoXe", vx.getBienSoXe() != null ? vx.getBienSoXe() : displayPlate);
-            resp.put("viTri", vx.getMaViTri());
+            resp.put("viTri", resolveTenViTriDo(vx));
             if (vx.getThoiGianVao() != null) {
                 resp.put("thoiGianVao", vx.getThoiGianVao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
                 Duration dur = Duration.between(vx.getThoiGianVao(), LocalDateTime.now());
@@ -580,6 +580,37 @@ public class PortalController {
             return "VT-••••••••";
         }
         return "••••••••••••";
+    }
+
+    private String resolveTenViTriDo(VeXe vx) {
+        if (vx == null) return "Khu vực xe hai bánh";
+        String viTri = vx.getMaViTri();
+        if (viTri != null && !viTri.isBlank()
+                && !"Khu vực chung".equalsIgnoreCase(viTri.trim())
+                && !"Khu vực tự do".equalsIgnoreCase(viTri.trim())) {
+            return viTri;
+        }
+        LoaiXe lx = vx.getLoaiXe();
+        if (lx != null && lx.getTenLoai() != null) {
+            String tl = lx.getTenLoai().toLowerCase();
+            if (tl.contains("máy") || tl.contains("hai bánh") || tl.contains("2 bánh") || tl.contains("motor")) {
+                return "Khu vực xe hai bánh";
+            }
+            if (tl.contains("ba bánh") || tl.contains("3 bánh")) {
+                return "Khu vực xe ba bánh";
+            }
+            if (tl.contains("đạp") || tl.contains("điện")) {
+                return "Khu vực xe đạp / xe điện";
+            }
+            if (tl.contains("ô tô") || tl.contains("o to") || tl.contains("con")) {
+                return "Khu vực ô tô";
+            }
+            if (tl.contains("tải") || tl.contains("bán tải")) {
+                return "Khu vực xe tải / bán tải";
+            }
+            return "Khu vực " + lx.getTenLoai();
+        }
+        return "Khu vực xe hai bánh";
     }
 
     /**

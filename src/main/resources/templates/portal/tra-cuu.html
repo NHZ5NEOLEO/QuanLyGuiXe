@@ -203,12 +203,12 @@
                                     <div class="col-sm-6">
                                         <div class="p-3 rounded-3 bg-light border h-100">
                                             <div class="text-xs fw-bold text-muted text-uppercase mb-1">
-                                                <i class="fa-solid fa-location-dot text-danger me-1"></i>Vị trí quy hoạch
+                                                <i class="fa-solid fa-location-dot text-danger me-2"></i>Vị trí đỗ xe
                                             </div>
                                             <div class="fs-5 fw-bold text-dark font-monospace" id="resViTri">
                                                 --
                                             </div>
-                                            <div class="text-xs text-muted mt-1">Khu vực phân bổ trong bãi</div>
+                                            <div class="text-xs text-muted mt-1">Khu vực đỗ xe trong bãi</div>
                                         </div>
                                     </div>
 
@@ -424,7 +424,25 @@
 
                     document.getElementById('resThoiGianVao').textContent = data.thoiGianVao || (data.dangGui ? 'Hôm nay' : 'Không có lượt gửi hiện tại');
                     document.getElementById('resThoiLuong').textContent = data.thoiLuong || (data.dangGui ? 'Đang tính...' : '—');
-                    document.getElementById('resViTri').textContent = data.viTri || 'Khu vực tự do';
+                    const rawViTri = data.viTri;
+                    const loaiXeStr = (data.loaiXe || data.loaiXeVeThang || '').toLowerCase();
+                    let displayViTri = rawViTri;
+                    if (!displayViTri || displayViTri === 'Khu vực chung' || displayViTri === 'Khu vực tự do' || displayViTri === '--') {
+                        if (loaiXeStr.includes('máy') || loaiXeStr.includes('hai bánh') || loaiXeStr.includes('2 bánh')) {
+                            displayViTri = 'Khu vực xe hai bánh';
+                        } else if (loaiXeStr.includes('ba bánh') || loaiXeStr.includes('3 bánh')) {
+                            displayViTri = 'Khu vực xe ba bánh';
+                        } else if (loaiXeStr.includes('đạp') || loaiXeStr.includes('điện')) {
+                            displayViTri = 'Khu vực xe đạp / xe điện';
+                        } else if (loaiXeStr.includes('ô tô') || loaiXeStr.includes('o to')) {
+                            displayViTri = 'Khu vực ô tô';
+                        } else if (loaiXeStr.includes('tải')) {
+                            displayViTri = 'Khu vực xe tải';
+                        } else {
+                            displayViTri = 'Khu vực xe hai bánh';
+                        }
+                    }
+                    document.getElementById('resViTri').textContent = displayViTri;
                     
                     // Xử lý bảo mật hiển thị mã vé
                     const ticketEl = document.getElementById('resMaTicket');

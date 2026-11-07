@@ -1249,7 +1249,7 @@ function renderTablePage() {
                     <span>${vx.tenLoaiXe || 'Phương tiện'}</span>
                 </td>
                 <td>
-                    <span class="badge ${zoneBadgeClass}">${vx.tenPhanKhu || 'Khu vực chung'}</span>
+                    <span class="badge ${zoneBadgeClass}">${vx.tenPhanKhu || (vx.tenLoaiXe && vx.tenLoaiXe.toLowerCase().includes('máy') ? 'Khu vực xe hai bánh' : (vx.tenLoaiXe && (vx.tenLoaiXe.toLowerCase().includes('đạp') || vx.tenLoaiXe.toLowerCase().includes('điện')) ? 'Khu vực xe đạp / xe điện' : 'Khu vực ô tô'))}</span>
                 </td>
                 <td>
                     <i class="fa-regular fa-clock text-muted me-1"></i>
@@ -1332,7 +1332,7 @@ function viewTicketDetail(ticketId) {
     document.getElementById('modalMaQR').innerText = v.maQR || '---';
     document.getElementById('modalBienSo').innerText = v.bienSoXe || '---';
     document.getElementById('modalLoaiXe').innerHTML = `<i class="fa-solid ${v.iconLoaiXe || 'fa-car'} me-1 text-secondary"></i> ${v.tenLoaiXe || 'Chưa rõ'}`;
-    document.getElementById('modalPhanKhu').innerText = v.tenPhanKhu || 'Khu vực chung';
+    document.getElementById('modalPhanKhu').innerText = v.tenPhanKhu || (v.tenLoaiXe && v.tenLoaiXe.toLowerCase().includes('máy') ? 'Khu vực xe hai bánh' : (v.tenLoaiXe && (v.tenLoaiXe.toLowerCase().includes('đạp') || v.tenLoaiXe.toLowerCase().includes('điện')) ? 'Khu vực xe đạp / xe điện' : 'Khu vực ô tô'));
     document.getElementById('modalThoiGianVao').innerText = v.thoiGianVaoFormatted || '---';
     document.getElementById('modalThoiLuong').innerText = v.thoiLuongText || 'Vừa vào';
     document.getElementById('modalHinhThucVe').innerText = v.laVeThang ? 'Thuê bao vé tháng' : 'Vé vãng lai theo lượt';

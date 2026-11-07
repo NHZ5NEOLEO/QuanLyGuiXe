@@ -197,13 +197,31 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 5. Chuẩn hóa biển số sạch (bienSoClean) cho các vé xe hiện có
+        // 5. Chuẩn hóa biển số sạch (bienSoClean) và gán phân khu đỗ xe cho các vé xe hiện có
         List<VeXe> existingTickets = veXeRepository.findAll();
         for (VeXe vx : existingTickets) {
             boolean updated = false;
             if (vx.getBienSoClean() == null && vx.getBienSoXe() != null) {
                 vx.setBienSoClean(BienSoXeHelper.clean(vx.getBienSoXe()));
                 updated = true;
+            }
+            if (vx.getKhuVuc() == null && vx.getLoaiXe() != null) {
+                if (vx.getLoaiXe().getKhuVuc() != null) {
+                    vx.setKhuVuc(vx.getLoaiXe().getKhuVuc());
+                    updated = true;
+                } else {
+                    String tl = vx.getLoaiXe().getTenLoai().toLowerCase();
+                    if (tl.contains("máy") || tl.contains("motor")) {
+                        vx.setKhuVuc(kv2B);
+                        updated = true;
+                    } else if (tl.contains("đạp") || tl.contains("điện")) {
+                        vx.setKhuVuc(kvXD);
+                        updated = true;
+                    } else if (tl.contains("ô tô") || tl.contains("tải")) {
+                        vx.setKhuVuc(kv4B);
+                        updated = true;
+                    }
+                }
             }
             if (updated) {
                 veXeRepository.save(vx);

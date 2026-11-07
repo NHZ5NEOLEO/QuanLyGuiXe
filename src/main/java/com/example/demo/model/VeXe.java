@@ -186,13 +186,33 @@ public class VeXe {
     }
 
     public String getMaViTri() {
-        if (khuVuc != null) {
-            return khuVuc.getTenKhu();
-        }
-        if (viTriDo != null && viTriDo.getMaViTri() != null) {
+        if (viTriDo != null && viTriDo.getMaViTri() != null && !viTriDo.getMaViTri().isBlank()) {
             return viTriDo.getMaViTri();
         }
-        return "Khu vực chung";
+        if (khuVuc != null && khuVuc.getTenKhu() != null && !khuVuc.getTenKhu().isBlank()
+                && !"Khu vực chung".equalsIgnoreCase(khuVuc.getTenKhu().trim())) {
+            return khuVuc.getTenKhu();
+        }
+        if (loaiXe != null && loaiXe.getTenLoai() != null) {
+            String tl = loaiXe.getTenLoai().toLowerCase();
+            if (tl.contains("máy") || tl.contains("hai bánh") || tl.contains("2 bánh") || tl.contains("motor")) {
+                return "Khu vực xe hai bánh";
+            }
+            if (tl.contains("ba bánh") || tl.contains("3 bánh")) {
+                return "Khu vực xe ba bánh";
+            }
+            if (tl.contains("đạp") || tl.contains("điện")) {
+                return "Khu vực xe đạp / xe điện";
+            }
+            if (tl.contains("ô tô") || tl.contains("o to") || tl.contains("con")) {
+                return "Khu vực ô tô";
+            }
+            if (tl.contains("tải") || tl.contains("bán tải")) {
+                return "Khu vực xe tải / bán tải";
+            }
+            return "Khu vực " + loaiXe.getTenLoai();
+        }
+        return "Khu vực xe hai bánh";
     }
 
     public DatChoTruoc getDatChoTruoc() {

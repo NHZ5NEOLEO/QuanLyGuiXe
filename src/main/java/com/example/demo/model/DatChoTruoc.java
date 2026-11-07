@@ -26,7 +26,7 @@ public class DatChoTruoc {
     private String bienSoXe;
 
     @Column(name = "ma_khu_vuc", length = 50)
-    private String maKhuVuc = "Khu vực chung";
+    private String maKhuVuc = "Khu vực xe hai bánh";
 
     @Column(nullable = false)
     private LocalDateTime thoiGianDat;
@@ -112,7 +112,7 @@ public class DatChoTruoc {
     }
 
     public String getMaViTri() {
-        return maKhuVuc != null ? maKhuVuc : "Khu vực chung";
+        return maKhuVuc != null ? maKhuVuc : "Khu vực xe hai bánh";
     }
 
     public LocalDateTime getThoiGianDat() {
