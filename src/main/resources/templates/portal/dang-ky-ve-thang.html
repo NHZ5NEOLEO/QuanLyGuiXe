@@ -110,7 +110,7 @@
                                 </div>
                             </div>
 
-                            <form id="registerForm" onsubmit="handleRegister(event)" novalidate>
+                            <form id="registerForm" th:data-logged-in="${isLoggedIn or session.currentUser != null or session.userId != null}" onsubmit="handleRegister(event)" novalidate>
 
                                 <!-- NHÓM 1: THÔNG TIN NGƯỜI ĐĂNG KÝ (ĐƯỢC TỰ ĐỘNG ĐIỀN TỪ TÀI KHOẢN) -->
                                 <div class="mb-4">
@@ -535,7 +535,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Client JavaScript -->
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
         const hoTenInput = document.getElementById('hoTen');
         const sdtInput = document.getElementById('sdt');
         const emailInput = document.getElementById('email');
@@ -710,6 +711,20 @@
 
         const isUserLoggedIn = /*[[${isLoggedIn or session.currentUser != null or session.userId != null}]]*/ false;
 
+        function checkIsLoggedIn() {
+            const form = document.getElementById('registerForm');
+            if (form && form.getAttribute('data-logged-in') === 'true') {
+                return true;
+            }
+            if (isUserLoggedIn === true) {
+                return true;
+            }
+            if (document.querySelector('.alert-success') !== null) {
+                return true;
+            }
+            return false;
+        }
+
         function fillQuickLogin(u, p) {
             document.getElementById('qlUsername').value = u;
             document.getElementById('qlPassword').value = p;
@@ -841,7 +856,7 @@
             registerErrorAlert.classList.add('d-none');
 
             // 0. Bắt buộc kiểm tra đăng nhập tài khoản
-            if (!isUserLoggedIn) {
+            if (!checkIsLoggedIn()) {
                 showError('Quý khách bắt buộc phải có tài khoản và đăng nhập để đăng ký vé tháng!');
                 const lmEl = document.getElementById('quickLoginModal');
                 const lm = bootstrap.Modal.getInstance(lmEl) || new bootstrap.Modal(lmEl);
@@ -948,6 +963,7 @@
             registerErrorText.textContent = msg;
             registerErrorAlert.classList.remove('d-none');
         }
+        /*]]>*/
     </script>
 </body>
 </html>
