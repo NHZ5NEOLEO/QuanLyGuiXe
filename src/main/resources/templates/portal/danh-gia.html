@@ -214,7 +214,7 @@
                                 <div th:each="r : ${recentReviews}" class="p-3 rounded-3 bg-light border">
                                     <div class="d-flex align-items-center justify-content-between mb-1.5">
                                         <div class="d-flex align-items-center gap-2">
-                                            <strong class="small text-dark" th:text="${r['hoTen'] != null and !#strings.isEmpty(r['hoTen']) ? r['hoTen'] : 'Khách gửi xe'}">Khách hàng</strong>
+                                            <strong class="small text-dark" th:text="${r['hoTen'] != null and !#strings.isEmpty(r['hoTen']) and !#strings.contains(r['hoTen'], '?') ? r['hoTen'] : 'Khách gửi xe'}">Khách gửi xe</strong>
                                             <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 text-2xs" 
                                                   th:text="${r['loaiDichVu'] == 'THAI_DO' ? 'Thái độ phục vụ' : (r['loaiDichVu'] == 'TOC_DO' ? 'Tốc độ xử lý' : (r['loaiDichVu'] == 'AN_NINH' ? 'An ninh' : (r['loaiDichVu'] == 'GIA_CA' ? 'Giá vé' : 'Chung')))}">
                                                 Góp ý
@@ -227,8 +227,8 @@
                                     <p class="text-muted small mb-1.5 lh-sm" th:text="${r['noiDung']}">
                                         Nội dung đánh giá của khách hàng.
                                     </p>
-                                    <div class="text-2xs text-muted font-monospace" th:text="${r['thoiGian'] != null ? #strings.substring(r['thoiGian'], 0, 10) : ''}">
-                                        2026-10-24
+                                    <div class="text-2xs text-muted font-monospace" th:text="${r['thoiGianDisplay'] != null ? r['thoiGianDisplay'] : (r['thoiGian'] != null and #strings.length(r['thoiGian']) >= 10 and #strings.substring(r['thoiGian'], 4, 5) == '-' ? #strings.substring(r['thoiGian'], 8, 10) + '/' + #strings.substring(r['thoiGian'], 5, 7) + '/' + #strings.substring(r['thoiGian'], 0, 4) : r['thoiGian'])}">
+                                        07/11/2026
                                     </div>
                                 </div>
                             </div>
@@ -368,6 +368,24 @@
             }
         }
 
+        function formatDateVN(dateInput) {
+            if (!dateInput) return '';
+            const str = String(dateInput).trim();
+            if (str.includes('/')) return str;
+            if (str.length >= 10 && str.charAt(4) === '-' && str.charAt(7) === '-') {
+                const parts = str.substring(0, 10).split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            return str;
+        }
+
         async function refreshReviews() {
             try {
                 const res = await fetch('/portal/api/feedbacks');
@@ -394,12 +412,13 @@
                         'CHUNG': 'Góp ý chung'
                     };
                     const catLabel = catMap[r.loaiDichVu] || 'Góp ý';
-                    const timeStr = r.thoiGian ? r.thoiGian.substring(0, 10) : '';
+                    const timeStr = formatDateVN(r.thoiGianDisplay || r.thoiGian);
+                    const hoTenVal = (!r.hoTen || r.hoTen.includes('?')) ? 'Khách gửi xe' : r.hoTen;
 
                     item.innerHTML = `
                         <div class="d-flex align-items-center justify-content-between mb-1.5">
                             <div class="d-flex align-items-center gap-2">
-                                <strong class="small text-dark">${r.hoTen || 'Khách gửi xe'}</strong>
+                                <strong class="small text-dark">${hoTenVal}</strong>
                                 <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 text-2xs">${catLabel}</span>
                             </div>
                             <div class="text-warning text-xs">${starsStr}</div>

@@ -500,7 +500,10 @@ public class PortalController {
             if (noiDung.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập nội dung đánh giá!"));
             }
-            String hoTen = req.getOrDefault("hoTen", "Khách hàng").toString().trim();
+            String hoTen = req.getOrDefault("hoTen", "Khách gửi xe").toString().trim();
+            if (hoTen.isEmpty() || hoTen.contains("?")) {
+                hoTen = "Khách gửi xe";
+            }
             String sdt = req.getOrDefault("sdt", "").toString().trim();
             int soSao = Integer.parseInt(req.getOrDefault("soSao", "5").toString());
             soSao = Math.max(1, Math.min(5, soSao));
@@ -528,9 +531,39 @@ public class PortalController {
 
     private List<Map<String, Object>> getRecentReviewsFromDb() {
         try {
-            return jdbcTemplate.queryForList(
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(
                     "SELECT TOP 10 id, ho_ten AS hoTen, so_dien_thoai AS soDienThoai, so_sao AS soSao, noi_dung AS noiDung, loai_dich_vu AS loaiDichVu, thoi_gian AS thoiGian FROM danh_gia ORDER BY thoi_gian DESC"
             );
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            for (Map<String, Object> r : list) {
+                // Sửa lỗi hiển thị hoTen nếu chứa '?' hoặc là 'Khách g?i xe'
+                Object htObj = r.get("hoTen");
+                if (htObj == null || htObj.toString().trim().isEmpty() || htObj.toString().contains("?")) {
+                    r.put("hoTen", "Khách gửi xe");
+                }
+                // Chuẩn hóa định dạng ngày tháng dd/MM/yyyy
+                Object tgObj = r.get("thoiGian");
+                String formattedDate = "";
+                if (tgObj instanceof LocalDateTime ldt) {
+                    formattedDate = ldt.format(dtf);
+                } else if (tgObj instanceof java.sql.Timestamp ts) {
+                    formattedDate = ts.toLocalDateTime().format(dtf);
+                } else if (tgObj instanceof java.sql.Date d) {
+                    formattedDate = d.toLocalDate().format(dtf);
+                } else if (tgObj != null) {
+                    String s = tgObj.toString();
+                    if (s.length() >= 10 && s.charAt(4) == '-' && s.charAt(7) == '-') {
+                        String[] parts = s.substring(0, 10).split("-");
+                        formattedDate = parts[2] + "/" + parts[1] + "/" + parts[0];
+                    } else {
+                        formattedDate = s;
+                    }
+                }
+                r.put("thoiGianDisplay", formattedDate);
+                r.put("thoiGianFormatted", formattedDate);
+                r.put("thoiGian", formattedDate);
+            }
+            return list;
         } catch (Exception e) {
             return List.of();
         }

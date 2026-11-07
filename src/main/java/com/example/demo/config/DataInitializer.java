@@ -254,5 +254,22 @@ public class DataInitializer implements CommandLineRunner {
             DanhGia dg4 = new DanhGia("Phạm Minh Đức", "0977112233", 3, "Giờ cao điểm chiều làn ra hơi đông, nên mở thêm luồng ra linh hoạt.", "TOC_DO");
             danhGiaRepository.saveAll(List.of(dg1, dg2, dg3, dg4));
         }
+
+        // 8b. Khắc phục lỗi font cột hoTen bảng DanhGia và chuẩn hóa 'Khách gửi xe'
+        try {
+            if (jdbcTemplate != null) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE DanhGia ALTER COLUMN ho_ten NVARCHAR(100) NOT NULL");
+                } catch (Exception ignored) {}
+                jdbcTemplate.update("UPDATE DanhGia SET ho_ten = N'Khách gửi xe' WHERE ho_ten LIKE '%?%' OR ho_ten LIKE '%g?i%'");
+            }
+        } catch (Exception ignored) {}
+
+        for (DanhGia dg : danhGiaRepository.findAll()) {
+            if (dg.getHoTen() != null && (dg.getHoTen().contains("?") || dg.getHoTen().toLowerCase().contains("g?i"))) {
+                dg.setHoTen("Khách gửi xe");
+                danhGiaRepository.save(dg);
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ public class DanhGia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String hoTen;
 
     @Column(length = 20)
