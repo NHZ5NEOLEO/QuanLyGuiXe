@@ -169,11 +169,11 @@
                                 <td class="text-muted fw-semibold" th:text="${stat.count}">1</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="user-avatar-circle avatar-sm" th:text="${r.hoTen != null and r.hoTen.length() > 0 ? #strings.substring(r.hoTen, 0, 1).toUpperCase() : 'K'}">
+                                        <div class="user-avatar-circle avatar-sm" th:text="${r.hoTen != null and r.hoTen.length() > 0 and !#strings.contains(r.hoTen, '?') ? #strings.substring(r.hoTen, 0, 1).toUpperCase() : 'K'}">
                                             K
                                         </div>
                                         <div>
-                                            <div class="fw-semibold text-dark" th:text="${r.hoTen != null and r.hoTen != '' ? r.hoTen : 'Khách hàng ẩn danh'}">Nguyễn Văn An</div>
+                                            <div class="fw-semibold text-dark" th:text="${r.hoTen != null and r.hoTen != '' and !#strings.contains(r.hoTen, '?') ? r.hoTen : 'Khách gửi xe'}">Nguyễn Văn An</div>
                                             <small class="text-muted" th:text="${r.soDienThoai != null and r.soDienThoai != '' ? r.soDienThoai : 'Không để lại SĐT'}">0912345678</small>
                                         </div>
                                     </div>

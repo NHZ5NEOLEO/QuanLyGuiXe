@@ -208,7 +208,50 @@ public class PortalController {
      */
     @GetMapping({"/danh-gia", "/portal/danh-gia"})
     public String danhGiaPage(Model model) {
-        model.addAttribute("recentReviews", getRecentReviewsFromDb());
+        List<Map<String, Object>> reviews = getRecentReviewsFromDb();
+        model.addAttribute("recentReviews", reviews);
+
+        // Tính điểm trung bình chuẩn xác từ toàn bộ đánh giá trong database
+        double avgScore = 5.0;
+        try {
+            Double avgDb = jdbcTemplate.queryForObject("SELECT AVG(CAST(so_sao AS FLOAT)) FROM danh_gia", Double.class);
+            if (avgDb != null && !avgDb.isNaN()) {
+                avgScore = avgDb;
+            } else if (!reviews.isEmpty()) {
+                double sum = 0;
+                for (Map<String, Object> r : reviews) {
+                    Object s = r.get("soSao");
+                    int val = 5;
+                    if (s instanceof Number n) val = n.intValue();
+                    else if (s != null) try { val = Integer.parseInt(s.toString()); } catch (Exception ignored) {}
+                    sum += val;
+                }
+                avgScore = sum / reviews.size();
+            }
+        } catch (Exception e) {
+            if (!reviews.isEmpty()) {
+                double sum = 0;
+                for (Map<String, Object> r : reviews) {
+                    Object s = r.get("soSao");
+                    int val = 5;
+                    if (s instanceof Number n) val = n.intValue();
+                    else if (s != null) try { val = Integer.parseInt(s.toString()); } catch (Exception ignored) {}
+                    sum += val;
+                }
+                avgScore = sum / reviews.size();
+            }
+        }
+
+        int totalCount = reviews.size();
+        try {
+            Integer c = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM danh_gia", Integer.class);
+            if (c != null && c > 0) totalCount = c;
+        } catch (Exception ignored) {}
+
+        String avgFormatted = String.format(java.util.Locale.US, "%.1f", avgScore);
+        model.addAttribute("avgRating", avgFormatted);
+        model.addAttribute("avgRatingInt", (int) Math.round(avgScore));
+        model.addAttribute("totalReviews", totalCount);
         model.addAttribute("pageTitle", "Đánh giá & Góp ý dịch vụ");
         model.addAttribute("activeNav", "danh-gia");
         return "portal/danh-gia";

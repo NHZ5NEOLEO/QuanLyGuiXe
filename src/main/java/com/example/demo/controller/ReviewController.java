@@ -30,6 +30,14 @@ public class ReviewController {
             Model model
     ) {
         List<DanhGia> all = danhGiaRepository.findAll();
+        for (DanhGia d : all) {
+            if (d.getHoTen() != null && (d.getHoTen().contains("?") || d.getHoTen().toLowerCase().contains("g?i"))) {
+                d.setHoTen("Khách gửi xe");
+                try {
+                    danhGiaRepository.save(d);
+                } catch (Exception ignored) {}
+            }
+        }
         all.sort((a, b) -> {
             if (a.getThoiGian() == null) return 1;
             if (b.getThoiGian() == null) return -1;
