@@ -198,9 +198,6 @@ public class VeXe {
             if (tl.contains("máy") || tl.contains("hai bánh") || tl.contains("2 bánh") || tl.contains("motor")) {
                 return "Khu vực xe hai bánh";
             }
-            if (tl.contains("ba bánh") || tl.contains("3 bánh")) {
-                return "Khu vực xe ba bánh";
-            }
             if (tl.contains("đạp") || tl.contains("điện")) {
                 return "Khu vực xe đạp / xe điện";
             }
