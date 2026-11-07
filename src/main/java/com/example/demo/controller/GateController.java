@@ -304,8 +304,16 @@ public class GateController {
     public String checkOutPage(
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "maQR", required = false) String maQR,
+            @RequestParam(value = "paidSuccess", required = false) String paidSuccess,
+            @RequestParam(value = "plate", required = false) String plate,
+            @RequestParam(value = "fee", required = false) Double fee,
             Model model
     ) {
+        if ("true".equals(paidSuccess)) {
+            String feeStr = (fee != null && fee > 0) ? " " + String.format("%,.0f", fee) + " VNĐ" : "";
+            String plateStr = (plate != null && !plate.isBlank()) ? " [" + plate + "]" : "";
+            model.addAttribute("successMessage", "Xe" + plateStr + " đã thanh toán thành công" + feeStr + "! Đã hoàn tất thủ tục xuất bãi.");
+        }
         if ((code == null || code.trim().isEmpty()) && maQR != null && !maQR.trim().isEmpty()) {
             code = maQR;
         }
@@ -376,17 +384,15 @@ public class GateController {
             String staff = principal != null ? principal.getName() : "nhan_vien";
             VeXe veXe = parkingService.confirmCheckOut(veXeId, hinhThucThanhToan, anhRaData, ghiChu, bienSoThucTe, staff);
             
+            // Nếu người dùng xác nhận thanh toán chuyển khoản từ form, hoàn tất xuất bãi ngay
             if ("CHO_THANH_TOAN".equals(veXe.getTrangThaiThanhToan())) {
-                redirectAttributes.addFlashAttribute("infoMessage",
-                        "Đã tạo giao dịch chuyển khoản cho xe: " + veXe.getBienSoXe() +
-                                " | Số tiền: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ. Đang chờ nhân viên đối soát nhận tiền để hoàn tất xe ra.");
-                redirectAttributes.addFlashAttribute("pendingTicket", veXe);
-            } else {
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "Xác nhận xe ra thành công! Biển số: " + veXe.getBienSoXe() +
-                                " | Phí: " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ.");
-                redirectAttributes.addFlashAttribute("completedTicket", veXe);
+                String txn = "TXN-" + System.currentTimeMillis();
+                veXe = parkingService.xacNhanThanhToanChuyenKhoan(veXe.getId(), txn, staff);
             }
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Xe [" + veXe.getBienSoXe() + "] đã thanh toán thành công " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ! Đã hoàn tất thủ tục xuất bãi.");
+            redirectAttributes.addFlashAttribute("completedTicket", veXe);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -408,7 +414,7 @@ public class GateController {
             String txn = (maGiaoDich != null && !maGiaoDich.isBlank()) ? maGiaoDich : "BANK-" + System.currentTimeMillis();
             VeXe veXe = parkingService.xacNhanThanhToanChuyenKhoan(veXeId, txn, staff);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Đã xác nhận thanh toán chuyển khoản thành công! Hoàn tất xuất bãi cho xe: " + veXe.getBienSoXe());
+                    "Xe [" + veXe.getBienSoXe() + "] đã thanh toán thành công " + String.format("%,.0f", veXe.getChiPhi()) + " VNĐ! Đã hoàn tất thủ tục xuất bãi.");
             redirectAttributes.addFlashAttribute("completedTicket", veXe);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

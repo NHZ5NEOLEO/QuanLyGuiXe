@@ -456,10 +456,16 @@
                 </div>
             </div>
 
-            <!-- Success / Error Alert Notifications -->
+            <!-- Success / Info / Error Alert Notifications -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert" id="checkoutSuccessAlert">
-                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
-                <div class="flex-grow-1 fw-medium" th:text="${successMessage}">Thanh toán và cho xe ra thành công!</div>
+                <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+                <div class="flex-grow-1 fw-bold fs-6" th:text="${successMessage}">Xe đã thanh toán thành công và hoàn tất xuất bãi!</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div th:if="${infoMessage}" class="alert alert-info alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert">
+                <i class="fa-solid fa-circle-info fs-5 text-info"></i>
+                <div class="flex-grow-1 fw-medium" th:text="${infoMessage}">Thông báo đối soát thanh toán.</div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 

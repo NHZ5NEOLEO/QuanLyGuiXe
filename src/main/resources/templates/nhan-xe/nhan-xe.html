@@ -481,10 +481,16 @@
                 </div>
             </div>
 
-            <!-- Success / Error Alert Notifications -->
+            <!-- Success / Info / Error Alert Notifications -->
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert" id="checkoutSuccessAlert">
-                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
-                <div class="flex-grow-1 fw-medium" th:text="${successMessage}">Thanh toán và cho xe ra thành công!</div>
+                <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+                <div class="flex-grow-1 fw-bold fs-6" th:text="${successMessage}">Xe đã thanh toán thành công và hoàn tất xuất bãi!</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div th:if="${infoMessage}" class="alert alert-info alert-dismissible fade show d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert">
+                <i class="fa-solid fa-circle-info fs-5 text-info"></i>
+                <div class="flex-grow-1 fw-medium" th:text="${infoMessage}">Thông báo đối soát thanh toán.</div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
@@ -1272,10 +1278,12 @@
         playBarrierAudio(true);
         triggerBarrierOpen(7000, 'Xác nhận thanh toán thành công – Đã ghi nhận lượt xe ra!');
 
-        // Sau 4 giây tự động điều hướng tải lại trang /xe-ra sạch sẽ
+        // Sau 3 giây tự động điều hướng tải lại trang /xe-ra sạch sẽ kèm thông báo thành công
+        const plateVal = data.bienSoXe || data.plate || '';
+        const feeVal = data.chiPhi || 0;
         setTimeout(() => {
-            window.location.href = '/xe-ra';
-        }, 4000);
+            window.location.href = '/xe-ra?paidSuccess=true&plate=' + encodeURIComponent(plateVal) + '&fee=' + feeVal;
+        }, 3000);
     }
 
     // Auto-trigger barrier open on page load if checkout invoice is shown & start VietQR polling
@@ -1286,6 +1294,18 @@
             setTimeout(() => {
                 triggerBarrierOpen(6000, 'Thanh toán hoàn tất – Cổng Barie đã tự động nâng mở cho xe xuất bãi!');
             }, 300);
+            if (successEl && typeof Swal !== 'undefined') {
+                const msg = successEl.innerText.trim();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ĐÃ THANH TOÁN THÀNH CÔNG!',
+                    text: msg,
+                    timer: 5000,
+                    timerProgressBar: true,
+                    confirmButtonText: 'Đồng ý',
+                    confirmButtonColor: '#10B981'
+                });
+            }
             if (invoiceEl && window.innerWidth < 992) {
                 invoiceEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
