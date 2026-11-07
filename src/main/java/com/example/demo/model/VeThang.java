@@ -134,6 +134,15 @@ public class VeThang {
         this.giaTien = giaTien;
     }
 
+    // Alias getters/setters for flexibility
+    public Double getGiaVe() {
+        return giaTien;
+    }
+
+    public void setGiaVe(Double giaVe) {
+        this.giaTien = giaVe;
+    }
+
     public String getTrangThai() {
         return trangThai;
     }

@@ -109,8 +109,9 @@ public class MonthlyTicketController {
         try {
             String staff = principal != null ? principal.getName() : "admin";
             VeThang vt = monthlyTicketService.xacNhanThanhToanVeThang(veThangId, staff);
+            double giaTien = (vt.getGiaTien() != null) ? vt.getGiaTien() : 0.0;
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Xe [" + vt.getBienSoXe() + "] đã thanh toán thành công " + String.format("%,.0f", vt.getGiaVe()) + " VNĐ! Mã thẻ vé tháng: " + vt.getMaThe() + " đã được kích hoạt thành công.");
+                    "Xe [" + vt.getBienSoXe() + "] đã thanh toán thành công " + String.format("%,.0f", giaTien) + " VNĐ! Mã thẻ vé tháng: " + vt.getMaThe() + " đã được kích hoạt thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
