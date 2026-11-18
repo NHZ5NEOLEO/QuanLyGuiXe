@@ -40,6 +40,14 @@ public class VeXe {
     @JoinColumn(name = "khu_vuc_id")
     private KhuVuc khuVuc; // Phân khu đỗ xe thực tế của lượt gửi (Khu 2B, 4B, XD)
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "phuong_tien_id")
+    private PhuongTien phuongTien; // Hồ sơ phương tiện trong CSDL
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ca_truc_id")
+    private CaTruc caTruc; // Ca trực tiếp nhận xe
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dat_cho_truoc_id")
     private DatChoTruoc datChoTruoc; // Liên kết đơn đặt chỗ trước và tiền cọc nếu có
@@ -73,6 +81,9 @@ public class VeXe {
 
     @Column(name = "thoi_gian_thanh_toan")
     private LocalDateTime thoiGianThanhToan; // Thời điểm hoàn tất xác nhận thanh toán
+
+    @Column(name = "nguoi_tiep_nhan", length = 100)
+    private String nguoiTiepNhan; // Username nhân viên tiếp nhận xe vào bãi
 
     @Column(name = "nguoi_xac_nhan", length = 100)
     private String nguoiXacNhan; // Username nhân viên/admin xác nhận thu tiền
@@ -306,6 +317,30 @@ public class VeXe {
 
     public void setThoiGianThanhToan(LocalDateTime thoiGianThanhToan) {
         this.thoiGianThanhToan = thoiGianThanhToan;
+    }
+
+    public PhuongTien getPhuongTien() {
+        return phuongTien;
+    }
+
+    public void setPhuongTien(PhuongTien phuongTien) {
+        this.phuongTien = phuongTien;
+    }
+
+    public CaTruc getCaTruc() {
+        return caTruc;
+    }
+
+    public void setCaTruc(CaTruc caTruc) {
+        this.caTruc = caTruc;
+    }
+
+    public String getNguoiTiepNhan() {
+        return nguoiTiepNhan;
+    }
+
+    public void setNguoiTiepNhan(String nguoiTiepNhan) {
+        this.nguoiTiepNhan = nguoiTiepNhan;
     }
 
     public String getNguoiXacNhan() {

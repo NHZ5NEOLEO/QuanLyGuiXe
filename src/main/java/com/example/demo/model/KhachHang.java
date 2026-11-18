@@ -25,6 +25,10 @@ public class KhachHang {
     @Column(length = 255, columnDefinition = "NVARCHAR(255)")
     private String diaChi;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nguoi_dung_id")
+    private NguoiDung nguoiDung;
+
     public KhachHang() {
     }
 
@@ -82,5 +86,13 @@ public class KhachHang {
 
     public void setDiaChi(String diaChi) {
         this.diaChi = diaChi;
+    }
+
+    public NguoiDung getNguoiDung() {
+        return nguoiDung;
+    }
+
+    public void setNguoiDung(NguoiDung nguoiDung) {
+        this.nguoiDung = nguoiDung;
     }
 }

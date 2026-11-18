@@ -1,0 +1,31 @@
+sequenceDiagram
+    autonumber
+    actor Driver as Lái xe
+    actor Guard as Nhân viên Bảo vệ
+    participant Camera as Camera / OCR
+    participant WebUI as Giao diện Làn vào (Web UI)
+    participant Backend as Backend (GateController / ParkingService)
+    participant DB as SQL Server
+    participant Barrier as Cần Barie tự động
+
+    Driver->>Camera: Di chuyển phương tiện vào cổng
+    Camera->>WebUI: Chụp ảnh phương tiện & trích xuất biển số
+    WebUI->>Guard: Hiển thị ảnh chụp & biển số nhận diện
+    Guard->>WebUI: Kiểm tra đối chiếu & bấm "Xác nhận xe vào"
+    WebUI->>Backend: Gửi yêu cầu check-in (Biển số, Loại xe, Ảnh vào)
+    activate Backend
+    Backend->>DB: Kiểm tra Blacklist & Trùng xe trong bãi
+    DB-->>Backend: Dữ liệu hợp lệ (Không vi phạm)
+    Backend->>DB: Kiểm tra sức chứa phân khu đỗ xe
+    DB-->>Backend: Còn chỗ trống hợp lệ
+    Backend->>DB: INSERT bản ghi VeXe (Trạng thái: Đang gửi)
+    Backend->>Backend: Sinh mã định danh QR duy nhất
+    Backend-->>WebUI: Trả về kết quả thành công + Mã QR vé
+    deactivate Backend
+    WebUI->>Barrier: Kích hoạt tín hiệu mở cần Barie tự động
+    activate Barrier
+    Barrier-->>Driver: Nâng cần Barie, đèn chuyển Xanh
+    Driver->>Barrier: Xe di chuyển qua cổng vào bãi
+    Barrier-->>Barrier: Hạ cần Barie đóng cổng an toàn
+    deactivate Barrier
+    WebUI->>Driver: Cấp mã QR vé xe điện tử / In vé

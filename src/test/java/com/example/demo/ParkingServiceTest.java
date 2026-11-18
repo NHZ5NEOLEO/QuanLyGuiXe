@@ -6,15 +6,19 @@ import com.example.demo.dto.FeeCalculationResult;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.InvalidTicketStateException;
 import com.example.demo.exception.VehicleAlreadyParkedException;
+import com.example.demo.model.CaTruc;
 import com.example.demo.model.DanhSachDen;
 import com.example.demo.model.DatChoTruoc;
 import com.example.demo.model.KhuVuc;
 import com.example.demo.model.LoaiXe;
+import com.example.demo.model.PhuongTien;
 import com.example.demo.model.VeThang;
 import com.example.demo.model.VeXe;
+import com.example.demo.repository.CaTrucRepository;
 import com.example.demo.repository.DatChoTruocRepository;
 import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
+import com.example.demo.repository.PhuongTienRepository;
 import com.example.demo.repository.VeXeRepository;
 import com.example.demo.service.BlacklistService;
 import com.example.demo.service.FeeCalculationService;
@@ -67,6 +71,12 @@ public class ParkingServiceTest {
 
     @Mock
     private BlacklistService blacklistService;
+
+    @Mock
+    private CaTrucRepository caTrucRepository;
+
+    @Mock
+    private PhuongTienRepository phuongTienRepository;
 
     @InjectMocks
     private ParkingService parkingService;
@@ -400,5 +410,46 @@ public class ParkingServiceTest {
         assertThrows(InvalidTicketStateException.class, () -> {
             parkingService.confirmCheckOut(104, "TIEN_MAT", null, null);
         });
+    }
+
+    @Test
+    @DisplayName("15. Check-in liên kết Ca trực, Phương tiện và ghi nhận Người tiếp nhận")
+    void testCheckIn_LinksShiftVehicleAndStaff() {
+        CheckInRequest request = new CheckInRequest();
+        request.setBienSoXe("29B1-123.45");
+        request.setLoaiXeId(1L);
+
+        when(loaiXeRepository.findById(1L)).thenReturn(Optional.of(loaiXeMay));
+        when(blacklistService.checkBlacklist(anyString())).thenReturn(Optional.empty());
+        when(veXeRepository.existsByBienSoCleanAndTrangThai(anyString(), eq("Đang gửi"))).thenReturn(false);
+        when(veXeRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianVaoDesc(anyString(), eq("Đang gửi")))
+                .thenReturn(Optional.empty());
+        when(veXeRepository.findByMaQR(anyString())).thenReturn(Optional.empty());
+        when(monthlyTicketService.findActiveMonthlyPass(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(datChoTruocRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianDatDesc(anyString(), eq("CHO_DEN")))
+                .thenReturn(Optional.empty());
+        when(veXeRepository.save(any(VeXe.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CaTruc caTruc = new CaTruc();
+        caTruc.setId(10L);
+        caTruc.setTenCa("Ca sáng");
+        caTruc.setTrangThai("DANG_TRUC");
+        when(caTrucRepository.findFirstByTrangThaiOrderByThoiGianBatDauDesc("DANG_TRUC"))
+                .thenReturn(Optional.of(caTruc));
+
+        PhuongTien phuongTien = new PhuongTien();
+        phuongTien.setId(20L);
+        phuongTien.setBienSoXe("29B1-123.45");
+        when(phuongTienRepository.findByBienSoXe("29B1-123.45"))
+                .thenReturn(Optional.of(phuongTien));
+
+        VeXe result = parkingService.checkIn(request, "nv_nguyenvana");
+
+        assertNotNull(result);
+        assertEquals("nv_nguyenvana", result.getNguoiTiepNhan());
+        assertNotNull(result.getCaTruc());
+        assertEquals("Ca sáng", result.getCaTruc().getTenCa());
+        assertNotNull(result.getPhuongTien());
+        assertEquals("29B1-123.45", result.getPhuongTien().getBienSoXe());
     }
 }

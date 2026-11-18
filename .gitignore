@@ -37,6 +37,7 @@ __pycache__/
 *.pyc
 scratch/
 .agents/
+docx_qa/
 
 ### Local Environment Configuration ###
 .env

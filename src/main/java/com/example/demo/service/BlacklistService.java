@@ -1,8 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.model.DanhSachDen;
+import com.example.demo.model.NguoiDung;
+import com.example.demo.model.PhuongTien;
 import com.example.demo.model.VeXe;
 import com.example.demo.repository.DanhSachDenRepository;
+import com.example.demo.repository.NguoiDungRepository;
+import com.example.demo.repository.PhuongTienRepository;
 import com.example.demo.repository.VeThangRepository;
 import com.example.demo.repository.VeXeRepository;
 import com.example.demo.util.BienSoXeHelper;
@@ -22,18 +26,30 @@ public class BlacklistService implements DanhSachDenService {
     private final DanhSachDenRepository danhSachDenRepository;
     private final VeXeRepository veXeRepository;
     private final VeThangRepository veThangRepository;
+    private final PhuongTienRepository phuongTienRepository;
+    private final NguoiDungRepository nguoiDungRepository;
 
     @Autowired
     public BlacklistService(DanhSachDenRepository danhSachDenRepository,
                             VeXeRepository veXeRepository,
-                            VeThangRepository veThangRepository) {
+                            VeThangRepository veThangRepository,
+                            @Autowired(required = false) PhuongTienRepository phuongTienRepository,
+                            @Autowired(required = false) NguoiDungRepository nguoiDungRepository) {
         this.danhSachDenRepository = danhSachDenRepository;
         this.veXeRepository = veXeRepository;
         this.veThangRepository = veThangRepository;
+        this.phuongTienRepository = phuongTienRepository;
+        this.nguoiDungRepository = nguoiDungRepository;
+    }
+
+    public BlacklistService(DanhSachDenRepository danhSachDenRepository,
+                            VeXeRepository veXeRepository,
+                            VeThangRepository veThangRepository) {
+        this(danhSachDenRepository, veXeRepository, veThangRepository, null, null);
     }
 
     public BlacklistService(DanhSachDenRepository danhSachDenRepository, VeXeRepository veXeRepository) {
-        this(danhSachDenRepository, veXeRepository, null);
+        this(danhSachDenRepository, veXeRepository, null, null, null);
     }
 
     @Override
@@ -67,15 +83,36 @@ public class BlacklistService implements DanhSachDenService {
     @Transactional
     public DanhSachDen themVaoDanhSachDen(String bienSoXe, String lyDo, String mucDo, String nguoiThem) {
         String displayPlate = BienSoXeHelper.toDisplayFormat(bienSoXe);
+        
+        PhuongTien matchedVehicle = null;
+        if (phuongTienRepository != null) {
+            matchedVehicle = phuongTienRepository.findAll().stream()
+                    .filter(pt -> BienSoXeHelper.isSamePlate(pt.getBienSoXe(), bienSoXe))
+                    .findFirst().orElse(null);
+        }
+
+        NguoiDung matchedUser = null;
+        if (nguoiDungRepository != null && nguoiThem != null) {
+            matchedUser = nguoiDungRepository.findAll().stream()
+                    .filter(u -> nguoiThem.equalsIgnoreCase(u.getTenDangNhap()) || nguoiThem.equalsIgnoreCase(u.getHoTen()))
+                    .findFirst().orElse(null);
+            if (matchedUser == null) {
+                matchedUser = nguoiDungRepository.findById(1L).orElse(null);
+            }
+        }
+
         Optional<DanhSachDen> existing = kiemTraDanhSachDen(bienSoXe);
         if (existing.isPresent()) {
             DanhSachDen item = existing.get();
             item.setBienSoXe(displayPlate);
             item.setLyDo(lyDo);
             item.setMucDo(mucDo);
+            item.setNguoiThem(nguoiThem);
+            if (matchedVehicle != null) item.setPhuongTien(matchedVehicle);
+            if (matchedUser != null) item.setNguoiThemNguoiDung(matchedUser);
             return danhSachDenRepository.save(item);
         }
-        DanhSachDen item = new DanhSachDen(displayPlate, lyDo, mucDo, nguoiThem);
+        DanhSachDen item = new DanhSachDen(displayPlate, lyDo, mucDo, nguoiThem, matchedVehicle, matchedUser);
         return danhSachDenRepository.save(item);
     }
 

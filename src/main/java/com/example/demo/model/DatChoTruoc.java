@@ -16,7 +16,7 @@ public class DatChoTruoc {
     @Column(nullable = false, length = 30, unique = true)
     private String maDatCho; // BK-261010-001
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String hoTen;
 
     @Column(nullable = false, length = 20)
@@ -27,6 +27,14 @@ public class DatChoTruoc {
 
     @Column(name = "ma_khu_vuc", length = 50)
     private String maKhuVuc = "Khu vực xe hai bánh";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "khu_vuc_id")
+    private KhuVuc khuVuc;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "phuong_tien_id")
+    private PhuongTien phuongTien;
 
     @Column(nullable = false)
     private LocalDateTime thoiGianDat;
@@ -169,5 +177,21 @@ public class DatChoTruoc {
 
     public void setTrangThai(String trangThai) {
         this.trangThai = trangThai;
+    }
+
+    public KhuVuc getKhuVuc() {
+        return khuVuc;
+    }
+
+    public void setKhuVuc(KhuVuc khuVuc) {
+        this.khuVuc = khuVuc;
+    }
+
+    public PhuongTien getPhuongTien() {
+        return phuongTien;
+    }
+
+    public void setPhuongTien(PhuongTien phuongTien) {
+        this.phuongTien = phuongTien;
     }
 }

@@ -24,6 +24,10 @@ public class PasswordResetOtp {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nguoi_dung_id")
+    private NguoiDung nguoiDung;
+
     public PasswordResetOtp() {}
 
     public PasswordResetOtp(String email, String otp, int durationMinutes) {
@@ -84,6 +88,14 @@ public class PasswordResetOtp {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public NguoiDung getNguoiDung() {
+        return nguoiDung;
+    }
+
+    public void setNguoiDung(NguoiDung nguoiDung) {
+        this.nguoiDung = nguoiDung;
     }
 }
 

@@ -1,0 +1,54 @@
+graph TD
+    subgraph Presentation["Tầng Giao Diện (Presentation Layer)"]
+        UI_Web["Trình duyệt Web (HTML5, Bootstrap 5, Thymeleaf, JavaScript)"]
+        UI_Admin["Giao diện Quản trị / Dashboard (Chart.js, Dark/Light Mode)"]
+        UI_Gate["Giao diện Trực cổng Vào/Ra (Webcam Video, QR Scanner)"]
+        UI_Portal["Cổng dịch vụ công khai (Tra cứu xe, Đăng ký vé tháng, Đánh giá)"]
+    end
+
+    subgraph Business["Tầng Xử Lý Nghiệp Vụ (Business Logic Layer - Spring Boot 4 / Java 17)"]
+        Ctrl_Gate["GateController & ApiGateController"]
+        Ctrl_Auth["AuthController & Spring Security"]
+        Ctrl_Report["DashboardController & ReportService"]
+        Ctrl_Shift["ShiftController (Quản lý ca trực)"]
+        Svc_Parking["ParkingService (Điều phối Vào/Ra)"]
+        Svc_Fee["FeeCalculationService (Tính phí lũy tiến Ngày/Đêm)"]
+        Svc_QR["QrCodeService & VietQrService (Sinh mã QR & VietQR)"]
+        Svc_Blacklist["BlacklistService (Cảnh báo an ninh)"]
+        Svc_Monthly["MonthlyTicketService (Thuê bao vé tháng)"]
+    end
+
+    subgraph DataAccess["Tầng Truy Xuất Dữ Liệu (Data Access Layer)"]
+        JPA["Spring Data JPA & Hibernate ORM"]
+        Repo["VeXeRepository, NguoiDungRepository, LoaiXeRepository..."]
+    end
+
+    subgraph DatabaseLayer["Tầng Cơ Sở Dữ Liệu (Database Layer)"]
+        SQLServer[("Microsoft SQL Server 2022<br/>Database: QuanLyGuiXe<br/>(11 bảng dữ liệu chuẩn Unicode NVARCHAR)")]
+    end
+
+    subgraph Hardware["Thiết Bị & Dịch Vụ Tích Hợp (Software-in-the-Loop)"]
+        Cam["Camera nhận diện biển số (Webcam / Tesseract OCR)"]
+        Barie["Cần Barie tự động (Mô phỏng động cơ & Đèn tín hiệu)"]
+        NAPAS["Cổng thanh toán VietQR (Chuẩn NAPAS 24/7)"]
+    end
+
+    UI_Web --> Ctrl_Gate
+    UI_Admin --> Ctrl_Report
+    UI_Gate --> Ctrl_Gate
+    UI_Portal --> Ctrl_Gate
+
+    Ctrl_Gate --> Svc_Parking
+    Ctrl_Gate --> Svc_Fee
+    Ctrl_Gate --> Svc_QR
+    Ctrl_Gate --> Svc_Blacklist
+    Ctrl_Auth --> Svc_Monthly
+
+    Svc_Parking --> JPA
+    Svc_Fee --> JPA
+    Svc_Monthly --> JPA
+    JPA --> SQLServer
+
+    Cam -.->|Truyền ảnh & nhận diện| UI_Gate
+    Svc_QR -.->|Sinh mã VietQR| NAPAS
+    UI_Gate -.->|Tín hiệu điều khiển mở| Barie

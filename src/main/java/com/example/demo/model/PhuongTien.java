@@ -30,6 +30,10 @@ public class PhuongTien {
     @Column(name = "mo_ta", length = 255, columnDefinition = "NVARCHAR(255)")
     private String moTa;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "khach_hang_id")
+    private KhachHang khachHang;
+
     @Column(name = "ngay_tao", nullable = false)
     private LocalDateTime ngayTao = LocalDateTime.now();
 
@@ -118,5 +122,13 @@ public class PhuongTien {
 
     public void setNgayTao(LocalDateTime ngayTao) {
         this.ngayTao = ngayTao;
+    }
+
+    public KhachHang getKhachHang() {
+        return khachHang;
+    }
+
+    public void setKhachHang(KhachHang khachHang) {
+        this.khachHang = khachHang;
     }
 }

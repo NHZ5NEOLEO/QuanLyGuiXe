@@ -749,7 +749,7 @@
                                         <!-- Nút nhân viên xác nhận đã nhận chuyển khoản -->
                                         <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold shadow-xs" 
                                                 th:data-id="${preview.veXeId}" th:data-code="${preview.maQR}"
-                                                onclick="confirmStaffReceivedBankTransfer(this.getAttribute('data-id'), this.getAttribute('data-code'))">
+                                                onclick="confirmStaffReceivedBankTransfer(this, this.getAttribute('data-id'), this.getAttribute('data-code'))">
                                             <i class="fa-solid fa-circle-check text-success me-1"></i> Nhân viên xác nhận: Đã nhận đủ tiền chuyển khoản
                                         </button>
                                     </div>
@@ -1080,7 +1080,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/app.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- HTML5 QR Code Scanner Library (Local with CDN fallback) -->
+<!-- HTML5 QR Code & jsQR Scanner Libraries (Local with CDN fallback) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script th:src="@{/js/html5-qrcode.min.js}"></script>
 <script>
     if (typeof Html5Qrcode === 'undefined') {
@@ -1216,8 +1217,25 @@
         }, 2000);
     }
 
-    async function confirmStaffReceivedBankTransfer(veXeId, code) {
-        const btn = event ? event.currentTarget : null;
+    async function confirmStaffReceivedBankTransfer(btnElement, veXeId, code) {
+        let btn = null;
+        let targetId = veXeId;
+        let targetCode = code;
+
+        if (btnElement instanceof HTMLElement) {
+            btn = btnElement;
+            if (!targetId && btn.getAttribute('data-id')) {
+                targetId = btn.getAttribute('data-id');
+            }
+            if (!targetCode && btn.getAttribute('data-code')) {
+                targetCode = btn.getAttribute('data-code');
+            }
+        } else {
+            targetId = btnElement;
+            targetCode = veXeId;
+            btn = (typeof event !== 'undefined' && event && event.currentTarget) ? event.currentTarget : null;
+        }
+
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xác nhận thanh toán...';
@@ -1226,8 +1244,8 @@
         try {
             const captured = typeof getCapturedFrameData === 'function' ? getCapturedFrameData() : null;
             const payload = {
-                veXeId: veXeId,
-                code: code,
+                veXeId: targetId,
+                code: targetCode,
                 anhRaData: captured
             };
             const res = await fetch('/api/gate/confirm-bank-transfer', {
@@ -1464,6 +1482,11 @@
         if (btnIcon) btnIcon.className = 'fa-solid fa-camera me-1.5';
         isCameraRunning = false;
 
+        if (liveQrScanInterval) {
+            clearInterval(liveQrScanInterval);
+            liveQrScanInterval = null;
+        }
+
         if (html5QrScanner) {
             try { html5QrScanner.stop(); } catch(e){}
             html5QrScanner = null;
@@ -1605,8 +1628,47 @@
         document.getElementById('searchTicketForm').submit();
     }
 
+    let liveQrScanInterval = null;
+
     function startLiveQrScanning() {
-        // Placeholder for background frame decoder
+        if (liveQrScanInterval) {
+            clearInterval(liveQrScanInterval);
+            liveQrScanInterval = null;
+        }
+
+        const video = document.getElementById('webcamVideo');
+        if (!video) return;
+
+        liveQrScanInterval = setInterval(() => {
+            if (!isCameraRunning || !currentStream || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+            // Sử dụng jsQR quét liên tục từng frame video từ webcam
+            if (typeof jsQR !== 'undefined') {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert"
+                    });
+                    if (code && code.data && code.data.trim().length > 0) {
+                        const scannedCode = code.data.trim();
+                        console.log("QR Code scanned via live webcam:", scannedCode);
+                        if (liveQrScanInterval) {
+                            clearInterval(liveQrScanInterval);
+                            liveQrScanInterval = null;
+                        }
+                        handleExitCodeIdentified(scannedCode);
+                        return;
+                    }
+                } catch (e) {
+                    // Bỏ qua lỗi frame tạm thời
+                }
+            }
+        }, 400);
     }
 
     // =========================================================================

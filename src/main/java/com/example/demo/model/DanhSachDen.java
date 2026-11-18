@@ -25,6 +25,14 @@ public class DanhSachDen {
     @Column(length = 100, columnDefinition = "NVARCHAR(100)")
     private String nguoiThem;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "phuong_tien_id")
+    private PhuongTien phuongTien;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "nguoi_them_id")
+    private NguoiDung nguoiThemNguoiDung;
+
     public DanhSachDen() {
     }
 
@@ -33,6 +41,16 @@ public class DanhSachDen {
         this.lyDo = lyDo;
         this.mucDo = mucDo;
         this.nguoiThem = nguoiThem;
+        this.ngayThem = LocalDateTime.now();
+    }
+
+    public DanhSachDen(String bienSoXe, String lyDo, String mucDo, String nguoiThem, PhuongTien phuongTien, NguoiDung nguoiThemNguoiDung) {
+        this.bienSoXe = bienSoXe;
+        this.lyDo = lyDo;
+        this.mucDo = mucDo;
+        this.nguoiThem = nguoiThem;
+        this.phuongTien = phuongTien;
+        this.nguoiThemNguoiDung = nguoiThemNguoiDung;
         this.ngayThem = LocalDateTime.now();
     }
 
@@ -82,5 +100,21 @@ public class DanhSachDen {
 
     public void setNguoiThem(String nguoiThem) {
         this.nguoiThem = nguoiThem;
+    }
+
+    public PhuongTien getPhuongTien() {
+        return phuongTien;
+    }
+
+    public void setPhuongTien(PhuongTien phuongTien) {
+        this.phuongTien = phuongTien;
+    }
+
+    public NguoiDung getNguoiThemNguoiDung() {
+        return nguoiThemNguoiDung;
+    }
+
+    public void setNguoiThemNguoiDung(NguoiDung nguoiThemNguoiDung) {
+        this.nguoiThemNguoiDung = nguoiThemNguoiDung;
     }
 }

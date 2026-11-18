@@ -1,0 +1,147 @@
+erDiagram
+    NguoiDung ||--o{ CaTruc : "thuc hien"
+    NguoiDung ||--o{ KhachHang : "lien ket portal"
+    
+    KhachHang ||--o{ PhuongTien : "so huu"
+    KhachHang ||--o{ VeThang : "dang ky"
+    
+    LoaiXe ||--o{ KhuVuc : "quy hoach"
+    LoaiXe ||--o{ PhuongTien : "phan loai"
+    LoaiXe ||--o{ VeThang : "ap dung bieu phi"
+    LoaiXe ||--o{ VeXe : "tinh phi luot"
+    
+    KhuVuc ||--o{ VeXe : "do tai khu"
+    VeThang ||--o{ VeXe : "mien phi ve thang"
+    DatChoTruoc ||--o| VeXe : "khau tru coc"
+
+    NguoiDung {
+        bigint id PK
+        nvarchar ten_dang_nhap UK
+        varchar mat_khau
+        nvarchar ho_ten
+        varchar vai_tro
+        varchar so_dien_thoai
+        nvarchar email
+        bit trang_thai
+    }
+
+    KhachHang {
+        bigint id PK
+        nvarchar ho_ten
+        varchar so_dien_thoai UK
+        varchar cccd
+        varchar email
+        nvarchar dia_chi
+    }
+
+    LoaiXe {
+        bigint id PK
+        nvarchar ten_loai UK
+        decimal gia_ban_ngay
+        decimal gia_ban_dem
+        decimal gia_thang
+        varchar icon_class
+        nvarchar mo_ta
+    }
+
+    KhuVuc {
+        bigint id PK
+        varchar ma_khu UK
+        nvarchar ten_khu
+        bigint loai_xe_id FK
+        int suc_chua
+        nvarchar vi_tri
+    }
+
+    PhuongTien {
+        bigint id PK
+        varchar ma_phuong_tien UK
+        varchar bien_so_xe UK
+        bigint loai_xe_id FK
+        nvarchar chu_xe
+        varchar so_dien_thoai
+        nvarchar mo_ta
+        datetime2 ngay_tao
+    }
+
+    VeThang {
+        bigint id PK
+        varchar ma_the UK
+        bigint khach_hang_id FK
+        bigint loai_xe_id FK
+        varchar bien_so_xe
+        date ngay_bat_dau
+        date ngay_het_han
+        decimal gia_tien
+        varchar trang_thai
+    }
+
+    VeXe {
+        bigint id PK
+        varchar ma_qr UK
+        varchar bien_so_xe
+        varchar bien_so_clean
+        bigint loai_xe_id FK
+        bigint khu_vuc_id FK
+        bigint ve_thang_id FK
+        bigint dat_cho_truoc_id FK
+        datetime2 thoi_gian_vao
+        datetime2 thoi_gian_ra
+        decimal chi_phi
+        decimal so_tien_thuc_thu
+        varchar hinh_thuc_thanh_toan
+        varchar trang_thai_thanh_toan
+        nvarchar trang_thai
+        nvarchar anh_vao_url
+        nvarchar anh_ra_url
+        nvarchar ghi_chu
+    }
+
+    CaTruc {
+        bigint id PK
+        varchar ma_ca
+        nvarchar ten_ca
+        bigint nguoi_dung_id FK
+        datetime2 thoi_gian_bat_dau
+        datetime2 thoi_gian_ket_thuc
+        int tong_luot_vao
+        int tong_luot_ra
+        decimal tien_mat_thu_duoc
+        decimal chuyen_khoan_thu_duoc
+        decimal tong_doanh_thu
+        varchar trang_thai
+        nvarchar ghi_chu_ban_giao
+    }
+
+    DanhSachDen {
+        bigint id PK
+        varchar bien_so_xe UK
+        nvarchar ly_do
+        nvarchar muc_do
+        nvarchar nguoi_them
+        datetime2 ngay_them
+    }
+
+    DatChoTruoc {
+        bigint id PK
+        varchar ma_dat_cho UK
+        nvarchar ho_ten
+        varchar so_dien_thoai
+        varchar bien_so_xe
+        varchar ma_khu_vuc
+        datetime2 thoi_gian_dat
+        datetime2 thoi_gian_het_han
+        decimal tien_coc
+        bit da_thanh_toan_coc
+        varchar trang_thai
+    }
+
+    DanhGia {
+        bigint id PK
+        nvarchar ho_ten
+        varchar so_dien_thoai
+        int so_sao
+        nvarchar noi_dung
+        varchar loai_dich_vu
+        datetime2 thoi_gian
+    }

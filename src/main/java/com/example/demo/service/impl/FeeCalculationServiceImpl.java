@@ -76,7 +76,13 @@ public class FeeCalculationServiceImpl implements FeeCalculationService {
                     || (gioRa >= 22 || gioRa < 6)
                     || (totalMinutes > 12 * 60);
 
-            if (quaDem) {
+            // Xe đỗ dài bao gồm cả khung giờ ngày (06:00 - 22:00) và khung giờ đêm (22:00 - 06:00)
+            boolean caHaiKhungGio = quaDem && (totalMinutes > 14 * 60);
+
+            if (caHaiKhungGio) {
+                baseFee = giaNgay + giaDem;
+                quyTac = "Biểu phí kết hợp ca ngày và ca đêm (" + String.format("%,.0f", baseFee) + " VNĐ)";
+            } else if (quaDem) {
                 baseFee = giaDem;
                 quyTac = "Biểu phí ban đêm / trên 12 giờ (" + String.format("%,.0f", giaDem) + " VNĐ)";
             } else {

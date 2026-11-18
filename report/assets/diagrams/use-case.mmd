@@ -1,0 +1,42 @@
+flowchart LR
+    subgraph Tác Nhân
+        Customer(("Khách hàng / Cư dân"))
+        Guard(("Nhân viên Bảo vệ"))
+        Admin(("Quản trị viên"))
+    end
+
+    subgraph Hệ Thống Quản Lý Gửi Xe
+        UC_Login["Đăng nhập hệ thống"]
+        UC_Entry["Tiếp nhận xe vào & Xác nhận Camera"]
+        UC_Exit["Xử lý xe ra & Đối chiếu ảnh"]
+        UC_QR_Ticket["Cấp & Tra cứu mã QR vé xe"]
+        UC_Fee["Tính toán chi phí gửi xe"]
+        UC_Pay["Thanh toán tiền mặt / Quét VietQR"]
+        UC_Shift["Bàn giao ca trực & Đối soát tiền"]
+        UC_Monthly["Quản lý & Đăng ký vé tháng"]
+        UC_Security["Cảnh báo xe quá 24h & Blacklist"]
+        UC_Dashboard["Xem Dashboard & Thống kê doanh thu"]
+        UC_Price["Cài đặt biểu phí gửi xe"]
+        UC_User["Quản lý tài khoản & phân quyền"]
+        UC_Portal["Tra cứu xe công khai & Đánh giá dịch vụ"]
+    end
+
+    Customer --> UC_Portal
+    Customer --> UC_Pay
+    Customer --> UC_Monthly
+
+    Guard --> UC_Login
+    Guard --> UC_Entry
+    Guard --> UC_Exit
+    Guard --> UC_QR_Ticket
+    Guard --> UC_Fee
+    Guard --> UC_Shift
+    Guard --> UC_Security
+
+    Admin --> UC_Login
+    Admin --> UC_Dashboard
+    Admin --> UC_Price
+    Admin --> UC_User
+    Admin --> UC_Security
+    Admin --> UC_Monthly
+    Admin --> UC_Shift

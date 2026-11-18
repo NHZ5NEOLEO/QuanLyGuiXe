@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    actor Guard as Nhân viên Bảo vệ
+    participant WebUI as Giao diện Làn ra (Web UI)
+    participant Backend as Backend (ParkingService / FeeService)
+    participant DB as SQL Server
+    participant VietQR as Hệ thống VietQR NAPAS
+    participant Barrier as Cần Barie tự động
+
+    Customer->>Guard: Xuất trình mã QR vé xe / đọc biển số
+    Guard->>WebUI: Quét QR hoặc nhập biển số tra cứu
+    WebUI->>Backend: GET /api/gate/check-out/preview?query=...
+    activate Backend
+    Backend->>DB: Truy vấn vé xe trạng thái 'Đang gửi'
+    DB-->>Backend: Thông tin vé (Thời gian vào, Loại xe, Ảnh vào)
+    Backend->>Backend: Tính thời lượng & Cước phí gửi xe (Lũy tiến Ngày/Đêm)
+    Backend-->>WebUI: Trả về thông tin chi phí & Ảnh vào để đối chiếu
+    deactivate Backend
+    WebUI->>Guard: Hiển thị số tiền & ảnh vào/ra để so sánh
+    alt Khách có vé tháng hợp lệ
+        WebUI->>WebUI: Tự động áp dụng cước 0 VNĐ (Miễn phí)
+    else Khách thanh toán VietQR
+        WebUI->>VietQR: Yêu cầu sinh mã QR thanh toán động
+        VietQR-->>WebUI: Trả về hình ảnh mã VietQR chuẩn NAPAS
+        Customer->>VietQR: Quét mã chuyển khoản qua App ngân hàng
+        Guard->>WebUI: Bấm xác nhận đã nhận chuyển khoản
+    else Khách thanh toán Tiền mặt
+        Customer->>Guard: Giao tiền mặt tại quầy
+        Guard->>WebUI: Bấm xác nhận đã thu tiền mặt
+    end
+    WebUI->>Backend: POST /api/gate/check-out/confirm
+    activate Backend
+    Backend->>DB: UPDATE VeXe (Trạng thái: Đã ra, Lưu chi phí & giờ ra)
+    Backend-->>WebUI: Xác nhận xe ra thành công
+    deactivate Backend
+    WebUI->>Barrier: Kích hoạt tín hiệu mở cần Barie tự động
+    activate Barrier
+    Barrier-->>Customer: Mở cần Barie cho xe xuất bãi
+    deactivate Barrier
+    WebUI->>Customer: In biên lai thu tiền POS 80mm

@@ -53,6 +53,19 @@ public class FeeCalculationServiceTest {
     }
 
     @Test
+    @DisplayName("Tính phí gửi xe qua cả ca ngày và ca đêm (> 14h trong 24h)")
+    void testCalculate_CombinedDayAndNight_Motorbike() {
+        LocalDateTime vao = LocalDateTime.of(2026, 10, 12, 7, 0);
+        LocalDateTime ra = LocalDateTime.of(2026, 10, 12, 23, 0); // 16 giờ
+
+        FeeCalculationResult result = feeCalculationService.calculate(xeMay, vao, ra, false, false);
+
+        assertNotNull(result);
+        assertEquals(10000.0, result.getSoTienThanhToan());
+        assertTrue(result.getQuyTacApDung().contains("kết hợp ca ngày và ca đêm"));
+    }
+
+    @Test
     @DisplayName("Tính phí lưu bãi nhiều ngày (3 ngày 2 giờ) kèm phụ phí tồn bãi > 24h")
     void testCalculate_MultiDay() {
         LocalDateTime vao = LocalDateTime.of(2026, 10, 10, 8, 0);

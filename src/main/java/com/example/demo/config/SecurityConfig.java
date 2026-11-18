@@ -75,12 +75,14 @@ public class SecurityConfig {
                 .requestMatchers("/dang-ky-ve-thang", "/dang-ky-ve-thang/**", "/portal/api/register-monthly").permitAll()
                 .requestMatchers("/danh-gia", "/danh-gia/**", "/portal/api/feedback", "/portal/api/feedbacks").permitAll()
                 .requestMatchers("/qr-entry", "/qr-exit", "/qr-cong-vao", "/qr-cong-ra", "/customer-checkin", "/customer-checkout", "/khach-gui-xe", "/khach-nhan-xe", "/khach-xe-vao", "/khach-xe-ra").permitAll()
-                // 4. API tra cứu công khai (chỉ xem, không làm thay đổi trạng thái bãi xe hay tạo lượt gửi)
-                .requestMatchers("/api/gate/check-plate", "/api/xe-vao/check-plate", "/api/check-plate").permitAll()
+                // 4. API tra cứu công khai & khách quét mã check-in cổng vào
+                .requestMatchers("/api/gate/check-plate", "/api/xe-vao/check-plate", "/api/check-plate", "/api/gate/qr-checkin").permitAll()
                 .requestMatchers("/api/gate/qr-checkout-preview", "/api/parking/preview-checkout").permitAll()
                 .requestMatchers("/api/gate/check-qr-paid", "/api/parking/qr/**").permitAll()
 
                 // 5. Trang và API chỉ dành riêng cho Quản trị viên (ADMIN)
+                .requestMatchers("/ve-xe/*/xoa", "/tickets/*/delete", "/ve-xe/*/delete").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/tickets/**", "/api/ve-xe/**").hasRole("ADMIN")
                 .requestMatchers("/staff", "/staff/**", "/nhan-vien", "/nhan-vien/**", "/nguoi-dung", "/nguoi-dung/**", "/users", "/users/**", "/quan-ly-nguoi-dung", "/quan-ly-nguoi-dung/**", "/quan-ly-nhan-vien", "/quan-ly-nhan-vien/**").hasRole("ADMIN")
                 .requestMatchers("/thong-tin-danh-gia", "/thong-tin-danh-gia/**", "/danh-gia-khach-hang", "/danh-gia-khach-hang/**", "/reviews", "/reviews/**", "/quan-ly-danh-gia", "/quan-ly-danh-gia/**", "/danh-gia-he-thong", "/danh-gia-he-thong/**").hasRole("ADMIN")
                 .requestMatchers("/price-settings/**", "/bang-gia/**").hasRole("ADMIN")
@@ -94,12 +96,12 @@ public class SecurityConfig {
                 // Nghiêm ngặt: Tất cả API tạo lượt gửi xe (check-in) và xác nhận checkout phải yêu cầu nhân viên/admin đăng nhập
                 .requestMatchers("/gui-xe", "/gui-xe/**", "/nhan-xe", "/nhan-xe/**", "/xe-vao", "/xe-vao/**", "/xe-ra", "/xe-ra/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/gate/**", "/check-in/**", "/check-out/**", "/checkin", "/checkout/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/api/gate/check-in", "/api/gate/qr-checkin", "/api/gate/check-out/confirm").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/api/gate/check-in", "/api/gate/check-out/confirm").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/api/parking/check-in", "/api/parking/check-out").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/active-vehicles/**", "/xe-trong-bai/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/history/**", "/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/ve-xe", "/ve-xe/**", "/tickets", "/tickets/**", "/history/**", "/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/security-alerts/**", "/canh-bao-an-ninh/**", "/shift/**", "/ca-truc/**").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers("/api/tickets/**", "/api/parking/**", "/api/parking-map/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/api/tickets/**", "/api/ve-xe/**", "/api/parking/**", "/api/parking-map/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
 
                 // 7. Mọi request khác cần xác thực đăng nhập
                 .anyRequest().authenticated()

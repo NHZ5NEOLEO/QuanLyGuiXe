@@ -283,9 +283,11 @@ public class GateController {
      * Xử lý xe vào từ Form tại trang /gui-xe hoặc /xe-vao
      */
     @PostMapping({"/gui-xe", "/parking/check-in", "/xe-vao"})
-    public String handleCheckIn(@ModelAttribute CheckInRequest request, RedirectAttributes redirectAttributes) {
+    public String handleCheckIn(@ModelAttribute CheckInRequest request, java.security.Principal principal, RedirectAttributes redirectAttributes) {
         try {
-            VeXe veXe = parkingService.checkIn(request);
+            VeXe veXe = (principal != null)
+                    ? parkingService.checkIn(request, principal.getName())
+                    : parkingService.checkIn(request);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Xe vào bãi thành công! Biển số: " + veXe.getBienSoXe() + " | Mã vé: " + veXe.getMaQR());
             redirectAttributes.addFlashAttribute("newTicket", veXe);

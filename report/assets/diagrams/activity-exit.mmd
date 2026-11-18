@@ -1,0 +1,25 @@
+flowchart TD
+    Start([Phương tiện tiến vào làn ra]) --> Scan[Khách xuất trình mã QR hoặc đọc biển số xe]
+    Scan --> Lookup[Nhân viên quét mã QR hoặc nhập biển số tra cứu]
+    Lookup --> CheckTicket{Tìm thấy vé 'Đang gửi'?}
+    CheckTicket -- Không --> NotFound[Báo lỗi: Không tìm thấy lượt gửi xe] --> Stop([Dừng xử lý])
+
+    CheckTicket -- Có --> CamExit[Camera chụp ảnh phương tiện lúc ra bãi]
+    CamExit --> Compare[Nhân viên đối chiếu ảnh lúc vào và ảnh lúc ra]
+    Compare --> Match{Biển số và ảnh khớp?}
+    Match -- Không --> Suspicious[Cảnh báo an ninh: Nghi vấn trộm cắp / lệch biển] --> Stop
+
+    Match -- Có --> Calc[Hệ thống tự động tính thời gian và cước phí gửi xe]
+    Calc --> CheckMonthly{Xe có vé tháng còn hạn?}
+    CheckMonthly -- Có --> FreePass[Miễn phí lượt gửi: Phí = 0 VNĐ] --> FinishOut
+    
+    CheckMonthly -- Không --> ChoosePay{Hình thức thanh toán}
+    ChoosePay -- Tiền mặt --> Cash[Nhân viên thu tiền mặt] --> FinishOut
+    ChoosePay -- VietQR --> QRGen[Tự động sinh mã VietQR NAPAS động theo đúng số tiền]
+    QRGen --> PayQR[Khách quét mã thanh toán qua ứng dụng ngân hàng]
+    PayQR --> ConfirmBank[Nhân viên xác nhận tiền đã vào tài khoản] --> FinishOut
+
+    FinishOut[Cập nhật trạng thái vé: 'Đã ra' và lưu doanh thu]
+    FinishOut --> OpenBarie[Barie tự động mở cần cho xe xuất bãi]
+    OpenBarie --> PrintBill[In hóa đơn nhiệt POS 80mm cho khách]
+    PrintBill --> EndSuccess([Hoàn tất lượt xe ra])

@@ -1,0 +1,25 @@
+flowchart TD
+    Start([Phương tiện tiến vào làn vào]) --> Step1[Camera chụp ảnh và nhận diện biển số xe]
+    Step1 --> Step2[Hệ thống hiển thị hình ảnh và biển số lên màn hình trực cổng]
+    Step2 --> Step3[Bảo vệ kiểm tra và đối chiếu biển số thực tế]
+    Step3 --> Decision1{Biển số có cần chỉnh sửa?}
+    Decision1 -- Có --> FixPlate[Bảo vệ chỉnh sửa lại biển số chính xác]
+    Decision1 -- Không --> ConfirmPlate[Bảo vệ nhấn nút Xác nhận cho xe vào]
+    FixPlate --> ConfirmPlate
+
+    ConfirmPlate --> Step4[Backend kiểm tra dữ liệu đầu vào]
+    Step4 --> CheckBlacklist{Biển số thuộc Blacklist?}
+    CheckBlacklist -- Có --> AlertBlacklist[Báo động đỏ: Từ chối xe vào bãi] --> Stop([Dừng quy trình])
+    
+    CheckBlacklist -- Không --> CheckParked{Xe đang có trong bãi?}
+    CheckParked -- Có --> AlertParked[Báo lỗi: Xe chưa hoàn tất lượt ra trước đó] --> Stop
+
+    CheckParked -- Không --> CheckCapacity{Phân khu còn chỗ trống?}
+    CheckCapacity -- Không --> AlertFull[Báo lỗi: Phân khu bãi đỗ đã đầy] --> Stop
+
+    CheckCapacity -- Có --> CreateTicket[Tạo bản ghi VeXe trạng thái 'Đang gửi']
+    CreateTicket --> GenQR[Sinh mã QR vé xe duy nhất bằng ZXing]
+    GenQR --> OpenBarrier[Gửi tín hiệu điều khiển Barie tự động nâng cần]
+    OpenBarrier --> CarIn[Phương tiện đi qua cổng vào bãi đỗ]
+    CarIn --> CloseBarrier[Cần Barie tự động hạ xuống hoàn tất]
+    CloseBarrier --> EndSuccess([Kết thúc lượt xe vào])

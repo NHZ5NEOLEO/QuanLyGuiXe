@@ -14,11 +14,14 @@ import com.example.demo.model.KhuVuc;
 import com.example.demo.model.LoaiXe;
 import com.example.demo.model.VeThang;
 import com.example.demo.model.VeXe;
+import com.example.demo.repository.CaTrucRepository;
 import com.example.demo.repository.DatChoTruocRepository;
 import com.example.demo.repository.KhuVucRepository;
 import com.example.demo.repository.LoaiXeRepository;
+import com.example.demo.repository.PhuongTienRepository;
 import com.example.demo.repository.VeXeRepository;
 import com.example.demo.util.BienSoXeHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,33 @@ public class ParkingService implements XuLyGuiXeService {
     private final QrCodeService qrCodeService;
     private final KhuVucRepository khuVucRepository;
     private final BlacklistService blacklistService;
+    private final CaTrucRepository caTrucRepository;
+    private final PhuongTienRepository phuongTienRepository;
+
+    @Autowired
+    public ParkingService(VeXeRepository veXeRepository,
+                          LoaiXeRepository loaiXeRepository,
+                          MonthlyTicketService monthlyTicketService,
+                          VietQrService vietQrService,
+                          DatChoTruocRepository datChoTruocRepository,
+                          FeeCalculationService feeCalculationService,
+                          QrCodeService qrCodeService,
+                          KhuVucRepository khuVucRepository,
+                          BlacklistService blacklistService,
+                          CaTrucRepository caTrucRepository,
+                          PhuongTienRepository phuongTienRepository) {
+        this.veXeRepository = veXeRepository;
+        this.loaiXeRepository = loaiXeRepository;
+        this.monthlyTicketService = monthlyTicketService;
+        this.vietQrService = vietQrService;
+        this.datChoTruocRepository = datChoTruocRepository;
+        this.feeCalculationService = feeCalculationService;
+        this.qrCodeService = qrCodeService;
+        this.khuVucRepository = khuVucRepository;
+        this.blacklistService = blacklistService;
+        this.caTrucRepository = caTrucRepository;
+        this.phuongTienRepository = phuongTienRepository;
+    }
 
     public ParkingService(VeXeRepository veXeRepository,
                           LoaiXeRepository loaiXeRepository,
@@ -51,15 +81,9 @@ public class ParkingService implements XuLyGuiXeService {
                           QrCodeService qrCodeService,
                           KhuVucRepository khuVucRepository,
                           BlacklistService blacklistService) {
-        this.veXeRepository = veXeRepository;
-        this.loaiXeRepository = loaiXeRepository;
-        this.monthlyTicketService = monthlyTicketService;
-        this.vietQrService = vietQrService;
-        this.datChoTruocRepository = datChoTruocRepository;
-        this.feeCalculationService = feeCalculationService;
-        this.qrCodeService = qrCodeService;
-        this.khuVucRepository = khuVucRepository;
-        this.blacklistService = blacklistService;
+        this(veXeRepository, loaiXeRepository, monthlyTicketService, vietQrService,
+             datChoTruocRepository, feeCalculationService, qrCodeService,
+             khuVucRepository, blacklistService, null, null);
     }
 
     /**
@@ -67,6 +91,11 @@ public class ParkingService implements XuLyGuiXeService {
      */
     @Transactional(rollbackFor = Exception.class)
     public VeXe checkIn(CheckInRequest request) {
+        return checkIn(request, "Bảo vệ cổng");
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public VeXe checkIn(CheckInRequest request, String nguoiTiepNhan) {
         if (request == null || request.getBienSoXe() == null || request.getBienSoXe().trim().isEmpty()) {
             throw new BadRequestException("Biển số xe không được để trống!");
         }
@@ -210,6 +239,26 @@ public class ParkingService implements XuLyGuiXeService {
                 veXe.setTrangThai("Đang gửi");
                 veXe.setAnhVaoUrl(request.getAnhVaoData());
                 veXe.setGhiChu(ghiChu);
+
+                String staff = (nguoiTiepNhan != null && !nguoiTiepNhan.trim().isEmpty())
+                        ? nguoiTiepNhan.trim()
+                        : "Bảo vệ cổng";
+                veXe.setNguoiTiepNhan(staff);
+
+                // Liên kết ca trực đang hoạt động (DANG_TRUC)
+                if (caTrucRepository != null) {
+                    caTrucRepository.findFirstByTrangThaiOrderByThoiGianBatDauDesc("DANG_TRUC")
+                            .ifPresent(veXe::setCaTruc);
+                }
+
+                // Liên kết phương tiện nếu đã đăng ký trong hệ thống
+                if (phuongTienRepository != null) {
+                    final String plateUpper = rawPlate.toUpperCase();
+                    phuongTienRepository.findByBienSoXe(bienSoDisplay)
+                            .or(() -> phuongTienRepository.findByBienSoXe(cleanKey))
+                            .or(() -> phuongTienRepository.findByBienSoXe(plateUpper))
+                            .ifPresent(veXe::setPhuongTien);
+                }
 
                 if (veThangOpt.isPresent()) {
                     VeThang vt = veThangOpt.get();

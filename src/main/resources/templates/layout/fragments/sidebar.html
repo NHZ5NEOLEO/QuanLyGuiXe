@@ -74,6 +74,12 @@
             <span th:text="${session.userRole == 'NHAN_VIEN' ? 'Tra cứu vé xe' : 'Quản lý vé xe'}">Quản lý vé xe</span>
         </a>
 
+        <!-- 5a. Quản lý vé tháng (Dành cho cả ADMIN & NHAN_VIEN) -->
+        <a th:href="@{/ve-thang}" th:classappend="${activePage == 'monthly-tickets' or activePage == 've-thang'} ? 'active' : ''" class="sidebar-link" title="Quản lý khách hàng và đăng ký thuê bao vé tháng">
+            <i class="fa-solid fa-id-card text-purple" aria-hidden="true"></i>
+            <span>Vé tháng</span>
+        </a>
+
         <!-- 5b. Cảnh báo an ninh (Xe gửi quá 24h & Danh sách đen) -->
         <a th:href="@{/canh-bao-an-ninh}" th:classappend="${activePage == 'security-alerts' or activePage == 'canh-bao-an-ninh'} ? 'active' : ''" class="sidebar-link" title="Xử lý xe gửi quá 24 giờ và danh sách đen an ninh">
             <i class="fa-solid fa-triangle-exclamation text-danger" aria-hidden="true"></i>

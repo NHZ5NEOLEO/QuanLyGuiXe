@@ -47,10 +47,14 @@ public class SecurityAlertController {
             @RequestParam("lyDo") String lyDo,
             @RequestParam(value = "mucDo", defaultValue = "NGUY_HIEM") String mucDo,
             @RequestParam(value = "nguoiThem", defaultValue = "Bảo vệ") String nguoiThem,
+            Principal principal,
             RedirectAttributes redirectAttributes
     ) {
         try {
-            blacklistService.addToBlacklist(bienSoXe, lyDo, mucDo, nguoiThem);
+            String author = (principal != null && principal.getName() != null && !principal.getName().isBlank()) 
+                    ? principal.getName() 
+                    : nguoiThem;
+            blacklistService.addToBlacklist(bienSoXe, lyDo, mucDo, author);
             redirectAttributes.addFlashAttribute("successMessage", "Đã thêm biển số [" + bienSoXe.toUpperCase() + "] vào Danh sách đen cảnh báo an ninh!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());

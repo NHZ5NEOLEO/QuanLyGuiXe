@@ -94,9 +94,11 @@ public class ApiGateController {
      * API Check-in bằng Ajax
      */
     @PostMapping("/check-in")
-    public ResponseEntity<?> checkIn(@RequestBody CheckInRequest request) {
+    public ResponseEntity<?> checkIn(@RequestBody CheckInRequest request, java.security.Principal principal) {
         try {
-            VeXe veXe = parkingService.checkIn(request);
+            VeXe veXe = (principal != null)
+                    ? parkingService.checkIn(request, principal.getName())
+                    : parkingService.checkIn(request);
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
             resp.put("message", "Xe vào bãi thành công!");

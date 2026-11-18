@@ -1,0 +1,747 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1720 1900" width="1720" height="1900" style="background:#ffffff; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;">
+
+<defs>
+    <filter id="cardShadow" x="-10%" y="-10%" width="125%" height="125%">
+        <feDropShadow dx="2" dy="5" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10" />
+    </filter>
+    <marker id="arrow-start-1" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+        <path d="M 1 2 L 1 8 M 4 2 L 4 8" stroke="#334155" stroke-width="2" fill="none" />
+    </marker>
+    <marker id="arrow-end-n" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+        <path d="M 2 2 L 10 6 L 2 10" stroke="#334155" stroke-width="2" fill="none" />
+    </marker>
+</defs>
+
+
+<rect x="50" y="15" width="1610" height="48" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+<text x="70" y="44" font-size="20" font-weight="700" fill="#0F172A">SƠ ĐỒ THỰC THỂ LIÊN KẾT (ERD) - HỆ THỐNG PHẦN MỀM QUẢN LÝ GỬI XE THÔNG MINH</text>
+<text x="1450" y="44" font-size="13" font-weight="600" fill="#475569">Microsoft SQL Server 2022 | 13 Bảng</text>
+
+<path d="M 390 1130 C 390.0 1130, 390.0 140, 390 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 390 1580 C 390.0 1580, 390.0 500, 390 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 390 1580 C 390.0 1580, 390.0 140, 390 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 450 910 C 420.0 910, 420.0 140, 390 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 800 910 C 800.0 910, 800.0 500, 800 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 800 1300 C 830.0 1300, 830.0 140, 860 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 800 1300 C 800.0 1300, 800.0 500, 800 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 390 500 C 390.0 500, 390.0 140, 390 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 860 140 C 830.0 140, 830.0 140, 800 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 800 140 C 830.0 140, 830.0 140, 860 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 390 840 C 390.0 840, 390.0 140, 390 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 450 500 C 420.0 500, 420.0 500, 390 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 800 500 C 800.0 500, 800.0 140, 800 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 860 780 C 830.0 780, 830.0 140, 800 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 860 780 C 625.0 780, 625.0 500, 390 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 825.0 140, 825.0 1130, 390 1130" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1030.0 140, 1030.0 500, 800 500" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1030.0 140, 1030.0 140, 800 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1230.0 140, 1230.0 440, 1200 440" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1230.0 140, 1230.0 780, 1200 780" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1030.0 140, 1030.0 1300, 800 1300" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1260 140 C 1230.0 140, 1230.0 140, 1200 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+<path d="M 1200 440 C 1200.0 440, 1200.0 140, 1200 140" fill="none" stroke="#64748B" stroke-width="1.8" stroke-dasharray="none" opacity="0.65"/>
+
+    <g id="table-nguoi_dung" filter="url(#cardShadow)">
+        <rect x="50" y="80" width="340" height="268" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 50 90 Q 50 80 60 80 L 380 80 Q 390 80 390 90 L 390 128 L 50 128 Z" fill="#1E3A8A" />
+        <line x1="50" y1="128" x2="390" y2="128" stroke="#3B82F6" stroke-width="3" />
+        <text x="65" y="106" font-size="14" font-weight="700" fill="#FFFFFF">nguoi_dung</text>
+        <text x="65" y="122" font-size="10.5" font-weight="500" fill="#E2E8F0">Tài khoản & Xác thực</text>
+    
+<rect x="51" y="132" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="136" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="77" y="149" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="102" y="149" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="378" y="149" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="51" y="158" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="175" font-size="11.5" font-weight="500" fill="#334155">ho_ten</text>
+<text x="378" y="175" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(100) NOT NULL</text>
+<rect x="51" y="184" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="201" font-size="11.5" font-weight="500" fill="#334155">mat_khau</text>
+<text x="378" y="201" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(100) NOT NULL</text>
+<rect x="51" y="210" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="227" font-size="11.5" font-weight="500" fill="#334155">so_dien_thoai</text>
+<text x="378" y="227" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="51" y="236" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="253" font-size="11.5" font-weight="500" fill="#334155">ten_dang_nhap</text>
+<text x="378" y="253" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(50) NOT NULL</text>
+<rect x="51" y="262" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="279" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="378" y="279" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIT NULL</text>
+<rect x="51" y="288" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="305" font-size="11.5" font-weight="500" fill="#334155">vai_tro</text>
+<text x="378" y="305" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="51" y="314" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="331" font-size="11.5" font-weight="500" fill="#334155">email</text>
+<text x="378" y="331" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(150) NULL</text>
+</g>
+
+    <g id="table-khach_hang" filter="url(#cardShadow)">
+        <rect x="50" y="440" width="340" height="242" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 50 450 Q 50 440 60 440 L 380 440 Q 390 440 390 450 L 390 488 L 50 488 Z" fill="#1D4ED8" />
+        <line x1="50" y1="488" x2="390" y2="488" stroke="#60A5FA" stroke-width="3" />
+        <text x="65" y="466" font-size="14" font-weight="700" fill="#FFFFFF">khach_hang</text>
+        <text x="65" y="482" font-size="10.5" font-weight="500" fill="#E2E8F0">Khách hàng & Thuê bao</text>
+    
+<rect x="51" y="492" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="496" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="77" y="509" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="102" y="509" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="378" y="509" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="51" y="518" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="535" font-size="11.5" font-weight="500" fill="#334155">cccd</text>
+<text x="378" y="535" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="51" y="544" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="561" font-size="11.5" font-weight="500" fill="#334155">dia_chi</text>
+<text x="378" y="561" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(255) NULL</text>
+<rect x="51" y="570" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="587" font-size="11.5" font-weight="500" fill="#334155">email</text>
+<text x="378" y="587" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(100) NULL</text>
+<rect x="51" y="596" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="613" font-size="11.5" font-weight="500" fill="#334155">ho_ten</text>
+<text x="378" y="613" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(100) NOT NULL</text>
+<rect x="51" y="622" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="639" font-size="11.5" font-weight="500" fill="#334155">so_dien_thoai</text>
+<text x="378" y="639" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(15) NOT NULL</text>
+<rect x="51" y="648" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="652" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="77" y="665" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="102" y="665" font-size="11.5" font-weight="500" fill="#0F172A">nguoi_dung_id</text>
+<text x="378" y="665" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-password_reset_otp" filter="url(#cardShadow)">
+        <rect x="50" y="780" width="340" height="242" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 50 790 Q 50 780 60 780 L 380 780 Q 390 780 390 790 L 390 828 L 50 828 Z" fill="#475569" />
+        <line x1="50" y1="828" x2="390" y2="828" stroke="#94A3B8" stroke-width="3" />
+        <text x="65" y="806" font-size="14" font-weight="700" fill="#FFFFFF">password_reset_otp</text>
+        <text x="65" y="822" font-size="10.5" font-weight="500" fill="#E2E8F0">Bảo mật & Xác thực</text>
+    
+<rect x="51" y="832" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="836" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="77" y="849" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="102" y="849" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="378" y="849" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="51" y="858" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="875" font-size="11.5" font-weight="500" fill="#334155">created_at</text>
+<text x="378" y="875" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="51" y="884" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="901" font-size="11.5" font-weight="500" fill="#334155">email</text>
+<text x="378" y="901" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(120) NOT NULL</text>
+<rect x="51" y="910" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="927" font-size="11.5" font-weight="500" fill="#334155">expire_at</text>
+<text x="378" y="927" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="51" y="936" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="953" font-size="11.5" font-weight="500" fill="#334155">otp</text>
+<text x="378" y="953" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(10) NOT NULL</text>
+<rect x="51" y="962" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="979" font-size="11.5" font-weight="500" fill="#334155">used</text>
+<text x="378" y="979" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIT NULL</text>
+<rect x="51" y="988" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="992" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="77" y="1005" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="102" y="1005" font-size="11.5" font-weight="500" fill="#0F172A">nguoi_dung_id</text>
+<text x="378" y="1005" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-ca_truc" filter="url(#cardShadow)">
+        <rect x="50" y="1070" width="340" height="398" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 50 1080 Q 50 1070 60 1070 L 380 1070 Q 390 1070 390 1080 L 390 1118 L 50 1118 Z" fill="#0F766E" />
+        <line x1="50" y1="1118" x2="390" y2="1118" stroke="#14B8A6" stroke-width="3" />
+        <text x="65" y="1096" font-size="14" font-weight="700" fill="#FFFFFF">ca_truc</text>
+        <text x="65" y="1112" font-size="10.5" font-weight="500" fill="#E2E8F0">Quản lý Ca trực</text>
+    
+<rect x="51" y="1122" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="1126" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="77" y="1139" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="102" y="1139" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="378" y="1139" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="51" y="1148" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1165" font-size="11.5" font-weight="500" fill="#334155">chuyen_khoan_thu_duoc</text>
+<text x="378" y="1165" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="51" y="1174" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1191" font-size="11.5" font-weight="500" fill="#334155">ghi_chu_ban_giao</text>
+<text x="378" y="1191" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(500) NULL</text>
+<rect x="51" y="1200" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1217" font-size="11.5" font-weight="500" fill="#334155">ma_ca</text>
+<text x="378" y="1217" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(50) NOT NULL</text>
+<rect x="51" y="1226" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1243" font-size="11.5" font-weight="500" fill="#334155">ten_ca</text>
+<text x="378" y="1243" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(100) NOT NULL</text>
+<rect x="51" y="1252" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1269" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_bat_dau</text>
+<text x="378" y="1269" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="51" y="1278" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1295" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_ket_thuc</text>
+<text x="378" y="1295" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="51" y="1304" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1321" font-size="11.5" font-weight="500" fill="#334155">tien_mat_thu_duoc</text>
+<text x="378" y="1321" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="51" y="1330" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1347" font-size="11.5" font-weight="500" fill="#334155">tong_doanh_thu</text>
+<text x="378" y="1347" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="51" y="1356" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1373" font-size="11.5" font-weight="500" fill="#334155">tong_luot_ra</text>
+<text x="378" y="1373" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">INT NULL</text>
+<rect x="51" y="1382" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1399" font-size="11.5" font-weight="500" fill="#334155">tong_luot_vao</text>
+<text x="378" y="1399" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">INT NULL</text>
+<rect x="51" y="1408" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1425" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="378" y="1425" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="51" y="1434" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="1438" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="77" y="1451" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="102" y="1451" font-size="11.5" font-weight="500" fill="#0F172A">nguoi_dung_id</text>
+<text x="378" y="1451" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-danh_gia" filter="url(#cardShadow)">
+        <rect x="50" y="1520" width="340" height="294" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 50 1530 Q 50 1520 60 1520 L 380 1520 Q 390 1520 390 1530 L 390 1568 L 50 1568 Z" fill="#854D0E" />
+        <line x1="50" y1="1568" x2="390" y2="1568" stroke="#EAB308" stroke-width="3" />
+        <text x="65" y="1546" font-size="14" font-weight="700" fill="#FFFFFF">danh_gia</text>
+        <text x="65" y="1562" font-size="10.5" font-weight="500" fill="#E2E8F0">Chăm sóc Khách hàng</text>
+    
+<rect x="51" y="1572" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="1576" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="77" y="1589" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="102" y="1589" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="378" y="1589" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="51" y="1598" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1615" font-size="11.5" font-weight="500" fill="#334155">ho_ten</text>
+<text x="378" y="1615" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(100) NOT NULL</text>
+<rect x="51" y="1624" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1641" font-size="11.5" font-weight="500" fill="#334155">loai_dich_vu</text>
+<text x="378" y="1641" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="51" y="1650" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1667" font-size="11.5" font-weight="500" fill="#334155">noi_dung</text>
+<text x="378" y="1667" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(500) NULL</text>
+<rect x="51" y="1676" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1693" font-size="11.5" font-weight="500" fill="#334155">so_dien_thoai</text>
+<text x="378" y="1693" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="51" y="1702" width="338" height="26" fill="#F8FAFC" />
+<text x="102" y="1719" font-size="11.5" font-weight="500" fill="#334155">so_sao</text>
+<text x="378" y="1719" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">INT NOT NULL</text>
+<rect x="51" y="1728" width="338" height="26" fill="#FFFFFF" />
+<text x="102" y="1745" font-size="11.5" font-weight="500" fill="#334155">thoi_gian</text>
+<text x="378" y="1745" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="51" y="1754" width="338" height="26" fill="#F8FAFC" />
+
+            <rect x="60" y="1758" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="77" y="1771" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="102" y="1771" font-size="11.5" font-weight="500" fill="#0F172A">nguoi_dung_id</text>
+<text x="378" y="1771" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="51" y="1780" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="60" y="1784" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="77" y="1797" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="102" y="1797" font-size="11.5" font-weight="500" fill="#0F172A">khach_hang_id</text>
+<text x="378" y="1797" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-loai_xe" filter="url(#cardShadow)">
+        <rect x="450" y="80" width="350" height="268" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 450 90 Q 450 80 460 80 L 790 80 Q 800 80 800 90 L 800 128 L 450 128 Z" fill="#065F46" />
+        <line x1="450" y1="128" x2="800" y2="128" stroke="#10B981" stroke-width="3" />
+        <text x="465" y="106" font-size="14" font-weight="700" fill="#FFFFFF">loai_xe</text>
+        <text x="465" y="122" font-size="10.5" font-weight="500" fill="#E2E8F0">Phương tiện & Giá vé</text>
+    
+<rect x="451" y="132" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="136" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="477" y="149" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="502" y="149" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="788" y="149" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="451" y="158" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="175" font-size="11.5" font-weight="500" fill="#334155">gia_ban_dem</text>
+<text x="788" y="175" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">FLOAT NOT NULL</text>
+<rect x="451" y="184" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="201" font-size="11.5" font-weight="500" fill="#334155">gia_ban_ngay</text>
+<text x="788" y="201" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">FLOAT NOT NULL</text>
+<rect x="451" y="210" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="227" font-size="11.5" font-weight="500" fill="#334155">gia_thang</text>
+<text x="788" y="227" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">FLOAT NOT NULL</text>
+<rect x="451" y="236" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="253" font-size="11.5" font-weight="500" fill="#334155">icon_class</text>
+<text x="788" y="253" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="451" y="262" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="279" font-size="11.5" font-weight="500" fill="#334155">mo_ta</text>
+<text x="788" y="279" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(255) NULL</text>
+<rect x="451" y="288" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="305" font-size="11.5" font-weight="500" fill="#334155">ten_loai</text>
+<text x="788" y="305" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(100) NOT NULL</text>
+<rect x="451" y="314" width="348" height="26" fill="#F8FAFC" />
+
+            <rect x="460" y="318" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="331" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="331" font-size="11.5" font-weight="500" fill="#0F172A">khu_vuc_id</text>
+<text x="788" y="331" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-phuong_tien" filter="url(#cardShadow)">
+        <rect x="450" y="440" width="350" height="294" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 450 450 Q 450 440 460 440 L 790 440 Q 800 440 800 450 L 800 488 L 450 488 Z" fill="#047857" />
+        <line x1="450" y1="488" x2="800" y2="488" stroke="#34D399" stroke-width="3" />
+        <text x="465" y="466" font-size="14" font-weight="700" fill="#FFFFFF">phuong_tien</text>
+        <text x="465" y="482" font-size="10.5" font-weight="500" fill="#E2E8F0">Phương tiện lưu thông</text>
+    
+<rect x="451" y="492" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="496" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="477" y="509" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="502" y="509" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="788" y="509" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="451" y="518" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="535" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe</text>
+<text x="788" y="535" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="451" y="544" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="561" font-size="11.5" font-weight="500" fill="#334155">chu_xe</text>
+<text x="788" y="561" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(100) NULL</text>
+<rect x="451" y="570" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="587" font-size="11.5" font-weight="500" fill="#334155">ma_phuong_tien</text>
+<text x="788" y="587" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="451" y="596" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="613" font-size="11.5" font-weight="500" fill="#334155">mo_ta</text>
+<text x="788" y="613" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(255) NULL</text>
+<rect x="451" y="622" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="639" font-size="11.5" font-weight="500" fill="#334155">ngay_tao</text>
+<text x="788" y="639" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="451" y="648" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="665" font-size="11.5" font-weight="500" fill="#334155">so_dien_thoai</text>
+<text x="788" y="665" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="451" y="674" width="348" height="26" fill="#F8FAFC" />
+
+            <rect x="460" y="678" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="691" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="691" font-size="11.5" font-weight="500" fill="#0F172A">loai_xe_id</text>
+<text x="788" y="691" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="451" y="700" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="704" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="717" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="717" font-size="11.5" font-weight="500" fill="#0F172A">khach_hang_id</text>
+<text x="788" y="717" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-danh_sach_den" filter="url(#cardShadow)">
+        <rect x="450" y="850" width="350" height="268" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 450 860 Q 450 850 460 850 L 790 850 Q 800 850 800 860 L 800 898 L 450 898 Z" fill="#991B1B" />
+        <line x1="450" y1="898" x2="800" y2="898" stroke="#EF4444" stroke-width="3" />
+        <text x="465" y="876" font-size="14" font-weight="700" fill="#FFFFFF">danh_sach_den</text>
+        <text x="465" y="892" font-size="10.5" font-weight="500" fill="#E2E8F0">An ninh & Cảnh báo</text>
+    
+<rect x="451" y="902" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="906" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="477" y="919" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="502" y="919" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="788" y="919" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="451" y="928" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="945" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe</text>
+<text x="788" y="945" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="451" y="954" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="971" font-size="11.5" font-weight="500" fill="#334155">ly_do</text>
+<text x="788" y="971" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(255) NOT NULL</text>
+<rect x="451" y="980" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="997" font-size="11.5" font-weight="500" fill="#334155">muc_do</text>
+<text x="788" y="997" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(50) NULL</text>
+<rect x="451" y="1006" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1023" font-size="11.5" font-weight="500" fill="#334155">ngay_them</text>
+<text x="788" y="1023" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="451" y="1032" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1049" font-size="11.5" font-weight="500" fill="#334155">nguoi_them</text>
+<text x="788" y="1049" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(100) NULL</text>
+<rect x="451" y="1058" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="1062" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="1075" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="1075" font-size="11.5" font-weight="500" fill="#0F172A">phuong_tien_id</text>
+<text x="788" y="1075" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="451" y="1084" width="348" height="26" fill="#F8FAFC" />
+
+            <rect x="460" y="1088" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="1101" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="1101" font-size="11.5" font-weight="500" fill="#0F172A">nguoi_them_id</text>
+<text x="788" y="1101" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-dat_cho_truoc" filter="url(#cardShadow)">
+        <rect x="450" y="1240" width="350" height="450" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 450 1250 Q 450 1240 460 1240 L 790 1240 Q 800 1240 800 1250 L 800 1288 L 450 1288 Z" fill="#7C2D12" />
+        <line x1="450" y1="1288" x2="800" y2="1288" stroke="#F97316" stroke-width="3" />
+        <text x="465" y="1266" font-size="14" font-weight="700" fill="#FFFFFF">dat_cho_truoc</text>
+        <text x="465" y="1282" font-size="10.5" font-weight="500" fill="#E2E8F0">Dịch vụ Cổng trực tuyến</text>
+    
+<rect x="451" y="1292" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="1296" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="477" y="1309" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="502" y="1309" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="788" y="1309" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="451" y="1318" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1335" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe</text>
+<text x="788" y="1335" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="451" y="1344" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1361" font-size="11.5" font-weight="500" fill="#334155">ho_ten</text>
+<text x="788" y="1361" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(100) NOT NULL</text>
+<rect x="451" y="1370" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1387" font-size="11.5" font-weight="500" fill="#334155">ma_dat_cho</text>
+<text x="788" y="1387" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(30) NOT NULL</text>
+<rect x="451" y="1396" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1413" font-size="11.5" font-weight="500" fill="#334155">so_dien_thoai</text>
+<text x="788" y="1413" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="451" y="1422" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1439" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_dat</text>
+<text x="788" y="1439" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="451" y="1448" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1465" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_het_han</text>
+<text x="788" y="1465" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="451" y="1474" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1491" font-size="11.5" font-weight="500" fill="#334155">tien_coc</text>
+<text x="788" y="1491" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="451" y="1500" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1517" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="788" y="1517" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="451" y="1526" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1543" font-size="11.5" font-weight="500" fill="#334155">ma_khu_vuc</text>
+<text x="788" y="1543" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="451" y="1552" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1569" font-size="11.5" font-weight="500" fill="#334155">da_thanh_toan_coc</text>
+<text x="788" y="1569" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIT NULL</text>
+<rect x="451" y="1578" width="348" height="26" fill="#F8FAFC" />
+<text x="502" y="1595" font-size="11.5" font-weight="500" fill="#334155">ma_giao_dich_coc</text>
+<text x="788" y="1595" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(100) NULL</text>
+<rect x="451" y="1604" width="348" height="26" fill="#FFFFFF" />
+<text x="502" y="1621" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_checkin</text>
+<text x="788" y="1621" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="451" y="1630" width="348" height="26" fill="#F8FAFC" />
+
+            <rect x="460" y="1634" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="1647" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="1647" font-size="11.5" font-weight="500" fill="#0F172A">khu_vuc_id</text>
+<text x="788" y="1647" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="451" y="1656" width="348" height="26" fill="#FFFFFF" />
+
+            <rect x="460" y="1660" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="477" y="1673" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="502" y="1673" font-size="11.5" font-weight="500" fill="#0F172A">phuong_tien_id</text>
+<text x="788" y="1673" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-khu_vuc" filter="url(#cardShadow)">
+        <rect x="860" y="80" width="340" height="216" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 860 90 Q 860 80 870 80 L 1190 80 Q 1200 80 1200 90 L 1200 128 L 860 128 Z" fill="#92400E" />
+        <line x1="860" y1="128" x2="1200" y2="128" stroke="#F59E0B" stroke-width="3" />
+        <text x="875" y="106" font-size="14" font-weight="700" fill="#FFFFFF">khu_vuc</text>
+        <text x="875" y="122" font-size="10.5" font-weight="500" fill="#E2E8F0">Hạ tầng Bãi đỗ</text>
+    
+<rect x="861" y="132" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="870" y="136" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="887" y="149" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="912" y="149" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="1188" y="149" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="861" y="158" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="175" font-size="11.5" font-weight="500" fill="#334155">ma_khu</text>
+<text x="1188" y="175" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(10) NOT NULL</text>
+<rect x="861" y="184" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="201" font-size="11.5" font-weight="500" fill="#334155">suc_chua</text>
+<text x="1188" y="201" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">INT NOT NULL</text>
+<rect x="861" y="210" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="227" font-size="11.5" font-weight="500" fill="#334155">ten_khu</text>
+<text x="1188" y="227" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">NVARCHAR(100) NOT NULL</text>
+<rect x="861" y="236" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="253" font-size="11.5" font-weight="500" fill="#334155">vi_tri</text>
+<text x="1188" y="253" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(255) NULL</text>
+<rect x="861" y="262" width="338" height="26" fill="#F8FAFC" />
+
+            <rect x="870" y="266" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="887" y="279" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="912" y="279" font-size="11.5" font-weight="500" fill="#0F172A">loai_xe_id</text>
+<text x="1188" y="279" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-vi_tri_do" filter="url(#cardShadow)">
+        <rect x="860" y="380" width="340" height="242" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 860 390 Q 860 380 870 380 L 1190 380 Q 1200 380 1200 390 L 1200 428 L 860 428 Z" fill="#B45309" />
+        <line x1="860" y1="428" x2="1200" y2="428" stroke="#FBBF24" stroke-width="3" />
+        <text x="875" y="406" font-size="14" font-weight="700" fill="#FFFFFF">vi_tri_do</text>
+        <text x="875" y="422" font-size="10.5" font-weight="500" fill="#E2E8F0">Vị trí đỗ thông minh</text>
+    
+<rect x="861" y="432" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="870" y="436" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="887" y="449" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="912" y="449" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="1188" y="449" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="861" y="458" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="475" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe_dang_do</text>
+<text x="1188" y="475" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(30) NULL</text>
+<rect x="861" y="484" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="501" font-size="11.5" font-weight="500" fill="#334155">ma_vi_tri</text>
+<text x="1188" y="501" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(30) NOT NULL</text>
+<rect x="861" y="510" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="527" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_vao_do</text>
+<text x="1188" y="527" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="861" y="536" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="553" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="1188" y="553" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(30) NULL</text>
+<rect x="861" y="562" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="579" font-size="11.5" font-weight="500" fill="#334155">version</text>
+<text x="1188" y="579" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="861" y="588" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="870" y="592" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="887" y="605" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="912" y="605" font-size="11.5" font-weight="500" fill="#0F172A">khu_vuc_id</text>
+<text x="1188" y="605" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+    <g id="table-ve_thang" filter="url(#cardShadow)">
+        <rect x="860" y="720" width="340" height="294" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 860 730 Q 860 720 870 720 L 1190 720 Q 1200 720 1200 730 L 1200 768 L 860 768 Z" fill="#5B21B6" />
+        <line x1="860" y1="768" x2="1200" y2="768" stroke="#8B5CF6" stroke-width="3" />
+        <text x="875" y="746" font-size="14" font-weight="700" fill="#FFFFFF">ve_thang</text>
+        <text x="875" y="762" font-size="10.5" font-weight="500" fill="#E2E8F0">Vé gửi dài hạn</text>
+    
+<rect x="861" y="772" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="870" y="776" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="887" y="789" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="912" y="789" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="1188" y="789" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="861" y="798" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="815" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe</text>
+<text x="1188" y="815" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="861" y="824" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="841" font-size="11.5" font-weight="500" fill="#334155">gia_tien</text>
+<text x="1188" y="841" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="861" y="850" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="867" font-size="11.5" font-weight="500" fill="#334155">ma_the</text>
+<text x="1188" y="867" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(50) NOT NULL</text>
+<rect x="861" y="876" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="893" font-size="11.5" font-weight="500" fill="#334155">ngay_bat_dau</text>
+<text x="1188" y="893" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATE NOT NULL</text>
+<rect x="861" y="902" width="338" height="26" fill="#F8FAFC" />
+<text x="912" y="919" font-size="11.5" font-weight="500" fill="#334155">ngay_het_han</text>
+<text x="1188" y="919" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATE NOT NULL</text>
+<rect x="861" y="928" width="338" height="26" fill="#FFFFFF" />
+<text x="912" y="945" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="1188" y="945" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="861" y="954" width="338" height="26" fill="#F8FAFC" />
+
+            <rect x="870" y="958" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="887" y="971" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="912" y="971" font-size="11.5" font-weight="500" fill="#0F172A">khach_hang_id</text>
+<text x="1188" y="971" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+<rect x="861" y="980" width="338" height="26" fill="#FFFFFF" />
+
+            <rect x="870" y="984" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="887" y="997" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="912" y="997" font-size="11.5" font-weight="500" fill="#0F172A">loai_xe_id</text>
+<text x="1188" y="997" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">BIGINT NOT NULL</text>
+</g>
+
+    <g id="table-ve_xe" filter="url(#cardShadow)">
+        <rect x="1260" y="80" width="400" height="892" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+        <path d="M 1260 90 Q 1260 80 1270 80 L 1650 80 Q 1660 80 1660 90 L 1660 128 L 1260 128 Z" fill="#312E81" />
+        <line x1="1260" y1="128" x2="1660" y2="128" stroke="#6366F1" stroke-width="3" />
+        <text x="1275" y="106" font-size="14" font-weight="700" fill="#FFFFFF">ve_xe</text>
+        <text x="1275" y="122" font-size="10.5" font-weight="500" fill="#E2E8F0">Giao dịch, Camera OCR, Barie & VietQR</text>
+    
+<rect x="1261" y="132" width="398" height="26" fill="#FFFFFF" />
+
+            <rect x="1270" y="136" width="34" height="18" rx="4" fill="#B45309" opacity="0.15" />
+            <text x="1287" y="149" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+            
+<text x="1312" y="149" font-size="11.5" font-weight="700" fill="#0F172A">id</text>
+<text x="1648" y="149" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">INT NOT NULL</text>
+<rect x="1261" y="158" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="175" font-size="11.5" font-weight="500" fill="#334155">bien_so_xe</text>
+<text x="1648" y="175" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(20) NOT NULL</text>
+<rect x="1261" y="184" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="201" font-size="11.5" font-weight="500" fill="#334155">chi_phi</text>
+<text x="1648" y="201" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="1261" y="210" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="227" font-size="11.5" font-weight="500" fill="#334155">maqr</text>
+<text x="1648" y="227" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(255) NOT NULL</text>
+<rect x="1261" y="236" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="253" font-size="11.5" font-weight="500" fill="#334155">maqr</text>
+<text x="1648" y="253" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">VARCHAR(255) NOT NULL</text>
+<rect x="1261" y="262" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="279" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_ra</text>
+<text x="1648" y="279" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="1261" y="288" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="305" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_vao</text>
+<text x="1648" y="305" font-size="10" font-weight="500" fill="#64748B" text-anchor="end">DATETIME2 NOT NULL</text>
+<rect x="1261" y="314" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="331" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="1648" y="331" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(50) NULL</text>
+<rect x="1261" y="340" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="357" font-size="11.5" font-weight="500" fill="#334155">trang_thai</text>
+<text x="1648" y="357" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(50) NULL</text>
+<rect x="1261" y="366" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="383" font-size="11.5" font-weight="500" fill="#334155">anh_ra_url</text>
+<text x="1648" y="383" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(MAX) NULL</text>
+<rect x="1261" y="392" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="409" font-size="11.5" font-weight="500" fill="#334155">anh_vao_url</text>
+<text x="1648" y="409" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(MAX) NULL</text>
+<rect x="1261" y="418" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="435" font-size="11.5" font-weight="500" fill="#334155">ghi_chu</text>
+<text x="1648" y="435" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(MAX) NULL</text>
+<rect x="1261" y="444" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="461" font-size="11.5" font-weight="500" fill="#334155">hinh_thuc_thanh_toan</text>
+<text x="1648" y="461" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="1261" y="470" width="398" height="26" fill="#F8FAFC" />
+
+            <rect x="1270" y="474" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="487" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="487" font-size="11.5" font-weight="500" fill="#0F172A">loai_xe_id</text>
+<text x="1648" y="487" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="496" width="398" height="26" fill="#FFFFFF" />
+
+            <rect x="1270" y="500" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="513" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="513" font-size="11.5" font-weight="500" fill="#0F172A">ve_thang_id</text>
+<text x="1648" y="513" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="522" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="539" font-size="11.5" font-weight="500" fill="#334155">bien_so_clean</text>
+<text x="1648" y="539" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(20) NULL</text>
+<rect x="1261" y="548" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="565" font-size="11.5" font-weight="500" fill="#334155">ma_giao_dich</text>
+<text x="1648" y="565" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(100) NULL</text>
+<rect x="1261" y="574" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="591" font-size="11.5" font-weight="500" fill="#334155">nguoi_xac_nhan</text>
+<text x="1648" y="591" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(100) NULL</text>
+<rect x="1261" y="600" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="617" font-size="11.5" font-weight="500" fill="#334155">so_tien_phai_thu</text>
+<text x="1648" y="617" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="1261" y="626" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="643" font-size="11.5" font-weight="500" fill="#334155">so_tien_thuc_thu</text>
+<text x="1648" y="643" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="1261" y="652" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="669" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_thanh_toan</text>
+<text x="1648" y="669" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="1261" y="678" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="695" font-size="11.5" font-weight="500" fill="#334155">tien_coc_khau_tru</text>
+<text x="1648" y="695" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">FLOAT NULL</text>
+<rect x="1261" y="704" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="721" font-size="11.5" font-weight="500" fill="#334155">trang_thai_thanh_toan</text>
+<text x="1648" y="721" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(50) NULL</text>
+<rect x="1261" y="730" width="398" height="26" fill="#F8FAFC" />
+
+            <rect x="1270" y="734" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="747" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="747" font-size="11.5" font-weight="500" fill="#0F172A">dat_cho_truoc_id</text>
+<text x="1648" y="747" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="756" width="398" height="26" fill="#FFFFFF" />
+
+            <rect x="1270" y="760" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="773" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="773" font-size="11.5" font-weight="500" fill="#0F172A">vi_tri_do_id</text>
+<text x="1648" y="773" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="782" width="398" height="26" fill="#F8FAFC" />
+
+            <rect x="1270" y="786" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="799" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="799" font-size="11.5" font-weight="500" fill="#0F172A">khu_vuc_id</text>
+<text x="1648" y="799" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="808" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="825" font-size="11.5" font-weight="500" fill="#334155">da_kiem_tra</text>
+<text x="1648" y="825" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIT NULL</text>
+<rect x="1261" y="834" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="851" font-size="11.5" font-weight="500" fill="#334155">ghi_chu_kiem_tra</text>
+<text x="1648" y="851" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">NVARCHAR(MAX) NULL</text>
+<rect x="1261" y="860" width="398" height="26" fill="#FFFFFF" />
+<text x="1312" y="877" font-size="11.5" font-weight="500" fill="#334155">nguoi_kiem_tra</text>
+<text x="1648" y="877" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">VARCHAR(100) NULL</text>
+<rect x="1261" y="886" width="398" height="26" fill="#F8FAFC" />
+<text x="1312" y="903" font-size="11.5" font-weight="500" fill="#334155">thoi_gian_kiem_tra</text>
+<text x="1648" y="903" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">DATETIME2 NULL</text>
+<rect x="1261" y="912" width="398" height="26" fill="#FFFFFF" />
+
+            <rect x="1270" y="916" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="929" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="929" font-size="11.5" font-weight="500" fill="#0F172A">phuong_tien_id</text>
+<text x="1648" y="929" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+<rect x="1261" y="938" width="398" height="26" fill="#F8FAFC" />
+
+            <rect x="1270" y="942" width="34" height="18" rx="4" fill="#2563EB" opacity="0.15" />
+            <text x="1287" y="955" font-size="9" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+            
+<text x="1312" y="955" font-size="11.5" font-weight="500" fill="#0F172A">ca_truc_id</text>
+<text x="1648" y="955" font-size="10" font-weight="500" fill="#94A3B8" text-anchor="end">BIGINT NULL</text>
+</g>
+
+<g id="legend">
+    <rect x="50" y="1810" width="1610" height="70" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
+    <text x="70" y="1836" font-size="13" font-weight="700" fill="#0F172A">CHÚ GIẢI THIẾT KẾ ERD QUẢN LÝ GỬI XE:</text>
+    
+    <rect x="70" y="1846" width="30" height="18" rx="3" fill="#B45309" opacity="0.2"/>
+    <text x="85" y="1859" font-size="10" font-weight="700" fill="#B45309" text-anchor="middle">PK</text>
+    <text x="110" y="1859" font-size="11" fill="#334155">Primary Key (Khóa chính)</text>
+
+    <rect x="290" y="1846" width="30" height="18" rx="3" fill="#2563EB" opacity="0.2"/>
+    <text x="305" y="1859" font-size="10" font-weight="700" fill="#2563EB" text-anchor="middle">FK</text>
+    <text x="330" y="1859" font-size="11" fill="#334155">Foreign Key (Khóa ngoại)</text>
+
+    <circle cx="530" cy="1855" r="6" fill="#1E3A8A"/>
+    <text x="545" y="1859" font-size="11" fill="#334155">Người dùng &amp; Cư dân</text>
+
+    <circle cx="720" cy="1855" r="6" fill="#065F46"/>
+    <text x="735" y="1859" font-size="11" fill="#334155">Phương tiện &amp; Bảng giá</text>
+
+    <circle cx="915" cy="1855" r="6" fill="#92400E"/>
+    <text x="930" y="1859" font-size="11" fill="#334155">Khu vực &amp; Vị trí đỗ</text>
+
+    <circle cx="1100" cy="1855" r="6" fill="#312E81"/>
+    <text x="1115" y="1859" font-size="11" fill="#334155">Vé xe, Camera &amp; VietQR</text>
+
+    <circle cx="1310" cy="1855" r="6" fill="#991B1B"/>
+    <text x="1325" y="1859" font-size="11" fill="#334155">Danh sách đen &amp; An ninh</text>
+</g>
+
+</svg>

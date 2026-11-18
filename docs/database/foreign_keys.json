@@ -1,0 +1,163 @@
+﻿[
+    {
+        "FK_Name":  "FKqui05bwdvo7xpt60dfhwwyuvq",
+        "FromTable":  "ca_truc",
+        "FromCol":  "nguoi_dung_id",
+        "ToTable":  "nguoi_dung",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DanhGia_KhachHang",
+        "FromTable":  "danh_gia",
+        "FromCol":  "khach_hang_id",
+        "ToTable":  "khach_hang",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DanhGia_NguoiDung",
+        "FromTable":  "danh_gia",
+        "FromCol":  "nguoi_dung_id",
+        "ToTable":  "nguoi_dung",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DanhSachDen_NguoiDung",
+        "FromTable":  "danh_sach_den",
+        "FromCol":  "nguoi_them_id",
+        "ToTable":  "nguoi_dung",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DanhSachDen_PhuongTien",
+        "FromTable":  "danh_sach_den",
+        "FromCol":  "phuong_tien_id",
+        "ToTable":  "phuong_tien",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DatChoTruoc_KhuVuc",
+        "FromTable":  "dat_cho_truoc",
+        "FromCol":  "khu_vuc_id",
+        "ToTable":  "khu_vuc",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_DatChoTruoc_PhuongTien",
+        "FromTable":  "dat_cho_truoc",
+        "FromCol":  "phuong_tien_id",
+        "ToTable":  "phuong_tien",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_KhachHang_NguoiDung",
+        "FromTable":  "khach_hang",
+        "FromCol":  "nguoi_dung_id",
+        "ToTable":  "nguoi_dung",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKks9w3l9syfn3t8t3q7n7nk2je",
+        "FromTable":  "khu_vuc",
+        "FromCol":  "loai_xe_id",
+        "ToTable":  "loai_xe",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKaf5r5t5wtw6cyq95spus5pp",
+        "FromTable":  "loai_xe",
+        "FromCol":  "khu_vuc_id",
+        "ToTable":  "khu_vuc",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_PasswordResetOtp_NguoiDung",
+        "FromTable":  "password_reset_otp",
+        "FromCol":  "nguoi_dung_id",
+        "ToTable":  "nguoi_dung",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_PhuongTien_KhachHang",
+        "FromTable":  "phuong_tien",
+        "FromCol":  "khach_hang_id",
+        "ToTable":  "khach_hang",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK7uaa0it2sgxy6bxqvngar7rnk",
+        "FromTable":  "phuong_tien",
+        "FromCol":  "loai_xe_id",
+        "ToTable":  "loai_xe",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKohqlf8ewwcr35me4qqqa2fsw",
+        "FromTable":  "ve_thang",
+        "FromCol":  "loai_xe_id",
+        "ToTable":  "loai_xe",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKtbcl3d63j5gw4k20762snrksj",
+        "FromTable":  "ve_thang",
+        "FromCol":  "khach_hang_id",
+        "ToTable":  "khach_hang",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_VeXe_CaTruc",
+        "FromTable":  "ve_xe",
+        "FromCol":  "ca_truc_id",
+        "ToTable":  "ca_truc",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK_VeXe_PhuongTien",
+        "FromTable":  "ve_xe",
+        "FromCol":  "phuong_tien_id",
+        "ToTable":  "phuong_tien",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FK26qnknljwg0t1ow4ai1brjilg",
+        "FromTable":  "ve_xe",
+        "FromCol":  "loai_xe_id",
+        "ToTable":  "loai_xe",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKbyfctnwaj04vu9e4si2g35r1h",
+        "FromTable":  "ve_xe",
+        "FromCol":  "vi_tri_do_id",
+        "ToTable":  "vi_tri_do",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKih4ihedda3xwnyvqmlvwmsxro",
+        "FromTable":  "ve_xe",
+        "FromCol":  "ve_thang_id",
+        "ToTable":  "ve_thang",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKmcamxtsi58tj4m045i9x3mfrs",
+        "FromTable":  "ve_xe",
+        "FromCol":  "dat_cho_truoc_id",
+        "ToTable":  "dat_cho_truoc",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKqygxlaajsarl8m7o0p3q8f9m1",
+        "FromTable":  "ve_xe",
+        "FromCol":  "khu_vuc_id",
+        "ToTable":  "khu_vuc",
+        "ToCol":  "id"
+    },
+    {
+        "FK_Name":  "FKqm27pc1pxulhd4fcuh6joahah",
+        "FromTable":  "vi_tri_do",
+        "FromCol":  "khu_vuc_id",
+        "ToTable":  "khu_vuc",
+        "ToCol":  "id"
+    }
+]

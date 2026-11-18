@@ -28,6 +28,14 @@ public class DanhGia {
 
     private LocalDateTime thoiGian = LocalDateTime.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "khach_hang_id")
+    private KhachHang khachHang;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nguoi_dung_id")
+    private NguoiDung nguoiDung;
+
     public DanhGia() {
     }
 
@@ -94,5 +102,21 @@ public class DanhGia {
 
     public void setThoiGian(LocalDateTime thoiGian) {
         this.thoiGian = thoiGian;
+    }
+
+    public KhachHang getKhachHang() {
+        return khachHang;
+    }
+
+    public void setKhachHang(KhachHang khachHang) {
+        this.khachHang = khachHang;
+    }
+
+    public NguoiDung getNguoiDung() {
+        return nguoiDung;
+    }
+
+    public void setNguoiDung(NguoiDung nguoiDung) {
+        this.nguoiDung = nguoiDung;
     }
 }

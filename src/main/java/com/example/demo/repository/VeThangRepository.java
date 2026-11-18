@@ -28,7 +28,7 @@ public interface VeThangRepository extends JpaRepository<VeThang, Long> {
     @Query("SELECT COUNT(v) FROM VeThang v WHERE LOWER(v.bienSoXe) = LOWER(:bienSoXe) AND v.trangThai = 'HOAT_DONG' AND v.ngayHetHan >= :currentDate")
     long countActiveByBienSoXe(@Param("bienSoXe") String bienSoXe, @Param("currentDate") LocalDate currentDate);
 
-    @Query("SELECT COALESCE(SUM(v.giaTien), 0.0) FROM VeThang v WHERE v.ngayBatDau BETWEEN :startDate AND :endDate")
+    @Query("SELECT COALESCE(SUM(v.giaTien), 0.0) FROM VeThang v WHERE v.ngayBatDau BETWEEN :startDate AND :endDate AND v.trangThai = 'HOAT_DONG'")
     Double calculateRevenueBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("SELECT v FROM VeThang v WHERE " +
