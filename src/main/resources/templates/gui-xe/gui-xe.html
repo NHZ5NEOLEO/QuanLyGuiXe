@@ -3096,7 +3096,7 @@
 
         // 1. Kiểm tra nếu chỉ toàn số
         if (/^\d+$/.test(clean)) {
-            fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Biển số không thể chỉ gồm chữ số (' + clean + ')! Bắt buộc phải có sê-ri chữ (VD: 30A-123.45 hoặc 29B1-888.88).</span>';
+            fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Biển số không thể chỉ gồm chữ số (' + clean + ')! Cần có sê-ri chữ. <span class="text-primary fw-semibold"><i class="fa-solid fa-wand-magic-sparkles ms-1 text-warning"></i> Vui lòng bấm vào gợi ý bên dưới để sửa nhanh:</span></span>';
             input.classList.add('is-invalid');
             input.classList.remove('is-valid');
             if (notice) notice.style.display = 'none';
