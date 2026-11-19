@@ -501,6 +501,8 @@
                                     </div>
                                     <!-- Dynamic real-time validation & Lookup feedback -->
                                     <div id="plateFeedback" class="small mt-2"></div>
+                                    <!-- Dynamic OCR Smart Suggestions Container -->
+                                    <div id="smartSuggestionsBox" class="mt-2 d-none"></div>
                                     <!-- Dynamic Monthly Pass / Conflict Notice Box -->
                                     <div id="specialNoticeBox" class="mt-2 d-none"></div>
                                 </div>
@@ -1323,6 +1325,9 @@
             input.focus();
         }
         resetPlateFeedback();
+        if (typeof renderSmartSuggestions === 'function') {
+            renderSmartSuggestions([]);
+        }
         const statusLabel = document.getElementById('cameraStatusLabel');
         if (statusLabel) {
             statusLabel.textContent = 'CAM 01 - LÀN VÀO';
@@ -1546,9 +1551,46 @@
     }
 
     /**
-     * Tạo Canvas con (vùng ROI) với tiền xử lý thang xám chất lượng cao
+     * Thuật toán Otsu Binarization tính toán ngưỡng nhị phân hóa tối ưu tự động dựa trên phân bố histogram thang xám
      */
-    function createSubCanvas(sourceCanvas, x, y, w, h) {
+    function computeOtsuThreshold(grayData, totalPixels) {
+        const hist = new Int32Array(256);
+        for (let i = 0; i < totalPixels; i++) {
+            hist[grayData[i]]++;
+        }
+        let total = totalPixels;
+        let sum = 0;
+        for (let t = 0; t < 256; t++) {
+            sum += t * hist[t];
+        }
+        let sumB = 0;
+        let wB = 0;
+        let varMax = 0;
+        let threshold = 128;
+
+        for (let t = 0; t < 256; t++) {
+            wB += hist[t];
+            if (wB === 0) continue;
+            const wF = total - wB;
+            if (wF === 0) break;
+
+            sumB += t * hist[t];
+            const mB = sumB / wB;
+            const mF = (sum - sumB) / wF;
+            const varBetween = wB * wF * (mB - mF) * (mB - mF);
+
+            if (varBetween > varMax) {
+                varMax = varBetween;
+                threshold = t;
+            }
+        }
+        return threshold;
+    }
+
+    /**
+     * Tạo Canvas con (vùng ROI) với tiền xử lý thang xám + Otsu Binarization / Contrast Stretching
+     */
+    function createSubCanvas(sourceCanvas, x, y, w, h, useOtsu = true) {
         const c = document.createElement('canvas');
         c.width = w;
         c.height = h;
@@ -1557,34 +1599,58 @@
         try {
             const imgData = ctx.getImageData(0, 0, w, h);
             const d = imgData.data;
+            const totalPixels = w * h;
+            const grays = new Uint8Array(totalPixels);
+
             let minVal = 255, maxVal = 0;
-            // 1. Chuyển thang xám và tìm min/max độ sáng
-            for (let i = 0; i < d.length; i += 4) {
+            for (let i = 0, j = 0; i < d.length; i += 4, j++) {
                 const gray = (0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]) | 0;
-                d[i] = gray;
+                grays[j] = gray;
                 if (gray < minVal) minVal = gray;
                 if (gray > maxVal) maxVal = gray;
             }
-            // 2. Kéo giãn tương phản (Contrast Stretching) giúp ký tự đen dập nổi rõ nét
-            const range = (maxVal - minVal) || 1;
-            for (let i = 0; i < d.length; i += 4) {
-                let stretched = ((d[i] - minVal) * 255 / range) | 0;
-                if (stretched < 115) {
-                    stretched = Math.max(0, stretched - 35);
-                } else if (stretched > 135) {
-                    stretched = Math.min(255, stretched + 35);
+
+            if (useOtsu) {
+                // Nhị phân hóa Otsu: tự động tách biệt chữ đen dập nổi trên nền biển số trắng phản quang
+                const threshold = computeOtsuThreshold(grays, totalPixels);
+                let darkCount = 0;
+                for (let j = 0; j < totalPixels; j++) {
+                    if (grays[j] <= threshold) darkCount++;
                 }
-                d[i] = stretched;
-                d[i+1] = stretched;
-                d[i+2] = stretched;
+                // Nếu vùng đen chiếm > 65% (ảnh ngược sáng/lóa), đảo ngược để chữ dập nổi luôn là màu đen (0), nền trắng (255)
+                const invert = darkCount > (totalPixels * 0.65);
+                for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+                    let isDark = grays[j] <= threshold;
+                    if (invert) isDark = !isDark;
+                    const val = isDark ? 0 : 255;
+                    d[i] = val;
+                    d[i+1] = val;
+                    d[i+2] = val;
+                }
+            } else {
+                // Kéo giãn tương phản (Contrast Stretching) dự phòng
+                const range = (maxVal - minVal) || 1;
+                for (let i = 0; i < d.length; i += 4) {
+                    let stretched = ((d[i] - minVal) * 255 / range) | 0;
+                    if (stretched < 115) {
+                        stretched = Math.max(0, stretched - 35);
+                    } else if (stretched > 135) {
+                        stretched = Math.min(255, stretched + 35);
+                    }
+                    d[i] = stretched;
+                    d[i+1] = stretched;
+                    d[i+2] = stretched;
+                }
             }
             ctx.putImageData(imgData, 0, 0);
-        } catch(e) {}
+        } catch(e) {
+            console.warn("[OCR SubCanvas] Lỗi xử lý canvas:", e);
+        }
         return c;
     }
 
     /**
-     * Quét AI OCR thông minh: Tự động scale siêu phân giải + Phân tách 2 dòng xe máy & quét khối ô tô
+     * Quét AI OCR thông minh: Tự động scale siêu phân giải + Dual-Pass (Otsu & Contrast) + Phân tách 2 dòng xe máy & quét khối ô tô
      */
     async function recognizePlateFromCanvas(sourceCanvas) {
         const worker = await getTesseractWorker();
@@ -1622,64 +1688,251 @@
             { x: 0, y: 0, w: sw, h: sh }
         ];
 
-        for (let idx = 0; idx < rois.length; idx++) {
-            const roi = rois[idx];
-            const roiCanvas = createSubCanvas(scaledCanvas, roi.x, roi.y, roi.w, roi.h);
-            const rw = roiCanvas.width;
-            const rh = roiCanvas.height;
+        // DUAL-PASS: Pass 1 với Otsu Binarization (chữ đen nét dập nổi cực rõ), Pass 2 với Contrast Stretching
+        const passes = [true, false];
 
-            // CHIẾN LƯỢC 1: Phân tách 2 dòng biển số xe máy (Line 1 + Line 2)
-            try {
-                // Dòng trên (0% -> 46% chiều cao ROI)
-                const topH = Math.floor(rh * 0.46);
-                const topCanvas = createSubCanvas(roiCanvas, 0, 0, rw, topH);
-                await worker.setParameters({
-                    tessedit_pageseg_mode: '7',
-                    tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
-                });
-                const resTop = await worker.recognize(topCanvas);
-                const topRaw = resTop && resTop.data ? resTop.data.text : '';
-                const topPart = extractTopPart(topRaw);
+        for (const useOtsu of passes) {
+            for (let idx = 0; idx < rois.length; idx++) {
+                const roi = rois[idx];
+                const roiCanvas = createSubCanvas(scaledCanvas, roi.x, roi.y, roi.w, roi.h, useOtsu);
+                const rw = roiCanvas.width;
+                const rh = roiCanvas.height;
 
-                // Dòng dưới (48% -> 98% chiều cao ROI, không cắt lề trái để không bị xén mất nét số đầu như số 4)
-                const botY = Math.floor(rh * 0.48);
-                const botH = Math.floor(rh * 0.50);
-                const botCanvas = createSubCanvas(roiCanvas, 0, botY, rw, botH);
-                const resBot = await worker.recognize(botCanvas);
-                const botRaw = resBot && resBot.data ? resBot.data.text : '';
-                const botPart = extractBottomPart(botRaw);
+                // CHIẾN LƯỢC 1: Phân tách 2 dòng biển số xe máy (Line 1 + Line 2)
+                try {
+                    // Dòng trên (0% -> 46% chiều cao ROI)
+                    const topH = Math.floor(rh * 0.46);
+                    const topCanvas = createSubCanvas(roiCanvas, 0, 0, rw, topH, useOtsu);
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: '7',
+                        tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+                    });
+                    const resTop = await worker.recognize(topCanvas);
+                    const topRaw = resTop && resTop.data ? resTop.data.text : '';
+                    const topPart = extractTopPart(topRaw);
 
-                console.log(`[AI ANPR ROI ${idx+1}] TopRaw="${topRaw.trim()}" -> [${topPart}] | BotRaw="${botRaw.trim()}" -> [${botPart}]`);
+                    // Dòng dưới (48% -> 98% chiều cao ROI, không cắt lề trái để không bị xén mất nét số đầu như số 4)
+                    const botY = Math.floor(rh * 0.48);
+                    const botH = Math.floor(rh * 0.50);
+                    const botCanvas = createSubCanvas(roiCanvas, 0, botY, rw, botH, useOtsu);
+                    const resBot = await worker.recognize(botCanvas);
+                    const botRaw = resBot && resBot.data ? resBot.data.text : '';
+                    const botPart = extractBottomPart(botRaw);
 
-                // Chỉ trả về khi phần sê-ri xe máy hợp lệ (bắt buộc có chữ cái, không chấp nhận toàn số)
-                const seriesPart = topPart ? (topPart.split('-')[1] || '') : '';
-                const hasValidSeriesLetter = /[A-Z]/.test(seriesPart);
-                if (topPart && botPart && hasValidSeriesLetter) {
-                    return topPart + ' ' + botPart;
+                    console.log(`[AI ANPR ROI ${idx+1} | Otsu=${useOtsu}] TopRaw="${topRaw.trim()}" -> [${topPart}] | BotRaw="${botRaw.trim()}" -> [${botPart}]`);
+
+                    // Chỉ trả về khi phần sê-ri xe máy hợp lệ (bắt buộc có chữ cái, không chấp nhận toàn số)
+                    const seriesPart = topPart ? (topPart.split('-')[1] || '') : '';
+                    const hasValidSeriesLetter = /[A-Z]/.test(seriesPart);
+                    if (topPart && botPart && hasValidSeriesLetter) {
+                        return topPart + ' ' + botPart;
+                    }
+                } catch(e) {
+                    console.warn("[AI ANPR] Lỗi nhận diện 2 dòng xe máy:", e);
                 }
-            } catch(e) {
-                console.warn("[AI ANPR] Lỗi nhận diện 2 dòng xe máy:", e);
-            }
 
-            // CHIẾN LƯỢC 2: Quét toàn bộ khối (cho ô tô hoặc xe máy ngang)
-            try {
-                await worker.setParameters({
-                    tessedit_pageseg_mode: '6',
-                    tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
-                });
-                const resAll = await worker.recognize(roiCanvas);
-                const allText = resAll && resAll.data ? resAll.data.text : '';
-                const plate = extractPlateFromText(allText);
-                if (plate) {
-                    console.log(`[AI ANPR ROI ${idx+1}] Full block match:`, plate);
-                    return plate;
+                // CHIẾN LƯỢC 2: Quét toàn bộ khối (cho ô tô hoặc xe máy ngang)
+                try {
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: '6',
+                        tessedit_char_whitelist: '0123456789ABCDEFGHKLMNPRSTUVXYZ-.\n '
+                    });
+                    const resAll = await worker.recognize(roiCanvas);
+                    const allText = resAll && resAll.data ? resAll.data.text : '';
+                    const plate = extractPlateFromText(allText);
+                    if (plate) {
+                        console.log(`[AI ANPR ROI ${idx+1} | Otsu=${useOtsu}] Full block match:`, plate);
+                        return plate;
+                    }
+                } catch(e) {
+                    console.warn("[AI ANPR] Lỗi nhận diện toàn khối:", e);
                 }
-            } catch(e) {
-                console.warn("[AI ANPR] Lỗi nhận diện toàn khối:", e);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Tự động sinh danh sách gợi ý thông minh 1-click cho biển số xe
+     * Khắc phục triệt để các cặp nhầm lẫn OCR: 71<->E1, 1<->4, chuẩn hóa dấu nối và khoảng trắng
+     */
+    function generateSmartPlateSuggestions(currentVal) {
+        if (!currentVal) {
+            renderSmartSuggestions([]);
+            return;
+        }
+        const val = currentVal.trim().toUpperCase();
+        const clean = val.replace(/[\s\-\.,_]+/g, '');
+        if (clean.length < 5) {
+            renderSmartSuggestions([]);
+            return;
+        }
+
+        const suggestions = [];
+        const seen = new Set();
+        const addSug = (plate, label, tag = 'Gợi ý') => {
+            if (!plate || seen.has(plate) || plate === val) return;
+            seen.add(plate);
+            suggestions.push({ plate, label, tag });
+        };
+
+        const formatNum = (np) => {
+            if (np.length === 5) return np.substring(0, 3) + '.' + np.substring(3);
+            if (np.length === 4) return np.substring(0, 2) + '.' + np.substring(2);
+            return np;
+        };
+
+        // 1. Trường hợp chuỗi toàn số hoặc sê-ri dạng số (như 597119565 hoặc 59-71 195.65)
+        const allDigitsMatch = clean.match(/^([1-9][0-9])([0-9]{2})([0-9]{4,5})$/);
+        if (allDigitsMatch) {
+            const prov = allDigitsMatch[1];
+            const numSeries = allDigitsMatch[2]; // VD: 71
+            const numPlate = allDigitsMatch[3];  // VD: 19565
+
+            // Bản đồ chuyển đổi sê-ri số sang sê-ri chữ hợp chuẩn Việt Nam
+            const seriesMap = {
+                '71': ['E1', 'A1', 'T1'],
+                '01': ['E1', 'D1', 'A1'],
+                '81': ['B1', 'E1'],
+                '41': ['A1', 'E1'],
+                '11': ['T1', 'E1', 'A1'],
+                '51': ['S1', 'E1'],
+                '61': ['G1', 'E1'],
+                '21': ['Z1', 'E1'],
+                '31': ['E1', 'C1']
+            };
+            const candidateSeries = seriesMap[numSeries] || ['E1', 'A1', 'B1'];
+
+            // Biến thể số đăng ký: số 1 ở đầu dòng thường bị đọc nhầm từ số 4 (do mất nét trái)
+            const candidateNums = [];
+            if (numPlate.startsWith('1')) {
+                candidateNums.push('4' + numPlate.substring(1));
+            }
+            candidateNums.push(numPlate);
+            if (numPlate.startsWith('4')) {
+                candidateNums.push('1' + numPlate.substring(1));
+            }
+
+            candidateSeries.forEach((ser, sIdx) => {
+                candidateNums.forEach((np, nIdx) => {
+                    const formatted = `${prov}-${ser} ${formatNum(np)}`;
+                    const tag = (sIdx === 0 && nIdx === 0) ? 'Chuẩn đề xuất' : (ser === 'E1' ? 'Sê-ri E1' : 'Đề xuất');
+                    addSug(formatted, formatted, tag);
+                });
+            });
+        }
+
+        // 2. Trường hợp đã có sê-ri dạng chữ (như 59-E1 195.65 hoặc 59E1 19565)
+        const plateMatch = clean.match(/^([1-9][0-9])([A-Z][0-9A-Z]?)([0-9]{4,5})$/);
+        if (plateMatch) {
+            const prov = plateMatch[1];
+            const ser = plateMatch[2];
+            const numPart = plateMatch[3];
+
+            // Số 1 đầu bị nhầm từ số 4
+            if (numPart.startsWith('1')) {
+                const fixedNum = '4' + numPart.substring(1);
+                addSug(`${prov}-${ser} ${formatNum(fixedNum)}`, `${prov}-${ser} ${formatNum(fixedNum)}`, 'Sửa nét 1 &rarr; 4');
+            }
+            // Số 4 đầu đề xuất thêm biến thể số 1
+            if (numPart.startsWith('4')) {
+                const altNum = '1' + numPart.substring(1);
+                addSug(`${prov}-${ser} ${formatNum(altNum)}`, `${prov}-${ser} ${formatNum(altNum)}`, 'Biến thể số 1');
+            }
+
+            // Gợi ý chuẩn hóa khoảng trắng và gạch nối
+            const std = `${prov}-${ser} ${formatNum(numPart)}`;
+            if (std !== val) {
+                addSug(std, std, 'Chuẩn hóa');
+            }
+        }
+
+        renderSmartSuggestions(suggestions);
+    }
+
+    /**
+     * Hiển thị danh sách các badge gợi ý 1-click dưới ô nhập biển số xe
+     */
+    function renderSmartSuggestions(suggestions) {
+        const box = document.getElementById('smartSuggestionsBox');
+        if (!box) return;
+
+        if (!suggestions || suggestions.length === 0) {
+            box.innerHTML = '';
+            box.classList.add('d-none');
+            box.style.display = 'none';
+            return;
+        }
+
+        box.classList.remove('d-none');
+        box.style.display = 'block';
+
+        let html = `
+            <div class="card border border-primary border-opacity-25 bg-primary bg-opacity-10 shadow-sm p-2 mb-2">
+                <div class="d-flex align-items-center justify-content-between mb-1 pb-1 border-bottom border-primary border-opacity-10">
+                    <div class="d-flex align-items-center gap-1 text-primary fw-bold small">
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                        <span>Gợi ý thông minh 1-click:</span>
+                    </div>
+                    <small class="text-muted text-xs">Nhấp để áp dụng ngay biển số chuẩn</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2 pt-1">
+        `;
+
+        suggestions.slice(0, 4).forEach((sug, idx) => {
+            const isBest = idx === 0;
+            const btnClass = isBest ? 'btn-primary text-white fw-bold shadow-sm' : 'btn-outline-primary bg-white fw-semibold';
+            const badgeClass = isBest ? 'bg-white text-primary' : 'bg-primary-subtle text-primary';
+            html += `
+                <button type="button" class="btn btn-sm ${btnClass} font-monospace d-flex align-items-center gap-1 px-2 py-1"
+                        onclick="applySmartSuggestion('${sug.plate}')" title="Nhấp để áp dụng ${sug.plate}">
+                    <i class="fa-solid fa-check text-xs"></i>
+                    <span class="fs-6">${sug.plate}</span>
+                    <span class="badge ${badgeClass} text-2xs ms-1">${sug.tag}</span>
+                </button>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        box.innerHTML = html;
+    }
+
+    /**
+     * Áp dụng biển số từ nút gợi ý thông minh 1-click
+     */
+    function applySmartSuggestion(plate) {
+        const input = document.getElementById('bienSoXe');
+        if (!input) return;
+        input.value = plate;
+        input.focus();
+        validateAndLookupPlate(plate);
+
+        const statusLabel = document.getElementById('cameraStatusLabel') || document.getElementById('cameraStatusText');
+        if (statusLabel) {
+            statusLabel.textContent = 'Đã áp dụng: ' + plate;
+        }
+        const statusPill = document.getElementById('cameraStatusBadge') || document.getElementById('cameraStatusPill');
+        if (statusPill) {
+            statusPill.className = 'badge bg-success-subtle text-success border border-success-subtle text-xs';
+        }
+
+        renderSmartSuggestions([]);
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Đã áp dụng gợi ý: ' + plate,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
     }
 
     /**
@@ -1760,6 +2013,9 @@
                     }
                     playScanBeep();
                     validateAndLookupPlate(detectedPlate);
+                    if (typeof generateSmartPlateSuggestions === 'function') {
+                        generateSmartPlateSuggestions(detectedPlate);
+                    }
 
                     Swal.fire({
                         toast: true,
@@ -1781,6 +2037,9 @@
                     }
                     if (plateFb) {
                         plateFb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Chưa quét rõ được biển số từ ảnh. Vui lòng gõ biển số vào ô bên dưới hoặc nhấn nút <strong>Làm mới</strong> để sửa.</span>';
+                    }
+                    if (typeof renderSmartSuggestions === 'function') {
+                        renderSmartSuggestions([]);
                     }
                     Swal.fire({
                         toast: true,
@@ -2011,6 +2270,9 @@
             hintBox.classList.add('d-none');
             hintBox.innerHTML = '';
         }
+        if (typeof renderSmartSuggestions === 'function') {
+            renderSmartSuggestions([]);
+        }
         const input = document.getElementById('bienSoXe');
         if (input) input.classList.remove('is-invalid', 'is-valid');
     }
@@ -2221,6 +2483,9 @@
             input.classList.add('is-invalid');
             input.classList.remove('is-valid');
             if (notice) notice.style.display = 'none';
+            if (typeof generateSmartPlateSuggestions === 'function') {
+                generateSmartPlateSuggestions(val);
+            }
             return;
         }
 
@@ -2230,6 +2495,9 @@
             input.classList.add('is-invalid');
             input.classList.remove('is-valid');
             if (notice) notice.style.display = 'none';
+            if (typeof renderSmartSuggestions === 'function') {
+                renderSmartSuggestions([]);
+            }
             return;
         }
 
@@ -2238,6 +2506,9 @@
             fb.innerHTML = '<span class="text-warning fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i> Đang nhập... Biển số hợp lệ cần từ 6-10 ký tự (VD: 30A-123.45).</span>';
             input.classList.remove('is-valid');
             if (notice) notice.style.display = 'none';
+            if (typeof renderSmartSuggestions === 'function') {
+                renderSmartSuggestions([]);
+            }
             return;
         }
 
@@ -2248,6 +2519,11 @@
         fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Biển số đúng định dạng: <strong>' + val + '</strong></span>';
         input.classList.remove('is-invalid');
         input.classList.add('is-valid');
+
+        // Hiển thị gợi ý thông minh nếu có thể chuẩn hóa hoặc có biến thể tốt hơn
+        if (typeof generateSmartPlateSuggestions === 'function') {
+            generateSmartPlateSuggestions(val);
+        }
 
         // Gọi API kiểm tra xem xe có Vé Tháng hoặc Xe Đang Trong Bãi không
         if (lookupTimeout) clearTimeout(lookupTimeout);
