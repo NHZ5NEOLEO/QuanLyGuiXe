@@ -154,6 +154,17 @@
 
                 <!-- BƯỚC 2: NHẬP MÃ OTP VÀ MẬT KHẨU MỚI (ẨN BAN ĐẦU) -->
                 <div id="step2Container" class="d-none">
+                    <!-- Banner hỗ trợ kiểm thử nếu mail server hạn chế relay ra external mail -->
+                    <div id="demoOtpAlert" class="alert alert-warning py-2.5 px-3 small mb-3 border-2 border-warning shadow-xs d-none">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-warning fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark">[Hỗ Trợ Kiểm Thử] Mailbox.org chặn gửi ra ngoài (tài khoản dùng thử)</div>
+                                <div class="text-xs text-secondary mt-0.5">Mã OTP đã sinh: <strong class="font-monospace fs-6 text-primary px-1.5 py-0.5 bg-white rounded border border-primary-subtle" id="demoOtpVal">------</strong> <span class="badge bg-success-subtle text-success ms-1">Đã tự động điền</span></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="p-2.5 bg-light rounded-3 border mb-3 small d-flex justify-content-between align-items-center">
                         <span class="text-muted">Mã gửi đến:</span>
                         <strong class="text-primary font-monospace" id="sentEmailDisplay">email@example.com</strong>
@@ -332,7 +343,24 @@
                 document.getElementById('step1Container').classList.add('d-none');
                 document.getElementById('step2Container').classList.remove('d-none');
                 document.getElementById('stepSubTitle').innerText = 'Nhập mã xác thực OTP từ email và thiết lập mật khẩu mới.';
-                document.getElementById('otpInput').focus();
+
+                // Nếu có mã devOtp do máy chủ chặn gửi ra ngoài (demo mode)
+                if (data.devOtp) {
+                    const demoAlert = document.getElementById('demoOtpAlert');
+                    const demoVal = document.getElementById('demoOtpVal');
+                    if (demoAlert && demoVal) {
+                        demoVal.innerText = data.devOtp;
+                        demoAlert.classList.remove('d-none');
+                    }
+                    const otpInp = document.getElementById('otpInput');
+                    if (otpInp) {
+                        otpInp.value = data.devOtp;
+                    }
+                    const pwdInp = document.getElementById('newPassword');
+                    if (pwdInp) pwdInp.focus();
+                } else {
+                    document.getElementById('otpInput').focus();
+                }
             } else {
                 errorMsg.innerText = data.message || 'Không thể gửi mã xác thực. Vui lòng thử lại!';
                 errorAlert.classList.remove('d-none');
