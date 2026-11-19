@@ -299,6 +299,10 @@ public class GateController {
         return "redirect:/gui-xe";
     }
 
+    public String handleCheckIn(CheckInRequest request, RedirectAttributes redirectAttributes) {
+        return handleCheckIn(request, null, redirectAttributes);
+    }
+
     /**
      * Trang Xe Ra (Làn ra & Thanh toán) - URL /xe-ra (hỗ trợ /nhan-xe và /parking/check-out)
      */
@@ -441,8 +445,8 @@ public class GateController {
     }
 
     @PostMapping("/checkin")
-    public String legacyCheckInForm(@ModelAttribute CheckInRequest request, RedirectAttributes redirectAttributes) {
-        return handleCheckIn(request, redirectAttributes);
+    public String legacyCheckInForm(@ModelAttribute CheckInRequest request, java.security.Principal principal, RedirectAttributes redirectAttributes) {
+        return handleCheckIn(request, principal, redirectAttributes);
     }
 
     @PostMapping("/checkout/confirm")
