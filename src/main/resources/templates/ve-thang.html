@@ -34,7 +34,7 @@
             <!-- Page Header -->
             <div class="page-header">
                 <div class="page-title-box">
-                    <h2>Quản lý vé tháng cư dân / nhân viên</h2>
+                    <h2>Quản lý vé tháng</h2>
                     <p>Đăng ký gói gửi xe định kỳ, theo dõi ngày hết hạn và gia hạn tự động</p>
                 </div>
                 <button class="btn-pro btn-primary-pro" data-bs-toggle="modal" data-bs-target="#addMonthlyModal">
@@ -154,7 +154,8 @@
                                             title="Xem mã QR thẻ vé tháng">
                                         <i class="fa-solid fa-qrcode me-1"></i> QR Thẻ
                                     </button>
-                                    <button class="btn-pro btn-outline-pro btn-sm-pro py-1 text-primary me-1" 
+                                    <button th:if="${session.userRole == null or session.userRole == 'ADMIN'}"
+                                            class="btn-pro btn-outline-pro btn-sm-pro py-1 text-primary me-1" 
                                             th:data-id="${t.id}"
                                             th:data-plate="${t.bienSoXe}"
                                             th:data-customer="${t.khachHang != null ? t.khachHang.hoTen : ''}"

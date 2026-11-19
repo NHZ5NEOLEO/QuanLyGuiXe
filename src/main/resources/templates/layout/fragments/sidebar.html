@@ -16,14 +16,15 @@
         <div class="brand-icon-box">
             <i class="fa-solid fa-square-parking" aria-hidden="true"></i>
         </div>
-        <div class="brand-text">
-            <div class="d-flex align-items-center gap-2">
-                <span class="title" style="font-size: 0.92rem; white-space: nowrap;">QUẢN LÝ GỬI XE</span>
+        <div class="brand-text flex-grow-1 overflow-hidden">
+            <div class="title fw-bold text-white text-truncate" style="font-size: 0.95rem; letter-spacing: 0.4px;">QUẢN LÝ GỬI XE</div>
+            <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="subtitle text-truncate" style="font-size: 0.70rem; color: #94a3b8;">Hệ thống bãi xe</span>
                 <span class="badge sidebar-role-badge"
+                      style="font-size: 0.65rem; padding: 2px 7px; font-weight: 700; letter-spacing: 0.3px; line-height: 1;"
                       th:classappend="${session.userRole == 'NHAN_VIEN'} ? 'bg-success text-white' : 'bg-primary text-white'"
                       th:text="${session.userRole != null ? (session.userRole == 'NHAN_VIEN' ? 'NHÂN VIÊN' : session.userRole) : 'ADMIN'}">ADMIN</span>
             </div>
-            <div class="subtitle">Hệ thống quản lý bãi xe</div>
         </div>
         <!-- Close button on mobile -->
         <button type="button" class="btn btn-sm text-secondary d-lg-none ms-auto border-0 p-1" onclick="toggleMobileSidebar(false)" aria-label="Đóng menu">

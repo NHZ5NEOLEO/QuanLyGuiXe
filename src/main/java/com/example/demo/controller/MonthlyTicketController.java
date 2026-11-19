@@ -74,8 +74,15 @@ public class MonthlyTicketController {
     public String renewMonthlyTicket(
             @RequestParam("veThangId") Long veThangId,
             @RequestParam(value = "months", defaultValue = "1") int months,
+            jakarta.servlet.http.HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
+        String role = (String) session.getAttribute("userRole");
+        if ("NHAN_VIEN".equalsIgnoreCase(role)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Nhân viên trực cổng không có quyền gia hạn vé tháng. Thao tác này chỉ dành cho Ban quản lý / Admin!");
+            return "redirect:/ve-thang";
+        }
         try {
             VeThang vt = monthlyTicketService.renewMonthlyPass(veThangId, months);
             redirectAttributes.addFlashAttribute("successMessage",
