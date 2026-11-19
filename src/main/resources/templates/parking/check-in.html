@@ -1401,11 +1401,33 @@
         if (/^[Z][0-9]/.test(s)) s = '2' + s.substring(1);
         if (/^[B][0-9]/.test(s)) s = '8' + s.substring(1);
 
-        const m = s.match(/([1-9][0-9])[\-]?(?:([A-Z][0-9A-Z]?)|([0-9][A-Z0-9]))/);
+        const m = s.match(/([1-9][0-9])[\-]?(?:([A-Z][0-9A-Z]?)|([0-9][A-Z0-9]?))/);
         if (m) {
             let prov = m[1];
             let series = m[2] || m[3];
-            if (series === '01' || series === 'F1') series = 'E1';
+
+            // Sửa lỗi Tesseract đọc nhầm chữ cái thành số hoặc ký tự gần giống trong sê-ri xe máy
+            if (series === '71' || series === '01' || series === 'F1' || series === 'L1' || series === '31' || series === 'C1') {
+                series = 'E1';
+            } else if (series === '81') {
+                series = 'B1';
+            } else if (series === '51') {
+                series = 'S1';
+            } else if (series === '61') {
+                series = 'G1';
+            } else if (series === '41') {
+                series = 'A1';
+            } else if (series === '21') {
+                series = 'Z1';
+            } else if (series === '11') {
+                series = 'T1';
+            } else if (/^[0-9]/.test(series)) {
+                // Nếu ký tự đầu là số (không hợp lệ theo quy chuẩn biển xe máy Việt Nam), map về chữ cái
+                const firstChar = series[0];
+                const rest = series.substring(1);
+                const numToLetter = { '7': 'E', '0': 'D', '8': 'B', '4': 'A', '5': 'S', '6': 'G', '1': 'T', '2': 'Z', '3': 'E' };
+                series = (numToLetter[firstChar] || 'E') + rest;
+            }
             series = series.replace(/[IL|/]/g, '1');
             return prov + '-' + series;
         }
@@ -1535,11 +1557,26 @@
         try {
             const imgData = ctx.getImageData(0, 0, w, h);
             const d = imgData.data;
+            let minVal = 255, maxVal = 0;
+            // 1. Chuyển thang xám và tìm min/max độ sáng
             for (let i = 0; i < d.length; i += 4) {
                 const gray = (0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]) | 0;
                 d[i] = gray;
-                d[i+1] = gray;
-                d[i+2] = gray;
+                if (gray < minVal) minVal = gray;
+                if (gray > maxVal) maxVal = gray;
+            }
+            // 2. Kéo giãn tương phản (Contrast Stretching) giúp ký tự đen dập nổi rõ nét
+            const range = (maxVal - minVal) || 1;
+            for (let i = 0; i < d.length; i += 4) {
+                let stretched = ((d[i] - minVal) * 255 / range) | 0;
+                if (stretched < 115) {
+                    stretched = Math.max(0, stretched - 35);
+                } else if (stretched > 135) {
+                    stretched = Math.min(255, stretched + 35);
+                }
+                d[i] = stretched;
+                d[i+1] = stretched;
+                d[i+2] = stretched;
             }
             ctx.putImageData(imgData, 0, 0);
         } catch(e) {}
@@ -1604,17 +1641,20 @@
                 const topRaw = resTop && resTop.data ? resTop.data.text : '';
                 const topPart = extractTopPart(topRaw);
 
-                // Dòng dưới (53% -> 94% chiều cao ROI)
-                const botY = Math.floor(rh * 0.53);
-                const botH = Math.floor(rh * 0.41);
-                const botCanvas = createSubCanvas(roiCanvas, Math.floor(rw * 0.05), botY, Math.floor(rw * 0.90), botH);
+                // Dòng dưới (48% -> 98% chiều cao ROI, không cắt lề trái để không bị xén mất nét số đầu như số 4)
+                const botY = Math.floor(rh * 0.48);
+                const botH = Math.floor(rh * 0.50);
+                const botCanvas = createSubCanvas(roiCanvas, 0, botY, rw, botH);
                 const resBot = await worker.recognize(botCanvas);
                 const botRaw = resBot && resBot.data ? resBot.data.text : '';
                 const botPart = extractBottomPart(botRaw);
 
                 console.log(`[AI ANPR ROI ${idx+1}] TopRaw="${topRaw.trim()}" -> [${topPart}] | BotRaw="${botRaw.trim()}" -> [${botPart}]`);
 
-                if (topPart && botPart) {
+                // Chỉ trả về khi phần sê-ri xe máy hợp lệ (bắt buộc có chữ cái, không chấp nhận toàn số)
+                const seriesPart = topPart ? (topPart.split('-')[1] || '') : '';
+                const hasValidSeriesLetter = /[A-Z]/.test(seriesPart);
+                if (topPart && botPart && hasValidSeriesLetter) {
                     return topPart + ' ' + botPart;
                 }
             } catch(e) {
