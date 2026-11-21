@@ -345,6 +345,30 @@ WHERE ho_ten LIKE '%Kh%ch%g%i%xe%';
 PRINT N'[OK] Đã chuẩn hóa dữ liệu tiếng Việt có dấu trong dat_cho_truoc và danh_gia.';
 GO
 
+-- =========================================================================================
+-- PHẦN 8: BẢNG LỊCH SỬ THAY ĐỔI BIỂU PHÍ GỬI XE (AUDIT LOG LƯU TRỮ SQL)
+-- =========================================================================================
+IF OBJECT_ID(N'dbo.lich_su_thay_doi_gia', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.lich_su_thay_doi_gia (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        loai_xe_id BIGINT NULL,
+        ten_loai NVARCHAR(100) NOT NULL,
+        gia_ban_ngay_cu FLOAT NULL,
+        gia_ban_ngay_moi FLOAT NOT NULL,
+        gia_ban_dem_cu FLOAT NULL,
+        gia_ban_dem_moi FLOAT NOT NULL,
+        gia_thang_cu FLOAT NULL,
+        gia_thang_moi FLOAT NOT NULL,
+        nguoi_thuc_hien NVARCHAR(100) NOT NULL,
+        thoi_gian_thay_doi DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+        hanh_dong NVARCHAR(50) NOT NULL DEFAULT N'CẬP NHẬT',
+        ghi_chu NVARCHAR(500) NULL
+    );
+    PRINT N'[OK] Đã tạo bảng dbo.lich_su_thay_doi_gia để lưu vết lịch sử sửa đổi biểu phí.';
+END
+GO
+
 PRINT N'-----------------------------------------------------------------------------';
 PRINT N'CẬP NHẬT CƠ SỞ DỮ LIỆU THÀNH CÔNG VÀ AN TOÀN 100%! KHÔNG CÓ DỮ LIỆU NÀO BỊ XÓA.';
 PRINT N'-----------------------------------------------------------------------------';

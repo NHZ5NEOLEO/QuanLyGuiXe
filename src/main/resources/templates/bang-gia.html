@@ -171,6 +171,121 @@
                 </div>
             </div>
 
+            <!-- =================================================================
+                 KHU VỰC: LỊCH SỬ SỬA ĐỔI BIỂU PHÍ (ĐỒNG BỘ CƠ SỞ DỮ LIỆU SQL)
+                 ================================================================= -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card-pro">
+                        <div class="card-pro-header d-flex flex-wrap align-items-center justify-content-between gap-2 py-3">
+                            <div class="card-pro-title d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary p-2" style="width: 36px; height: 36px;">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold fs-6 text-dark mb-0">Lịch sử sửa đổi biểu phí</h5>
+                                    <p class="text-secondary small mb-0">Toàn bộ thao tác cập nhật biểu phí trên web đều được tự động lưu trữ vào cơ sở dữ liệu SQL Server</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5">
+                                    <i class="fa-solid fa-database text-primary"></i>
+                                    <span th:text="${lichSuList != null ? #lists.size(lichSuList) + ' bản ghi SQL' : '0 bản ghi SQL'}">0 bản ghi SQL</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-pro-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 text-sm">
+                                    <thead class="table-light text-secondary text-2xs text-uppercase fw-bold letter-spacing-1">
+                                        <tr>
+                                            <th class="ps-3 py-3" style="width: 50px;">STT</th>
+                                            <th class="py-3" style="min-width: 150px;">Thời gian sửa</th>
+                                            <th class="py-3" style="min-width: 170px;">Người thực hiện</th>
+                                            <th class="py-3" style="min-width: 140px;">Loại phương tiện</th>
+                                            <th class="py-3 text-center" style="min-width: 100px;">Hành động</th>
+                                            <th class="py-3" style="min-width: 160px;">Giá ban ngày</th>
+                                            <th class="py-3" style="min-width: 160px;">Giá ban đêm</th>
+                                            <th class="py-3" style="min-width: 170px;">Giá vé tháng</th>
+                                            <th class="pe-3 py-3" style="min-width: 220px;">Tóm tắt thay đổi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${lichSuList == null or #lists.isEmpty(lichSuList)}">
+                                            <td colspan="9" class="text-center py-5 text-muted">
+                                                <div class="d-flex flex-column align-items-center justify-content-center py-3">
+                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center p-3 mb-2" style="width: 56px; height: 56px;">
+                                                        <i class="fa-solid fa-clock-rotate-left fs-3 text-secondary opacity-50"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark fs-6">Chưa có lịch sử sửa đổi nào</div>
+                                                    <small class="text-secondary mt-1">Khi bạn chỉnh sửa mức giá các thẻ bên trên và bấm "Lưu thay đổi", SQL sẽ tự động ghi vết tại đây.</small>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:each="ls, stat : ${lichSuList}">
+                                            <td class="ps-3 fw-bold text-secondary font-monospace" th:text="${stat.count}">1</td>
+                                            <td class="fw-semibold text-dark font-monospace text-xs">
+                                                <i class="fa-regular fa-calendar-check text-primary me-1"></i>
+                                                <span th:text="${ls.thoiGianThayDoi != null ? #temporals.format(ls.thoiGianThayDoi, 'dd/MM/yyyy HH:mm:ss') : '—'}">21/11/2026 15:30:00</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
+                                                        <i class="fa-solid fa-user-shield text-xs"></i>
+                                                    </div>
+                                                    <strong class="text-dark small" th:text="${ls.nguoiThucHien}">Admin</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border fw-bold" th:text="${ls.tenLoai}">Xe máy</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge" 
+                                                      th:classappend="${ls.hanhDong == 'THÊM MỚI' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25'}" 
+                                                      th:text="${ls.hanhDong}">CẬP NHẬT</span>
+                                            </td>
+                                            <td>
+                                                <div th:if="${ls.giaBanNgayCu != null and ls.giaBanNgayCu != ls.giaBanNgayMoi}">
+                                                    <span class="text-decoration-line-through text-muted small" th:text="${#numbers.formatDecimal(ls.giaBanNgayCu, 0, 'POINT', 0, 'COMMA') + ' đ'}">4.000 đ</span>
+                                                    <i class="fa-solid fa-arrow-right text-xs text-primary mx-1"></i>
+                                                    <strong class="text-primary" th:text="${#numbers.formatDecimal(ls.giaBanNgayMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">5.000 đ</strong>
+                                                </div>
+                                                <div th:unless="${ls.giaBanNgayCu != null and ls.giaBanNgayCu != ls.giaBanNgayMoi}">
+                                                    <strong class="text-dark" th:text="${#numbers.formatDecimal(ls.giaBanNgayMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">4.000 đ</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div th:if="${ls.giaBanDemCu != null and ls.giaBanDemCu != ls.giaBanDemMoi}">
+                                                    <span class="text-decoration-line-through text-muted small" th:text="${#numbers.formatDecimal(ls.giaBanDemCu, 0, 'POINT', 0, 'COMMA') + ' đ'}">6.000 đ</span>
+                                                    <i class="fa-solid fa-arrow-right text-xs text-primary mx-1"></i>
+                                                    <strong class="text-primary" th:text="${#numbers.formatDecimal(ls.giaBanDemMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">7.000 đ</strong>
+                                                </div>
+                                                <div th:unless="${ls.giaBanDemCu != null and ls.giaBanDemCu != ls.giaBanDemMoi}">
+                                                    <strong class="text-dark" th:text="${#numbers.formatDecimal(ls.giaBanDemMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">6.000 đ</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div th:if="${ls.giaThangCu != null and ls.giaThangCu != ls.giaThangMoi}">
+                                                    <span class="text-decoration-line-through text-muted small" th:text="${#numbers.formatDecimal(ls.giaThangCu, 0, 'POINT', 0, 'COMMA') + ' đ'}">100.000 đ</span>
+                                                    <i class="fa-solid fa-arrow-right text-xs text-success mx-1"></i>
+                                                    <strong class="text-success" th:text="${#numbers.formatDecimal(ls.giaThangMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">120.000 đ</strong>
+                                                </div>
+                                                <div th:unless="${ls.giaThangCu != null and ls.giaThangCu != ls.giaThangMoi}">
+                                                    <strong class="text-success" th:text="${#numbers.formatDecimal(ls.giaThangMoi, 0, 'POINT', 0, 'COMMA') + ' đ'}">100.000 đ</strong>
+                                                </div>
+                                            </td>
+                                            <td class="pe-3">
+                                                <small class="text-secondary" th:text="${ls.ghiChu != null and !ls.ghiChu.isEmpty() ? ls.ghiChu : '—'}">Thay đổi giá ngày</small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
         <!-- Reusable Operational Footer -->
         <div th:replace="~{fragments/footer :: app-footer}"></div>

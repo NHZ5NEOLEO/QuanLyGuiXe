@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requireExplicitSave(false)
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**", "/monthly-tickets/**", "/ve-thang/**")
+                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**", "/monthly-tickets/**", "/ve-thang/**", "/price-settings/**", "/bang-gia/**", "/bang_gia/**")
             )
             .authorizeHttpRequests(auth -> auth
                 // 1. Static resources & assets
@@ -85,7 +85,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/tickets/**", "/api/ve-xe/**").hasRole("ADMIN")
                 .requestMatchers("/staff", "/staff/**", "/nhan-vien", "/nhan-vien/**", "/nguoi-dung", "/nguoi-dung/**", "/users", "/users/**", "/quan-ly-nguoi-dung", "/quan-ly-nguoi-dung/**", "/quan-ly-nhan-vien", "/quan-ly-nhan-vien/**").hasRole("ADMIN")
                 .requestMatchers("/thong-tin-danh-gia", "/thong-tin-danh-gia/**", "/danh-gia-khach-hang", "/danh-gia-khach-hang/**", "/reviews", "/reviews/**", "/quan-ly-danh-gia", "/quan-ly-danh-gia/**", "/danh-gia-he-thong", "/danh-gia-he-thong/**").hasRole("ADMIN")
-                .requestMatchers("/price-settings/**", "/bang-gia/**").hasRole("ADMIN")
+                .requestMatchers("/price-settings/**", "/bang-gia/**", "/bang_gia/**", "/bang-gia", "/bang_gia").hasRole("ADMIN")
                 .requestMatchers("/settings/**", "/cai-dat/**").hasRole("ADMIN")
                 .requestMatchers("/reports/**", "/thong-ke/**", "/api/reports/**").hasRole("ADMIN")
                 .requestMatchers("/phuong-tien/**", "/vehicles/**", "/api/vehicles/**").hasRole("ADMIN")

@@ -464,7 +464,28 @@ INSERT INTO dbo.ve_xe (maqr, bien_so_xe, bien_so_clean, loai_xe_id, ve_thang_id,
 ('QR-DEMO-004', '29T1-54321', '29T154321', 1, NULL, 2, 1, DATEADD(hour, -4, GETDATE()), DATEADD(hour, -1, GETDATE()), 4000, 4000, 4000, 'TIEN_MAT', 'DA_THANH_TOAN', N'Đã ra', 6, 1);
 GO
 
+-- Bảng 14: Lịch sử sửa đổi biểu phí gửi xe (Audit Log)
+IF OBJECT_ID(N'dbo.lich_su_thay_doi_gia', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.lich_su_thay_doi_gia (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        loai_xe_id BIGINT NULL,
+        ten_loai NVARCHAR(100) NOT NULL,
+        gia_ban_ngay_cu FLOAT NULL,
+        gia_ban_ngay_moi FLOAT NOT NULL,
+        gia_ban_dem_cu FLOAT NULL,
+        gia_ban_dem_moi FLOAT NOT NULL,
+        gia_thang_cu FLOAT NULL,
+        gia_thang_moi FLOAT NOT NULL,
+        nguoi_thuc_hien NVARCHAR(100) NOT NULL,
+        thoi_gian_thay_doi DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+        hanh_dong NVARCHAR(50) NOT NULL DEFAULT N'CẬP NHẬT',
+        ghi_chu NVARCHAR(500) NULL
+    );
+END
+GO
+
 PRINT N'=============================================================================';
-PRINT N'ĐÃ KHỞI TẠO THÀNH CÔNG TOÀN BỘ CƠ SỞ DỮ LIỆU QuanLyGuiXe VỚI 13 BẢNG VÀ 23 KHÓA NGOẠI!';
+PRINT N'ĐÃ KHỞI TẠO THÀNH CÔNG TOÀN BỘ CƠ SỞ DỮ LIỆU QuanLyGuiXe VỚI 14 BẢNG!';
 PRINT N'=============================================================================';
 GO
