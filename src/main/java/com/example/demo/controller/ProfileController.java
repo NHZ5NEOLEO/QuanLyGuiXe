@@ -6,8 +6,10 @@ import com.example.demo.model.VeThang;
 import com.example.demo.repository.KhachHangRepository;
 import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
+import com.example.demo.service.MonthlyTicketService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,6 +41,9 @@ public class ProfileController {
     private final KhachHangRepository khachHangRepository;
     private final VeThangRepository veThangRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired(required = false)
+    private MonthlyTicketService monthlyTicketService;
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(0|\\+84)[0-9]{8,10}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -79,7 +84,7 @@ public class ProfileController {
         // Tìm hồ sơ Khách hàng tương ứng theo SĐT của tài khoản
         KhachHang customer = null;
         if (user.getSoDienThoai() != null && !user.getSoDienThoai().isBlank()) {
-            customer = khachHangRepository.findBySoDienThoai(user.getSoDienThoai().trim()).orElse(null);
+            customer = khachHangRepository.findFirstBySoDienThoai(user.getSoDienThoai().trim()).orElse(null);
         }
 
         if (customer == null) {
@@ -309,6 +314,61 @@ public class ProfileController {
                 session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc);
             }
         }
+    }
+
+    /**
+     * Khách hàng / Cư dân hủy hoặc xóa vé tháng của chính mình (đặc biệt là đơn chờ thanh toán hoặc thẻ cũ)
+     */
+    @PostMapping({"/tai-khoan/ve-thang/xoa", "/portal/ho-so/ve-thang/xoa"})
+    public String deleteMyTicket(
+            @RequestParam("veThangId") Long veThangId,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes
+    ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Optional<NguoiDung> userOpt = resolveCurrentUser(auth, request);
+        if (userOpt.isEmpty()) {
+            return "redirect:/login";
+        }
+
+        NguoiDung currentUser = userOpt.get();
+        Optional<VeThang> vtOpt = veThangRepository.findById(veThangId);
+        if (vtOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy thẻ vé tháng yêu cầu!");
+            return "redirect:/tai-khoan#tab-tickets";
+        }
+
+        VeThang vt = vtOpt.get();
+        // Kiểm tra quyền sở hữu vé tháng
+        boolean isOwner = false;
+        if ("ADMIN".equalsIgnoreCase(currentUser.getVaiTro())) {
+            isOwner = true;
+        } else if (vt.getKhachHang() != null) {
+            String custPhone = vt.getKhachHang().getSoDienThoai();
+            String userPhone = currentUser.getSoDienThoai();
+            if (custPhone != null && userPhone != null && custPhone.trim().equals(userPhone.trim())) {
+                isOwner = true;
+            }
+        }
+
+        if (!isOwner) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền thao tác trên thẻ vé tháng của khách hàng khác!");
+            return "redirect:/tai-khoan#tab-tickets";
+        }
+
+        try {
+            if (monthlyTicketService != null) {
+                monthlyTicketService.xoaVeThang(veThangId);
+            } else {
+                veThangRepository.delete(vt);
+            }
+            redirectAttributes.addFlashAttribute("successMessage", 
+                    "Đã hủy/xóa thành công thẻ vé tháng [" + vt.getMaThe() + "] cho biển số [" + vt.getBienSoXe() + "]!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa vé tháng: " + e.getMessage());
+        }
+
+        return "redirect:/tai-khoan#tab-tickets";
     }
 }
 

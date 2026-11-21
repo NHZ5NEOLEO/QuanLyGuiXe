@@ -9,7 +9,9 @@ import com.example.demo.repository.KhachHangRepository;
 import com.example.demo.repository.LoaiXeRepository;
 import com.example.demo.repository.NguoiDungRepository;
 import com.example.demo.repository.VeThangRepository;
+import com.example.demo.repository.VeXeRepository;
 import com.example.demo.util.BienSoXeHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class MonthlyTicketService implements VeThangService {
     private final LoaiXeRepository loaiXeRepository;
     private final NguoiDungRepository nguoiDungRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired(required = false)
+    private VeXeRepository veXeRepository;
 
     public MonthlyTicketService(VeThangRepository veThangRepository,
                                 KhachHangRepository khachHangRepository,
@@ -412,5 +417,46 @@ public class MonthlyTicketService implements VeThangService {
 
     public long countActivePasses() {
         return demVeThangHoatDong();
+    }
+
+    public long demVeThangChoThanhToan() {
+        return veThangRepository.countByTrangThai("CHO_THANH_TOAN");
+    }
+
+    public long demVeThangKhoa() {
+        return veThangRepository.countByTrangThai("KHOA");
+    }
+
+    public long demVeThangHetHan() {
+        LocalDate today = LocalDate.now();
+        return veThangRepository.findByNgayHetHanBefore(today).stream()
+                .filter(vt -> !"CHO_THANH_TOAN".equalsIgnoreCase(vt.getTrangThai()))
+                .count();
+    }
+
+    public long demTongVeThang() {
+        return veThangRepository.count();
+    }
+
+    @Override
+    @Transactional
+    public void xoaVeThang(Long veThangId) {
+        VeThang vt = veThangRepository.findById(veThangId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy thẻ vé tháng ID: " + veThangId));
+
+        // Kiểm tra xem xe này có đang ở trong bãi hay không
+        if (veXeRepository != null && vt.getBienSoXe() != null) {
+            String cleanPlate = BienSoXeHelper.toCleanKey(vt.getBienSoXe());
+            if (veXeRepository.existsByBienSoCleanAndTrangThai(cleanPlate, "Đang gửi")) {
+                throw new BadRequestException("Phương tiện [" + vt.getBienSoXe() + "] hiện đang có lượt gửi xe trong bãi! Vui lòng cho xe ra khỏi bãi trước khi xóa vé tháng.");
+            }
+            // Hủy liên kết khóa ngoại với các lượt gửi cũ để không vi phạm ràng buộc Foreign Key
+            try {
+                veXeRepository.unlinkVeThang(veThangId);
+            } catch (Exception ignored) {
+            }
+        }
+
+        veThangRepository.delete(vt);
     }
 }

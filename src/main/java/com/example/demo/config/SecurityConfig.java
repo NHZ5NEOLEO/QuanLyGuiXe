@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requireExplicitSave(false)
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**")
+                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**", "/monthly-tickets/**", "/ve-thang/**")
             )
             .authorizeHttpRequests(auth -> auth
                 // 1. Static resources & assets

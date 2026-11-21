@@ -45,11 +45,97 @@
             <!-- Reusable Flash alerts -->
             <div th:replace="~{fragments/alerts :: flash-alerts}"></div>
 
-            <!-- Search box -->
-            <div class="filter-bar-pro">
-                <form action="/monthly-tickets" method="get" class="d-flex align-items-center gap-3 flex-wrap w-100">
+            <!-- KPI Summary Cards -->
+            <div class="kpi-grid mb-4">
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Tổng số vé tháng</div>
+                        <div class="kpi-value text-primary" th:text="${countTotal != null ? countTotal : 0}">0</div>
+                        <div class="kpi-subtext">Hồ sơ lưu trữ hệ thống</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-blue">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Đang hiệu lực</div>
+                        <div class="kpi-value text-success" th:text="${countActive != null ? countActive : 0}">0</div>
+                        <div class="kpi-subtext">Đủ điều kiện ra/vào bãi</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Chờ duyệt thanh toán</div>
+                        <div class="kpi-value text-warning" th:text="${countPending != null ? countPending : 0}">0</div>
+                        <div class="kpi-subtext">Đơn đăng ký trực tuyến</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-orange">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Hết hạn &amp; Bị khóa</div>
+                        <div class="kpi-value text-danger" th:text="${(countExpired != null ? countExpired : 0) + (countLocked != null ? countLocked : 0)}">0</div>
+                        <div class="kpi-subtext">
+                            <span th:text="${countExpired != null ? countExpired : 0}">0</span> hết hạn, <span th:text="${countLocked != null ? countLocked : 0}">0</span> khóa
+                        </div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-red">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar & Quick Status Tabs -->
+            <div class="card-pro mb-3 p-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 border-bottom pb-3">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="text-muted small fw-bold me-1"><i class="fa-solid fa-filter me-1"></i>Lọc trạng thái:</span>
+                        <a th:href="@{/monthly-tickets(status='ALL', keyword=${keyword})}" 
+                           class="btn btn-sm rounded-pill px-3 fw-semibold"
+                           th:classappend="${status == null || status == 'ALL' || status == '' ? 'btn-primary' : 'btn-outline-secondary'}">
+                            Tất cả <span class="badge bg-white text-dark rounded-pill ms-1" th:text="${countTotal != null ? countTotal : 0}">0</span>
+                        </a>
+                        <a th:href="@{/monthly-tickets(status='HOAT_DONG', keyword=${keyword})}" 
+                           class="btn btn-sm rounded-pill px-3 fw-semibold"
+                           th:classappend="${status == 'HOAT_DONG' ? 'btn-success' : 'btn-outline-secondary'}">
+                            <i class="fa-solid fa-circle-check me-1"></i>Đang dùng <span class="badge bg-light text-success rounded-pill ms-1" th:text="${countActive != null ? countActive : 0}">0</span>
+                        </a>
+                        <a th:href="@{/monthly-tickets(status='CHO_THANH_TOAN', keyword=${keyword})}" 
+                           class="btn btn-sm rounded-pill px-3 fw-semibold"
+                           th:classappend="${status == 'CHO_THANH_TOAN' ? 'btn-warning text-dark' : 'btn-outline-secondary'}">
+                            <i class="fa-solid fa-clock me-1"></i>Chờ thanh toán 
+                            <span class="badge rounded-pill ms-1" th:classappend="${countPending != null && countPending > 0 ? 'bg-danger text-white' : 'bg-secondary text-white'}" th:text="${countPending != null ? countPending : 0}">0</span>
+                        </a>
+                        <a th:href="@{/monthly-tickets(status='EXPIRED', keyword=${keyword})}" 
+                           class="btn btn-sm rounded-pill px-3 fw-semibold"
+                           th:classappend="${status == 'EXPIRED' ? 'btn-danger' : 'btn-outline-secondary'}">
+                            <i class="fa-solid fa-hourglass-end me-1"></i>Quá hạn <span class="badge bg-light text-danger rounded-pill ms-1" th:text="${countExpired != null ? countExpired : 0}">0</span>
+                        </a>
+                        <a th:href="@{/monthly-tickets(status='KHOA', keyword=${keyword})}" 
+                           class="btn btn-sm rounded-pill px-3 fw-semibold"
+                           th:classappend="${status == 'KHOA' ? 'btn-dark' : 'btn-outline-secondary'}">
+                            <i class="fa-solid fa-lock me-1"></i>Bị khóa <span class="badge bg-light text-dark rounded-pill ms-1" th:text="${countLocked != null ? countLocked : 0}">0</span>
+                        </a>
+                    </div>
+                    <div class="text-muted small">
+                        Hiển thị <strong class="text-primary" th:text="${tickets != null ? tickets.size() : 0}">0</strong> vé trong trang này
+                    </div>
+                </div>
+
+                <!-- Form Search -->
+                <form action="/monthly-tickets" method="get" class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="hidden" name="status" th:value="${status}">
                     <input type="hidden" name="page" value="1">
-                    <div class="flex-grow-1 filter-search-lg-col">
+                    <div class="flex-grow-1">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-muted">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -60,10 +146,8 @@
                         </div>
                     </div>
                     <button type="submit" class="btn-pro btn-primary-pro btn-sm-pro">Tìm kiếm</button>
-                    <a th:if="${keyword != null && !keyword.isEmpty()}" href="/monthly-tickets" class="btn-pro btn-outline-pro btn-sm-pro">Bỏ lọc</a>
-                    <div class="ms-auto text-muted small">
-                        Vé tháng đang hiệu lực: <strong class="text-success fs-6" th:text="${totalActive}">0</strong>
-                    </div>
+                    <a th:if="${(keyword != null && !keyword.isEmpty()) || (status != null && !status.isEmpty() && status != 'ALL')}" 
+                       href="/monthly-tickets" class="btn-pro btn-outline-pro btn-sm-pro">Bỏ lọc</a>
                 </form>
             </div>
 
@@ -87,9 +171,7 @@
                             <tr>
                                 <th>Mã Thẻ</th>
                                 <th>Khách Hàng</th>
-                                <th>Số Điện Thoại</th>
-                                <th>Biển Số Xe</th>
-                                <th>Loại Xe</th>
+                                <th>Biển Số &amp; Loại Xe</th>
                                 <th>Thời Hạn Vé</th>
                                 <th>Giá Vé</th>
                                 <th>Còn Lại</th>
@@ -99,25 +181,24 @@
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(tickets)}">
-                                <td colspan="10" class="text-center py-4 text-muted">Không tìm thấy vé tháng nào phù hợp</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy vé tháng nào phù hợp</td>
                             </tr>
                             <tr th:each="t : ${tickets}">
                                 <td>
                                     <span class="font-monospace fw-semibold text-primary" th:text="${t.maThe}">VT-12345678</span>
+                                    <span th:if="${t.trangThai == 'CHO_THANH_TOAN'}" class="badge bg-warning-subtle text-warning border border-warning-subtle text-2xs d-block mt-1">Đăng ký online</span>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-dark" th:text="${t.khachHang.hoTen}">Nguyễn Văn A</div>
-                                    <small class="text-muted" th:text="${t.khachHang.diaChi}">Tòa A</small>
+                                    <div class="small text-muted font-monospace"><i class="fa-solid fa-phone me-1"></i><span th:text="${t.khachHang.soDienThoai}">0912345678</span></div>
+                                    <small th:if="${t.khachHang.diaChi != null && !t.khachHang.diaChi.isBlank()}" class="text-muted d-block text-truncate" th:text="${t.khachHang.diaChi}">Tòa A</small>
                                 </td>
-                                <td th:text="${t.khachHang.soDienThoai}">0912345678</td>
                                 <td>
                                     <span class="plate-tag" th:text="${t.bienSoXe}">29B1-88888</span>
-                                </td>
-                                <td>
-                                    <span th:if="${t.loaiXe != null}">
+                                    <div th:if="${t.loaiXe != null}" class="small text-muted mt-1">
                                         <i class="fa-solid me-1" th:classappend="${t.loaiXe.iconClass}"></i>
                                         <span th:text="${t.loaiXe.tenLoai}">Xe máy</span>
-                                    </span>
+                                    </div>
                                 </td>
                                 <td>
                                     <small class="text-muted d-block">Từ: <span th:text="${#temporals.format(t.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span></small>
@@ -137,8 +218,8 @@
                                     <span th:if="${t.trangThai == 'HOAT_DONG' && !t.isConHan()}" class="badge-pro badge-warning-pro">Quá hạn</span>
                                     <span th:if="${t.trangThai == 'KHOA'}" class="badge-pro badge-neutral-pro">Bị khóa</span>
                                 </td>
-                                <td class="text-end">
-                                    <form th:if="${t.trangThai == 'CHO_THANH_TOAN'}" action="/ve-thang/confirm-payment" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận đủ tiền và kích hoạt vé tháng này?');">
+                                <td class="text-end text-nowrap">
+                                    <form th:if="${t.trangThai == 'CHO_THANH_TOAN'}" th:action="@{/ve-thang/confirm-payment}" action="/ve-thang/confirm-payment" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận đủ tiền và kích hoạt vé tháng này?');">
                                         <input type="hidden" name="veThangId" th:value="${t.id}">
                                         <button type="submit" class="btn-pro btn-primary-pro btn-sm-pro py-1 px-2 me-1" title="Xác nhận thu tiền & Kích hoạt vé">
                                             <i class="fa-solid fa-check me-1"></i>Thu tiền
@@ -159,17 +240,29 @@
                                             th:data-id="${t.id}"
                                             th:data-plate="${t.bienSoXe}"
                                             th:data-customer="${t.khachHang != null ? t.khachHang.hoTen : ''}"
-                                            onclick="openRenewModal(this.dataset.id, this.dataset.plate, this.dataset.customer)">
+                                            onclick="openRenewModal(this.dataset.id, this.dataset.plate, this.dataset.customer)"
+                                            title="Gia hạn thời hạn thẻ">
                                         <i class="fa-solid fa-arrows-rotate"></i> Gia hạn
                                     </button>
-                                    <form action="/monthly-tickets/toggle" method="post" class="d-inline">
+                                    <form th:if="${t.trangThai != 'CHO_THANH_TOAN'}" th:action="@{/monthly-tickets/toggle}" action="/monthly-tickets/toggle" method="post" class="d-inline">
                                         <input type="hidden" name="veThangId" th:value="${t.id}">
-                                        <button type="submit" class="btn-pro btn-outline-pro btn-sm-pro py-1 text-muted" 
+                                        <button type="submit" class="btn-pro btn-outline-pro btn-sm-pro py-1 text-muted me-1" 
                                                 title="Khóa hoặc mở khóa thẻ" aria-label="Khóa hoặc mở khóa thẻ"
                                                 th:title="${t.trangThai == 'HOAT_DONG' ? 'Khóa thẻ' : 'Mở khóa'}">
                                             <i class="fa-solid" th:classappend="${t.trangThai == 'HOAT_DONG'} ? 'fa-lock' : 'fa-lock-open'"></i>
                                         </button>
                                     </form>
+                                    <!-- Nút Xóa (Admin) -->
+                                    <button th:if="${session.userRole == null or session.userRole == 'ADMIN'}"
+                                            type="button" class="btn-pro btn-outline-pro btn-sm-pro py-1 text-danger" 
+                                            th:data-id="${t.id}"
+                                            th:data-mathe="${t.maThe}"
+                                            th:data-plate="${t.bienSoXe}"
+                                            th:data-customer="${t.khachHang != null ? t.khachHang.hoTen : ''}"
+                                            onclick="openDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, this.dataset.customer)"
+                                            title="Xóa vé tháng này">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -352,6 +445,58 @@
     </div>
 </div>
 
+<!-- Modal Xác Nhận Xóa Thẻ Vé Tháng (Admin) -->
+<div class="modal fade" id="deleteMonthlyModal" tabindex="-1" aria-labelledby="deleteMonthlyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form th:action="@{/monthly-tickets/delete}" action="/monthly-tickets/delete" method="post">
+                <input type="hidden" id="deleteVeThangId" name="veThangId" value="">
+                <div class="modal-header bg-danger text-white py-3 border-0">
+                    <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2" id="deleteMonthlyModalLabel">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Xác Nhận Xóa Thẻ Vé Tháng
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger p-3 fs-3">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </span>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-2">Bạn có chắc chắn muốn xóa vé tháng này?</h6>
+                    <p class="text-muted text-xs mb-3">
+                        Hồ sơ vé tháng sẽ bị xóa khỏi hệ thống. Các lượt gửi xe trước đây vẫn được lưu trong lịch sử.
+                    </p>
+                    <div class="p-3 bg-light rounded-3 border text-start small mb-3">
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Mã thẻ:</span>
+                            <strong class="text-primary font-monospace" id="deleteMaThe">—</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Biển số xe:</span>
+                            <span class="plate-tag" id="deleteBienSo">—</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Khách hàng:</span>
+                            <strong class="text-dark" id="deleteKhachHang">—</strong>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning text-start text-2xs mb-0 py-2 px-3">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        <strong>Lưu ý:</strong> Nếu phương tiện đang gửi trong bãi, hệ thống sẽ chặn xóa để bảo toàn lịch sử vào/ra.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger flex-grow-1 fw-bold">
+                        <i class="fa-solid fa-trash me-1"></i> Xác Nhận Xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Backdrop & Scripts -->
 <div th:replace="~{fragments/navbar :: backdrop}"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -373,6 +518,14 @@
         document.getElementById('qrModalExpiry').textContent = expiry || '—';
         document.getElementById('qrModalImg').src = '/api/parking/qr/' + encodeURIComponent(maThe);
         new bootstrap.Modal(document.getElementById('monthlyQrModal')).show();
+    }
+
+    function openDeleteModal(id, maThe, plate, customer) {
+        document.getElementById('deleteVeThangId').value = id;
+        document.getElementById('deleteMaThe').textContent = maThe;
+        document.getElementById('deleteBienSo').textContent = plate;
+        document.getElementById('deleteKhachHang').textContent = customer || 'Khách hàng';
+        new bootstrap.Modal(document.getElementById('deleteMonthlyModal')).show();
     }
 </script>
 

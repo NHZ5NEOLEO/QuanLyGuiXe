@@ -38,5 +38,7 @@ public interface VeThangService {
 
     void doiTrangThai(Long veThangId);
 
+    void xoaVeThang(Long veThangId);
+
     long demVeThangHoatDong();
 }

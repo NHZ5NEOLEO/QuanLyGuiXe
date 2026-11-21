@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.model.VeXe;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
@@ -9,6 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VeXeRepository extends JpaRepository<VeXe, Integer> {
+
+    @Modifying
+    @Query("UPDATE VeXe v SET v.veThang = null WHERE v.veThang.id = :veThangId")
+    void unlinkVeThang(@Param("veThangId") Long veThangId);
 
     Optional<VeXe> findByMaQR(String maQR);
 
