@@ -335,16 +335,27 @@
                                      TAB 3: VÉ THÁNG CỦA TÔI
                                      ============================================================= -->
                                 <div class="tab-pane fade" id="tab-tickets-pane" role="tabpanel" aria-labelledby="tab-tickets-btn">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-2 border-bottom">
                                         <div>
                                             <h3 class="h6 fw-bold text-dark mb-1">Danh Sách Vé Tháng Đã Đăng Ký</h3>
                                             <p class="text-muted text-xs mb-0">
-                                                Quản lý thời hạn và thông tin các thẻ vé tháng đã đăng ký cho phương tiện của bạn.
+                                                Quản lý thời hạn, mở mã QR quét vào/ra bãi tự động và gia hạn vé.
                                             </p>
                                         </div>
-                                        <a th:href="@{/dang-ky-ve-thang}" class="btn btn-outline-primary btn-sm rounded-pill px-3 text-2xs fw-bold">
-                                            <i class="fa-solid fa-plus me-1"></i> Đăng ký thêm vé
-                                        </a>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <!-- Chuyển đổi giao diện Thẻ / Bảng -->
+                                            <div class="btn-group btn-group-sm p-0.5 bg-light rounded-pill border" role="group">
+                                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-primary" id="btnViewCards" onclick="switchTicketView('cards')">
+                                                    <i class="fa-solid fa-id-card me-1"></i> Dạng thẻ
+                                                </button>
+                                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-light text-muted" id="btnViewTable" onclick="switchTicketView('table')">
+                                                    <i class="fa-solid fa-table-list me-1"></i> Dạng bảng
+                                                </button>
+                                            </div>
+                                            <a th:href="@{/dang-ky-ve-thang}" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 text-xs fw-semibold shadow-2xs">
+                                                <i class="fa-solid fa-plus me-1"></i> Đăng ký thêm vé
+                                            </a>
+                                        </div>
                                     </div>
 
                                     <!-- Empty State if no tickets -->
@@ -354,17 +365,132 @@
                                         </div>
                                         <div class="h6 fw-bold text-dark mb-1">Chưa có vé tháng nào</div>
                                         <p class="text-muted text-xs mx-auto mb-3 mw-360">
-                                            Bạn chưa đăng ký vé tháng cho phương tiện nào. Đăng ký vé tháng trực tuyến ngay để tiết kiệm chi phí và ra vào bãi thuận tiện.
+                                             Bạn chưa đăng ký vé tháng cho phương tiện nào. Đăng ký vé tháng trực tuyến ngay để tiết kiệm chi phí và ra vào bãi thuận tiện.
                                         </p>
                                         <a th:href="@{/dang-ky-ve-thang}" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 text-xs fw-semibold">
                                             <i class="fa-solid fa-id-card me-1"></i> Đăng ký vé tháng ngay
                                         </a>
                                     </div>
 
-                                    <!-- Tickets Table -->
-                                    <div th:unless="${#lists.isEmpty(tickets)}" class="table-responsive">
-                                        <table class="table table-hover align-middle border mb-0 text-xs">
-                                            <thead class="table-light">
+                                    <!-- Chế độ 1: Dạng Thẻ Điện Tử VIP (Mặc định) -->
+                                    <div th:unless="${#lists.isEmpty(tickets)}" id="ticketCardsView" class="ticket-cards-container">
+                                        <div th:each="tk : ${tickets}" class="pass-card-item"
+                                             th:classappend="${tk.trangThai == 'CHO_THANH_TOAN'} ? 'pass-card-pending' : (${tk.trangThai == 'KHOA'} ? 'pass-card-locked' : (${tk.isConHan()} ? 'pass-card-active' : 'pass-card-expired'))">
+                                            
+                                            <!-- Dòng 1: Header thẻ vé (Biển số + Loại xe + Mã thẻ + Badge Trạng thái) -->
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <span class="profile-plate-badge fs-6 fw-bold text-nowrap" th:text="${tk.bienSoXe}">59-E1 495.65</span>
+                                                    <span class="badge bg-light text-dark border py-1 px-2.5 rounded-pill text-xs fw-semibold">
+                                                        <i class="fa-solid me-1 text-primary" th:classappend="${tk.loaiXe != null && tk.loaiXe.iconClass != null ? tk.loaiXe.iconClass : 'fa-motorcycle'}"></i>
+                                                        <span th:text="${tk.loaiXe != null ? tk.loaiXe.tenLoai : 'Xe máy'}">Xe máy</span>
+                                                    </span>
+                                                    <span class="font-monospace text-primary fw-bold text-xs bg-primary bg-opacity-10 px-2 py-0.5 rounded text-nowrap" th:text="${tk.maThe}">VT-0001</span>
+                                                </div>
+
+                                                <div>
+                                                    <span th:if="${tk.trangThai == 'CHO_THANH_TOAN'}" class="badge bg-warning bg-opacity-25 text-dark border border-warning px-2.5 py-1 rounded-pill text-xs fw-bold">
+                                                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Chờ thanh toán
+                                                    </span>
+                                                    <span th:if="${tk.trangThai == 'KHOA'}" class="badge bg-dark bg-opacity-10 text-dark border border-secondary border-opacity-25 px-2.5 py-1 rounded-pill text-xs fw-bold">
+                                                        <i class="fa-solid fa-lock me-1"></i> Tạm khóa
+                                                    </span>
+                                                    <span th:if="${tk.trangThai != 'CHO_THANH_TOAN' && tk.trangThai != 'KHOA' && tk.isConHan()}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill text-xs fw-bold">
+                                                        <i class="fa-solid fa-circle-check me-1"></i> Đang hiệu lực
+                                                    </span>
+                                                    <span th:if="${tk.trangThai != 'CHO_THANH_TOAN' && tk.trangThai != 'KHOA' && !tk.isConHan()}" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1 rounded-pill text-xs fw-bold">
+                                                        <i class="fa-solid fa-circle-xmark me-1"></i> Đã hết hạn
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Dòng 2: Nội dung thời hạn & Thao tác -->
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-1">
+                                                <!-- Chi tiết thời hạn -->
+                                                <div class="text-xs">
+                                                    <div th:if="${tk.trangThai != 'CHO_THANH_TOAN'}">
+                                                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                             <span class="text-muted"><i class="fa-regular fa-calendar-days text-primary me-1"></i>Thời hạn:</span>
+                                                             <strong class="text-dark font-monospace" th:text="${#temporals.format(tk.ngayBatDau, 'dd/MM/yyyy')}">27/10/2026</strong>
+                                                             <span class="text-muted">&rarr;</span>
+                                                             <strong class="text-dark font-monospace" th:text="${#temporals.format(tk.ngayHetHan, 'dd/MM/yyyy')}">27/11/2026</strong>
+                                                             <span th:if="${tk.isConHan()}" class="badge bg-success text-white rounded-pill px-2 py-0.5 text-2xs fw-bold">
+                                                                 Còn <span th:text="${tk.getSoNgayConLai()}">6</span> ngày
+                                                             </span>
+                                                             <span th:unless="${tk.isConHan()}" class="badge bg-danger text-white rounded-pill px-2 py-0.5 text-2xs fw-bold">
+                                                                 Hết hạn
+                                                             </span>
+                                                        </div>
+                                                        <div class="text-2xs text-muted">
+                                                            Đơn giá: <strong class="text-dark" th:text="${tk.giaTien != null ? #numbers.formatDecimal(tk.giaTien, 0, 'COMMA', 0, 'POINT') + ' đ' : '100.000 đ'}">100.000 đ</strong> / tháng
+                                                        </div>
+                                                    </div>
+
+                                                    <div th:if="${tk.trangThai == 'CHO_THANH_TOAN'}">
+                                                        <div class="text-warning fw-semibold mb-1">
+                                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                                            Số tiền cần thanh toán: <strong class="text-dark fs-6 font-monospace" th:text="${tk.giaTien != null ? #numbers.formatDecimal(tk.giaTien, 0, 'COMMA', 0, 'POINT') + ' đ' : '100.000 đ'}">100.000 đ</strong>
+                                                        </div>
+                                                        <div class="text-2xs text-muted">
+                                                            Vui lòng chuyển khoản VietQR hoặc nộp tại quầy để được quản trị viên đối soát kích hoạt.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Cụm nút Thao tác -->
+                                                <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+                                                    <!-- Khi chờ thanh toán -->
+                                                    <th:block th:if="${tk.trangThai == 'CHO_THANH_TOAN'}">
+                                                        <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 py-1.5 text-xs fw-bold text-dark shadow-2xs"
+                                                                th:data-mathe="${tk.maThe}"
+                                                                th:data-plate="${tk.bienSoXe}"
+                                                                th:data-amount="${tk.giaTien != null ? tk.giaTien : 100000}"
+                                                                th:data-customer="${user != null ? user.hoTen : ''}"
+                                                                onclick="openCustomerVietQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.amount, this.dataset.customer)">
+                                                            <i class="fa-solid fa-qrcode me-1"></i> Thanh toán VietQR
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1.5 text-xs fw-semibold"
+                                                                th:data-id="${tk.id}"
+                                                                th:data-mathe="${tk.maThe}"
+                                                                th:data-plate="${tk.bienSoXe}"
+                                                                onclick="openCustomerDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, true)"
+                                                                title="Hủy đơn đăng ký vé tháng này">
+                                                            <i class="fa-solid fa-xmark me-1"></i> Hủy đơn
+                                                        </button>
+                                                    </th:block>
+
+                                                    <!-- Khi đã kích hoạt -->
+                                                    <th:block th:if="${tk.trangThai != 'CHO_THANH_TOAN'}">
+                                                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 text-xs fw-bold shadow-2xs"
+                                                                th:data-mathe="${tk.maThe}"
+                                                                th:data-plate="${tk.bienSoXe}"
+                                                                th:data-type="${tk.loaiXe != null ? tk.loaiXe.tenLoai : 'Xe máy'}"
+                                                                th:data-expiry="${#temporals.format(tk.ngayHetHan, 'dd/MM/yyyy')}"
+                                                                onclick="openCustomerQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.type, this.dataset.expiry)"
+                                                                title="Xem mã QR thẻ vé tháng vào bãi">
+                                                            <i class="fa-solid fa-qrcode me-1"></i> Mã QR Thẻ
+                                                        </button>
+                                                        <a th:href="@{/dang-ky-ve-thang(plate=${tk.bienSoXe})}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 text-xs fw-semibold" title="Gia hạn vé cho xe này">
+                                                            <i class="fa-solid fa-rotate-right me-1"></i> Gia hạn
+                                                        </a>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-1.5 text-xs"
+                                                                th:data-id="${tk.id}"
+                                                                th:data-mathe="${tk.maThe}"
+                                                                th:data-plate="${tk.bienSoXe}"
+                                                                onclick="openCustomerDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, false)"
+                                                                title="Xóa vé tháng khỏi danh sách">
+                                                            <i class="fa-solid fa-trash-can"></i>
+                                                        </button>
+                                                    </th:block>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Chế độ 2: Dạng Bảng Rộng Rãi (Được ẩn mặc định, mở khi bấm 'Dạng bảng') -->
+                                    <div th:unless="${#lists.isEmpty(tickets)}" id="ticketTableView" class="table-responsive d-none">
+                                        <table class="table table-hover align-middle border mb-0 text-xs w-100" style="min-width: 680px;">
+                                            <thead class="table-light text-nowrap">
                                                 <tr>
                                                     <th class="ps-3">Mã thẻ</th>
                                                     <th>Biển số xe</th>
@@ -376,21 +502,17 @@
                                             </thead>
                                             <tbody>
                                                 <tr th:each="tk : ${tickets}">
-                                                    <!-- Mã thẻ -->
-                                                    <td class="ps-3">
+                                                    <td class="ps-3 text-nowrap">
                                                         <strong class="font-monospace text-primary" th:text="${tk.maThe}">VT-0001</strong>
                                                         <span th:if="${tk.trangThai == 'CHO_THANH_TOAN'}" class="badge bg-warning bg-opacity-25 text-dark border border-warning text-2xs d-block mt-0.5">Chờ thanh toán</span>
                                                     </td>
-                                                    <!-- Biển số -->
-                                                    <td>
+                                                    <td class="text-nowrap">
                                                         <span class="profile-plate-badge" th:text="${tk.bienSoXe}">29A-123.45</span>
                                                     </td>
-                                                    <!-- Loại xe -->
-                                                    <td>
+                                                    <td class="text-nowrap">
                                                         <span class="badge bg-light text-dark border fw-medium" th:text="${tk.loaiXe != null ? tk.loaiXe.tenLoai : 'Xe máy'}">Xe máy</span>
                                                     </td>
-                                                    <!-- Thời hạn -->
-                                                    <td>
+                                                    <td class="text-nowrap">
                                                         <div th:if="${tk.trangThai != 'CHO_THANH_TOAN'}">
                                                             <span class="fw-semibold text-dark" th:text="${#temporals.format(tk.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span>
                                                             <span class="text-muted"> &rarr; </span>
@@ -411,8 +533,7 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <!-- Trạng thái -->
-                                                    <td>
+                                                    <td class="text-nowrap">
                                                         <span th:if="${tk.trangThai == 'CHO_THANH_TOAN'}" class="badge bg-warning bg-opacity-25 text-dark border border-warning px-2.5 py-1 rounded-pill">
                                                             <i class="fa-solid fa-clock me-1"></i> Chờ thanh toán
                                                         </span>
@@ -426,49 +547,41 @@
                                                             <i class="fa-solid fa-circle-xmark me-1"></i> Hết hạn
                                                         </span>
                                                     </td>
-                                                    <!-- Thao tác -->
                                                     <td class="text-end pe-3 text-nowrap">
-                                                        <!-- Khi chờ thanh toán: Xem VietQR hoặc Hủy đơn -->
                                                         <th:block th:if="${tk.trangThai == 'CHO_THANH_TOAN'}">
-                                                            <button type="button" class="btn btn-warning btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold me-1 text-dark shadow-2xs"
+                                                            <button type="button" class="btn btn-warning btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold me-1 text-dark"
                                                                     th:data-mathe="${tk.maThe}"
                                                                     th:data-plate="${tk.bienSoXe}"
                                                                     th:data-amount="${tk.giaTien != null ? tk.giaTien : 100000}"
                                                                     th:data-customer="${user != null ? user.hoTen : ''}"
-                                                                    onclick="openCustomerVietQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.amount, this.dataset.customer)"
-                                                                    title="Xem mã VietQR chuyển khoản">
+                                                                    onclick="openCustomerVietQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.amount, this.dataset.customer)">
                                                                 <i class="fa-solid fa-qrcode me-1"></i> Thanh toán VietQR
                                                             </button>
                                                             <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 text-2xs fw-semibold"
                                                                     th:data-id="${tk.id}"
                                                                     th:data-mathe="${tk.maThe}"
                                                                     th:data-plate="${tk.bienSoXe}"
-                                                                    th:data-pending="true"
-                                                                    onclick="openCustomerDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, true)"
-                                                                    title="Hủy đơn đăng ký vé tháng này">
+                                                                    onclick="openCustomerDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, true)">
                                                                 <i class="fa-solid fa-xmark me-1"></i> Hủy đơn
                                                             </button>
                                                         </th:block>
 
-                                                        <!-- Khi đã kích hoạt: Xem QR Thẻ, Gia hạn hoặc Xóa -->
                                                         <th:block th:if="${tk.trangThai != 'CHO_THANH_TOAN'}">
                                                             <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold me-1"
                                                                     th:data-mathe="${tk.maThe}"
                                                                     th:data-plate="${tk.bienSoXe}"
                                                                     th:data-type="${tk.loaiXe != null ? tk.loaiXe.tenLoai : 'Xe máy'}"
                                                                     th:data-expiry="${#temporals.format(tk.ngayHetHan, 'dd/MM/yyyy')}"
-                                                                    onclick="openCustomerQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.type, this.dataset.expiry)"
-                                                                    title="Xem mã QR thẻ vé tháng vào bãi">
+                                                                    onclick="openCustomerQrModal(this.dataset.mathe, this.dataset.plate, this.dataset.type, this.dataset.expiry)">
                                                                 <i class="fa-solid fa-qrcode me-1"></i> QR Thẻ
                                                             </button>
-                                                            <a th:href="@{/dang-ky-ve-thang(plate=${tk.bienSoXe})}" class="btn btn-outline-primary btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold me-1" title="Gia hạn vé cho xe này">
+                                                            <a th:href="@{/dang-ky-ve-thang(plate=${tk.bienSoXe})}" class="btn btn-outline-primary btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold me-1">
                                                                 <i class="fa-solid fa-rotate-right me-1"></i> Gia hạn
                                                             </a>
                                                             <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 text-2xs"
                                                                     th:data-id="${tk.id}"
                                                                     th:data-mathe="${tk.maThe}"
                                                                     th:data-plate="${tk.bienSoXe}"
-                                                                    th:data-pending="false"
                                                                     onclick="openCustomerDeleteModal(this.dataset.id, this.dataset.mathe, this.dataset.plate, false)"
                                                                     title="Xóa vé tháng khỏi danh sách">
                                                                 <i class="fa-solid fa-trash-can"></i>
@@ -731,6 +844,42 @@
             }
             new bootstrap.Modal(document.getElementById('customerDeleteTicketModal')).show();
         }
+
+        // 6. Chuyển đổi giữa Chế độ xem Dạng Thẻ và Dạng Bảng
+        function switchTicketView(mode) {
+            const cardsView = document.getElementById('ticketCardsView');
+            const tableView = document.getElementById('ticketTableView');
+            const btnCards = document.getElementById('btnViewCards');
+            const btnTable = document.getElementById('btnViewTable');
+
+            if (!cardsView || !tableView) return;
+
+            if (mode === 'table') {
+                cardsView.classList.add('d-none');
+                tableView.classList.remove('d-none');
+                if (btnCards && btnTable) {
+                    btnCards.className = 'btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-light text-muted';
+                    btnTable.className = 'btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-primary';
+                }
+                localStorage.setItem('customer_ticket_view', 'table');
+            } else {
+                tableView.classList.add('d-none');
+                cardsView.classList.remove('d-none');
+                if (btnCards && btnTable) {
+                    btnTable.className = 'btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-light text-muted';
+                    btnCards.className = 'btn btn-sm rounded-pill px-2.5 py-1 text-2xs fw-bold btn-primary';
+                }
+                localStorage.setItem('customer_ticket_view', 'cards');
+            }
+        }
+
+        // Khôi phục tùy chọn xem ưa thích của người dùng nếu có
+        (function initViewPreference() {
+            const savedView = localStorage.getItem('customer_ticket_view');
+            if (savedView === 'table') {
+                switchTicketView('table');
+            }
+        })();
     </script>
 </body>
 </html>

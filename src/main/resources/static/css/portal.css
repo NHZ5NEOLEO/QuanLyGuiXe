@@ -1497,7 +1497,8 @@ body.portal-body {
 .profile-plate-badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
+    justify-content: center;
+    padding: 4px 12px;
     border: 2px solid #0f172a;
     border-radius: 6px;
     background: #ffffff;
@@ -1507,6 +1508,45 @@ body.portal-body {
     font-size: 0.875rem;
     letter-spacing: 0.05em;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    white-space: nowrap !important;
+}
+
+/* ==========================================================================
+   MONTHLY PASS DIGITAL CARDS (CUSTOMER PORTAL)
+   ========================================================================== */
+.pass-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.pass-card-item:hover {
+    box-shadow: 0 6px 18px -4px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.pass-card-active {
+    border-left: 5px solid #10b981 !important;
+}
+
+.pass-card-pending {
+    border-left: 5px solid #f59e0b !important;
+    background: #fffdfa;
+}
+
+.pass-card-expired {
+    border-left: 5px solid #94a3b8 !important;
+    background: #f8fafc;
+}
+
+.pass-card-locked {
+    border-left: 5px solid #64748b !important;
+    background: #f8fafc;
 }
 
 .auth-gate-icon {
