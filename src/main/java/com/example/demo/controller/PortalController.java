@@ -456,8 +456,9 @@ public class PortalController {
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                         "success", false,
+                        "code", "REQUIRE_LOGIN",
                         "requireLogin", true,
-                        "message", "Quý khách cần có tài khoản và đăng nhập để đăng ký vé tháng! Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
+                        "message", "Quý khách cần có tài khoản và đăng nhập để đăng ký vé tháng trực tuyến! Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
                 ));
             }
 
@@ -475,29 +476,76 @@ public class PortalController {
             }
 
             if (hoTen.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập họ và tên chủ xe!"));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "EMPTY_FULLNAME", "field", "hoTen", "message", "Vui lòng nhập họ và tên chủ xe (người đăng ký)!"));
             }
+            if (hoTen.length() < 2) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "INVALID_FULLNAME", "field", "hoTen", "message", "Họ và tên chủ xe quá ngắn (tối thiểu 2 ký tự)!"));
+            }
+
             if (sdt.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập số điện thoại liên hệ!"));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "EMPTY_PHONE", "field", "sdt", "message", "Vui lòng nhập số điện thoại liên hệ!"));
             }
-            if (req.get("bienSoXe") == null || req.get("bienSoXe").toString().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng nhập biển số xe đăng ký!"));
+            String cleanSdt = sdt.replaceAll("[^0-9]", "");
+            if (!cleanSdt.matches("^0\\d{9}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "code", "INVALID_PHONE",
+                        "field", "sdt",
+                        "message", "Số điện thoại [" + sdt + "] không hợp lệ! Vui lòng nhập số di động Việt Nam gồm 10 chữ số bắt đầu bằng 0 (Ví dụ: 0938361105)."
+                ));
             }
-            if (req.get("loaiXeId") == null || req.get("loaiXeId").toString().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng chọn loại phương tiện!"));
+            sdt = cleanSdt;
+
+            String email = req.getOrDefault("email", "").toString().trim();
+            if (!email.isEmpty() && !email.matches("^[\\w\\.-]+@[a-zA-Z\\d\\.-]+\\.[a-zA-Z]{2,6}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "code", "INVALID_EMAIL",
+                        "field", "email",
+                        "message", "Địa chỉ Email [" + email + "] không đúng định dạng (Ví dụ: example@domain.com)!"
+                ));
             }
 
             String cccd = req.getOrDefault("cccd", "").toString().trim();
-            String email = req.getOrDefault("email", "").toString().trim();
-            String diaChi = req.getOrDefault("diaChi", "").toString().trim();
+            if (!cccd.isEmpty() && !cccd.matches("^\\d{9}$|^\\d{12}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "code", "INVALID_CCCD",
+                        "field", "cccd",
+                        "message", "Số CCCD/CMND không hợp lệ! Vui lòng nhập đúng 9 hoặc 12 chữ số."
+                ));
+            }
+
+            if (req.get("bienSoXe") == null || req.get("bienSoXe").toString().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "EMPTY_PLATE", "field", "bienSoXe", "message", "Vui lòng nhập biển số xe đăng ký vé tháng!"));
+            }
             String bienSoXe = req.get("bienSoXe").toString().trim();
-            Long loaiXeId = Long.valueOf(req.get("loaiXeId").toString());
+
+            if (req.get("loaiXeId") == null || req.get("loaiXeId").toString().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "EMPTY_VEHICLE_TYPE", "field", "loaiXeId", "message", "Vui lòng chọn loại phương tiện (Xe máy, Ô tô...)!"));
+            }
+            Long loaiXeId;
+            try {
+                loaiXeId = Long.valueOf(req.get("loaiXeId").toString().trim());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "INVALID_VEHICLE_TYPE", "field", "loaiXeId", "message", "Mã loại phương tiện không hợp lệ!"));
+            }
+
             int months = 1;
             try {
                 months = Integer.parseInt(req.getOrDefault("months", "1").toString().trim());
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Số tháng không hợp lệ!"));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "INVALID_MONTHS", "field", "months", "message", "Thời hạn đăng ký số tháng không hợp lệ!"));
             }
+            if (months < 1 || months > 24) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "code", "OUT_OF_RANGE_MONTHS", "field", "months", "message", "Thời hạn đăng ký vé tháng phải từ 1 đến 24 tháng!"));
+            }
+
+            String diaChi = req.getOrDefault("diaChi", "").toString().trim();
+
+            // Kiểm tra xe có đang gửi lượt trong bãi không
+            String cleanPlate = com.example.demo.util.BienSoXeHelper.toCleanKey(bienSoXe);
+            boolean isVehicleCurrentlyParked = veXeRepository.existsByBienSoCleanAndTrangThai(cleanPlate, "Đang gửi");
 
             // Gọi MonthlyTicketService đăng ký vé tháng online: ở trạng thái CHO_THANH_TOAN, chưa được miễn phí check-in
             VeThang veThang = monthlyTicketService.dangKyVeThangOnline(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, months);
@@ -527,14 +575,29 @@ public class PortalController {
             resp.put("accountName", "NGUYỄN HUỆ");
             resp.put("trangThai", "CHO_THANH_TOAN");
             resp.put("trangThaiThanhToan", "CHO_THANH_TOAN");
+            resp.put("isCurrentlyParked", isVehicleCurrentlyParked);
+            if (isVehicleCurrentlyParked) {
+                resp.put("parkingNote", "Phương tiện này hiện đang có lượt gửi xe trong bãi. Vé tháng sẽ có hiệu lực áp dụng sau khi được đối soát kích hoạt.");
+            }
 
             return ResponseEntity.ok(resp);
         } catch (BadRequestException e) {
             log.warn("Yêu cầu đăng ký vé tháng không hợp lệ: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+            String msg = e.getMessage() != null ? e.getMessage() : "Dữ liệu đăng ký không hợp lệ!";
+            String code = "BAD_REQUEST";
+            if (msg.contains("đang hoạt động")) {
+                code = "DUPLICATE_ACTIVE_PASS";
+            } else if (msg.contains("TẠM KHÓA") || msg.contains("bị tạm khóa")) {
+                code = "LOCKED_PASS";
+            } else if (msg.contains("mã hệ thống")) {
+                code = "SYSTEM_CODE_NOT_PLATE";
+            } else if (msg.contains("quy chuẩn") || msg.contains("định dạng")) {
+                code = "INVALID_PLATE_FORMAT";
+            }
+            return ResponseEntity.badRequest().body(Map.of("success", false, "code", code, "message", msg));
         } catch (Throwable t) {
             log.error("Lỗi xử lý đăng ký vé tháng trực tuyến: ", t);
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Lỗi đăng ký: " + (t.getMessage() != null ? t.getMessage() : t.toString())));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "code", "SERVER_ERROR", "message", "Lỗi đăng ký: " + (t.getMessage() != null ? t.getMessage() : t.toString())));
         }
     }
 

@@ -260,10 +260,28 @@
                                     </div>
                                 </div>
 
-                                <!-- Alert lỗi nếu có -->
-                                <div id="registerErrorAlert" class="alert alert-danger border-danger d-flex align-items-center gap-2 text-xs fw-semibold mb-4 d-none" role="alert">
-                                    <i class="fa-solid fa-circle-exclamation fs-5 text-danger"></i>
-                                    <span id="registerErrorText">Vui lòng kiểm tra lại thông tin biểu mẫu.</span>
+                                <!-- Smart Notification Alert Banner -->
+                                <div id="registerNotificationBox" class="alert d-none mb-4 p-3 rounded-3 shadow-xs border" role="alert">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div id="notifIconWrapper" class="fs-4 flex-shrink-0 mt-0.5">
+                                            <i id="notifIcon" class="fa-solid fa-circle-exclamation text-danger"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <strong id="notifTitle" class="fs-6 fw-bold">Thông Báo</strong>
+                                                <button type="button" class="btn-close btn-sm" onclick="hideNotification()" aria-label="Đóng"></button>
+                                            </div>
+                                            <div id="notifMessage" class="small text-dark lh-base">
+                                                Vui lòng kiểm tra lại thông tin biểu mẫu.
+                                            </div>
+                                            <div id="notifActions" class="d-none mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex flex-wrap gap-2">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Backward compatibility hidden container -->
+                                <div id="registerErrorAlert" class="d-none">
+                                    <span id="registerErrorText"></span>
                                 </div>
 
                                 <!-- =================================================================
@@ -851,48 +869,191 @@
             }
         }
 
+        function clearFieldErrors() {
+            [hoTenInput, sdtInput, emailInput, bienSoXeInput, loaiXeSelect, monthsSelect].forEach(el => {
+                if (el) el.classList.remove('is-invalid');
+            });
+        }
+
+        function hideNotification() {
+            const box = document.getElementById('registerNotificationBox');
+            if (box) box.classList.add('d-none');
+            clearFieldErrors();
+        }
+
+        function showNotification(type, message, title, actions = [], fieldId = null) {
+            const box = document.getElementById('registerNotificationBox');
+            const icon = document.getElementById('notifIcon');
+            const titleEl = document.getElementById('notifTitle');
+            const msgEl = document.getElementById('notifMessage');
+            const actionsEl = document.getElementById('notifActions');
+
+            if (!box) return;
+
+            // Xóa các class trạng thái cũ
+            box.classList.remove('alert-danger', 'alert-warning', 'alert-info', 'alert-success', 'border-danger', 'border-warning', 'border-info', 'border-success', 'd-none');
+            icon.className = '';
+
+            let iconClass = 'fa-solid fa-circle-exclamation';
+            let alertClass = 'alert-danger border-danger';
+            let defaultTitle = 'Lỗi Thông Tin';
+
+            if (type === 'warning') {
+                alertClass = 'alert-warning border-warning';
+                iconClass = 'fa-solid fa-triangle-exclamation text-warning';
+                defaultTitle = 'Cảnh Báo Vé Tháng';
+            } else if (type === 'info') {
+                alertClass = 'alert-info border-info';
+                iconClass = 'fa-solid fa-circle-info text-info';
+                defaultTitle = 'Thông Báo Hệ Thống';
+            } else if (type === 'success') {
+                alertClass = 'alert-success border-success';
+                iconClass = 'fa-solid fa-circle-check text-success';
+                defaultTitle = 'Thành Công';
+            } else {
+                iconClass = 'fa-solid fa-circle-exclamation text-danger';
+            }
+
+            box.className = `alert ${alertClass} mb-4 p-3 rounded-3 shadow-xs border`;
+            icon.className = `${iconClass} fs-4`;
+            titleEl.textContent = title || defaultTitle;
+            msgEl.innerHTML = message;
+
+            // Xử lý action buttons nếu có
+            if (actions && actions.length > 0) {
+                actionsEl.innerHTML = '';
+                actions.forEach(act => {
+                    const btn = document.createElement(act.href ? 'a' : 'button');
+                    btn.className = `btn btn-sm ${act.btnClass || 'btn-secondary'} fw-bold text-xs py-1.5 px-3 d-inline-flex align-items-center gap-1.5`;
+                    if (act.href) {
+                        btn.href = act.href;
+                    } else {
+                        btn.type = 'button';
+                        if (act.onClick) {
+                            btn.setAttribute('onclick', act.onClick);
+                        }
+                    }
+                    btn.innerHTML = `${act.icon ? '<i class="' + act.icon + '"></i>' : ''}<span>${act.text}</span>`;
+                    actionsEl.appendChild(btn);
+                });
+                actionsEl.classList.remove('d-none');
+            } else {
+                actionsEl.innerHTML = '';
+                actionsEl.classList.add('d-none');
+            }
+
+            // Đồng bộ fallback
+            registerErrorText.textContent = message;
+
+            // Highlight field nếu có
+            clearFieldErrors();
+            if (fieldId) {
+                const targetField = document.getElementById(fieldId);
+                if (targetField) {
+                    targetField.classList.add('is-invalid');
+                    targetField.focus();
+                }
+            }
+
+            // Cuộn mượt đến hộp thông báo
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Tương thích ngược
+        function showError(msg) {
+            showNotification('danger', msg, 'Lỗi Đăng Ký');
+        }
+
+        // Lắng nghe sự kiện kiểm tra nhập liệu tức thời
+        bienSoXeInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            const clean = this.value.replace(/[^A-Z0-9]/g, '');
+            if (clean.startsWith('QR') || clean.startsWith('VT') || clean.startsWith('BK') || clean.startsWith('TICKET')) {
+                showNotification('warning', 'Chuỗi bạn đang nhập là mã hệ thống (Mã vé / Mã thẻ / Mã đặt chỗ). Vui lòng nhập đúng biển số xe trên giấy đăng ký xe (Ví dụ: 29A-123.45 hoặc 59-S1 298.82)!', 'Nhầm Lẫn Mã Hệ Thống', [], 'bienSoXe');
+            }
+        });
+
+        sdtInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length === 10 && this.value.startsWith('0')) {
+                this.classList.remove('is-invalid');
+            }
+        });
+
         async function handleRegister(e) {
             e.preventDefault();
-            registerErrorAlert.classList.add('d-none');
+            hideNotification();
 
             // 0. Bắt buộc kiểm tra đăng nhập tài khoản
             if (!checkIsLoggedIn()) {
-                showError('Quý khách bắt buộc phải có tài khoản và đăng nhập để đăng ký vé tháng!');
-                const lmEl = document.getElementById('quickLoginModal');
-                const lm = bootstrap.Modal.getInstance(lmEl) || new bootstrap.Modal(lmEl);
-                lm.show();
+                showNotification(
+                    'warning',
+                    'Quý khách cần có tài khoản và đăng nhập để đăng ký vé tháng trực tuyến. Vui lòng đăng nhập hoặc tạo tài khoản mới.',
+                    'Yêu Cầu Đăng Nhập',
+                    [
+                        { text: 'Đăng nhập ngay', icon: 'fa-solid fa-right-to-bracket', btnClass: 'btn-primary', onClick: "const lm = bootstrap.Modal.getInstance(document.getElementById('quickLoginModal')) || new bootstrap.Modal(document.getElementById('quickLoginModal')); lm.show();" },
+                        { text: 'Tạo tài khoản mới', icon: 'fa-solid fa-user-plus', btnClass: 'btn-outline-primary', onClick: "const rm = bootstrap.Modal.getInstance(document.getElementById('quickRegisterModal')) || new bootstrap.Modal(document.getElementById('quickRegisterModal')); rm.show();" }
+                    ]
+                );
                 return;
             }
 
-            // Validate fields
+            // 1. Kiểm tra Họ và tên
             const hoTen = hoTenInput.value.trim();
-            const sdt = sdtInput.value.trim();
+            if (!hoTen) {
+                showNotification('danger', 'Vui lòng nhập họ và tên chủ xe (người đăng ký)!', 'Thiếu Thông Tin', [], 'hoTen');
+                return;
+            }
+            if (hoTen.length < 2) {
+                showNotification('danger', 'Họ và tên chủ xe quá ngắn (tối thiểu 2 ký tự)!', 'Thông Tin Không Hợp Lệ', [], 'hoTen');
+                return;
+            }
+
+            // 2. Kiểm tra Số điện thoại
+            const sdt = sdtInput.value.trim().replace(/[^0-9]/g, '');
+            if (!sdt) {
+                showNotification('danger', 'Vui lòng nhập số điện thoại liên hệ!', 'Thiếu Thông Tin', [], 'sdt');
+                return;
+            }
+            if (!sdt.startsWith('0') || sdt.length !== 10) {
+                showNotification('danger', `Số điện thoại [${sdt}] không hợp lệ! Vui lòng nhập số di động Việt Nam gồm 10 chữ số bắt đầu bằng số 0 (Ví dụ: 0912345678, 0938361105).`, 'Số Điện Thoại Không Hợp Lệ', [], 'sdt');
+                return;
+            }
+
+            // 3. Kiểm tra Email (nếu có nhập)
+            const email = emailInput ? emailInput.value.trim() : '';
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showNotification('danger', `Địa chỉ email [${email}] không đúng định dạng (Ví dụ: name@example.com)!`, 'Email Không Hợp Lệ', [], 'email');
+                return;
+            }
+
+            // 4. Kiểm tra Biển số xe
             const bienSoXe = bienSoXeInput.value.trim().toUpperCase();
+            if (!bienSoXe) {
+                showNotification('danger', 'Vui lòng nhập biển số xe đăng ký vé tháng!', 'Thiếu Thông Tin', [], 'bienSoXe');
+                return;
+            }
+            const cleanPlate = bienSoXe.replace(/[^A-Z0-9]/g, '');
+            if (cleanPlate.startsWith('QR') || cleanPlate.startsWith('VT') || cleanPlate.startsWith('BK') || cleanPlate.startsWith('TICKET')) {
+                showNotification('danger', `Mã [${bienSoXe}] là mã hệ thống (Mã vé / Mã thẻ / Mã đặt chỗ), không phải biển số xe. Vui lòng nhập biển số xe thực tế!`, 'Nhầm Lẫn Mã Hệ Thống', [], 'bienSoXe');
+                return;
+            }
+            if (cleanPlate.length < 5 || cleanPlate.length > 12) {
+                showNotification('danger', `Biển số xe [${bienSoXe}] có độ dài không đúng quy chuẩn biển số Việt Nam (Ví dụ: 29A-123.45 hoặc 59S1-234.56)!`, 'Biển Số Không Hợp Lệ', [], 'bienSoXe');
+                return;
+            }
+
+            // 5. Kiểm tra Loại phương tiện
             const loaiXeId = loaiXeSelect.value;
+            if (!loaiXeId) {
+                showNotification('danger', 'Vui lòng chọn loại phương tiện (Xe máy, Ô tô...) trong danh sách!', 'Chưa Chọn Loại Xe', [], 'loaiXeId');
+                return;
+            }
+
+            // 6. Kiểm tra Số tháng
             const months = monthsSelect.value;
 
-            if (!hoTen) {
-                showError('Vui lòng nhập họ và tên của bạn.');
-                hoTenInput.focus();
-                return;
-            }
-            if (!sdt || sdt.length < 9) {
-                showError('Vui lòng nhập số điện thoại liên hệ hợp lệ.');
-                sdtInput.focus();
-                return;
-            }
-            if (!bienSoXe || bienSoXe.length < 3) {
-                showError('Vui lòng nhập biển số xe cần đăng ký vé tháng.');
-                bienSoXeInput.focus();
-                return;
-            }
-            if (!loaiXeId) {
-                showError('Vui lòng chọn loại phương tiện trong danh sách.');
-                loaiXeSelect.focus();
-                return;
-            }
-
-            // Lock submit button
+            // Khóa nút gửi đăng ký và hiển thị spinner
             btnSubmitRegister.disabled = true;
             btnSubmitText.classList.add('d-none');
             btnSubmitSpinner.classList.remove('d-none');
@@ -901,7 +1062,7 @@
             const payload = {
                 hoTen: hoTen,
                 sdt: sdt,
-                email: emailInput ? emailInput.value.trim() : '',
+                email: email,
                 bienSoXe: bienSoXe,
                 loaiXeId: loaiXeId,
                 months: months,
@@ -917,16 +1078,22 @@
 
                 const data = await res.json();
 
-                if (res.status === 401 || data.requireLogin) {
-                    showError(data.message || 'Quý khách cần đăng nhập tài khoản để đăng ký vé tháng!');
-                    const lmEl = document.getElementById('quickLoginModal');
-                    const lm = bootstrap.Modal.getInstance(lmEl) || new bootstrap.Modal(lmEl);
-                    lm.show();
+                // Trường hợp 1: Yêu cầu đăng nhập tài khoản
+                if (res.status === 401 || data.requireLogin || data.code === 'REQUIRE_LOGIN') {
+                    showNotification(
+                        'warning',
+                        data.message || 'Quý khách cần đăng nhập tài khoản để đăng ký vé tháng!',
+                        'Yêu Cầu Đăng Nhập',
+                        [
+                            { text: 'Đăng nhập ngay', icon: 'fa-solid fa-right-to-bracket', btnClass: 'btn-primary', onClick: "const lm = bootstrap.Modal.getInstance(document.getElementById('quickLoginModal')) || new bootstrap.Modal(document.getElementById('quickLoginModal')); lm.show();" },
+                            { text: 'Tạo tài khoản mới', icon: 'fa-solid fa-user-plus', btnClass: 'btn-outline-primary', onClick: "const rm = bootstrap.Modal.getInstance(document.getElementById('quickRegisterModal')) || new bootstrap.Modal(document.getElementById('quickRegisterModal')); rm.show();" }
+                        ]
+                    );
                     return;
                 }
 
+                // Trường hợp 2: Đăng ký thành công
                 if (res.ok && data.success) {
-                    // Populate success modal
                     document.getElementById('modalMaThe').textContent = data.maThe || 'VT-NEW';
                     document.getElementById('modalHoTen').textContent = data.hoTen || hoTen;
                     document.getElementById('modalBienSo').textContent = data.bienSoXe || bienSoXe;
@@ -937,7 +1104,12 @@
                         document.getElementById('modalQrImg').src = data.vietQrUrl;
                     }
 
-                    // Show Bootstrap Modal
+                    // Nếu xe đang trong bãi, hiện lưu ý
+                    if (data.parkingNote) {
+                        showNotification('info', data.parkingNote, 'Lưu Ý Phương Tiện Đang Gửi');
+                    }
+
+                    // Hiển thị modal thành công
                     const modal = new bootstrap.Modal(document.getElementById('successModal'));
                     modal.show();
 
@@ -947,21 +1119,58 @@
                     ngayBatDauHidden.value = formatDateISO(new Date());
                     updateSummary();
                 } else {
-                    showError(data.message || data.error || 'Lỗi khi lưu dữ liệu đăng ký vào hệ thống. Vui lòng thử lại.');
+                    // Trường hợp 3: Xử lý các logic lỗi / cảnh báo cụ thể từ Backend
+                    const errCode = data.code || '';
+                    const errMsg = data.message || data.error || 'Lỗi khi lưu dữ liệu đăng ký vào hệ thống. Vui lòng thử lại.';
+
+                    if (errCode === 'DUPLICATE_ACTIVE_PASS') {
+                        showNotification(
+                            'warning',
+                            errMsg,
+                            'Xe Đã Có Vé Tháng Hoạt Động',
+                            [
+                                { text: 'Tra cứu thông tin vé xe', icon: 'fa-solid fa-magnifying-glass', btnClass: 'btn-warning', href: '/tra-cuu' }
+                            ],
+                            'bienSoXe'
+                        );
+                    } else if (errCode === 'LOCKED_PASS') {
+                        showNotification(
+                            'warning',
+                            errMsg,
+                            'Thẻ Vé Tháng Đang Bị Khóa',
+                            [],
+                            'bienSoXe'
+                        );
+                    } else if (errCode === 'SYSTEM_CODE_NOT_PLATE') {
+                        showNotification(
+                            'danger',
+                            errMsg,
+                            'Nhầm Lẫn Mã Hệ Thống',
+                            [],
+                            'bienSoXe'
+                        );
+                    } else if (errCode === 'INVALID_PHONE' || errCode === 'EMPTY_PHONE') {
+                        showNotification('danger', errMsg, 'Số Điện Thoại Không Hợp Lệ', [], 'sdt');
+                    } else if (errCode === 'INVALID_FULLNAME' || errCode === 'EMPTY_FULLNAME') {
+                        showNotification('danger', errMsg, 'Họ Và Tên Không Hợp Lệ', [], 'hoTen');
+                    } else if (errCode === 'INVALID_EMAIL') {
+                        showNotification('danger', errMsg, 'Địa Chỉ Email Không Hợp Lệ', [], 'email');
+                    } else if (errCode === 'EMPTY_PLATE' || errCode === 'INVALID_PLATE_FORMAT') {
+                        showNotification('danger', errMsg, 'Biển Số Xe Không Đúng Chuẩn', [], 'bienSoXe');
+                    } else if (errCode === 'EMPTY_VEHICLE_TYPE' || errCode === 'INVALID_VEHICLE_TYPE') {
+                        showNotification('danger', errMsg, 'Chưa Chọn Loại Xe', [], 'loaiXeId');
+                    } else {
+                        showNotification('danger', errMsg, 'Lỗi Đăng Ký Vé Tháng', [], data.field || null);
+                    }
                 }
             } catch (err) {
                 console.error('Lỗi gửi đăng ký:', err);
-                showError('Không thể kết nối đến máy chủ hệ thống. Vui lòng thử lại sau.');
+                showNotification('danger', 'Không thể kết nối đến máy chủ hệ thống. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau!', 'Lỗi Kết Nối Máy Chủ');
             } finally {
                 btnSubmitRegister.disabled = false;
                 btnSubmitText.classList.remove('d-none');
                 btnSubmitSpinner.classList.add('d-none');
             }
-        }
-
-        function showError(msg) {
-            registerErrorText.textContent = msg;
-            registerErrorAlert.classList.remove('d-none');
         }
         /*]]>*/
     </script>

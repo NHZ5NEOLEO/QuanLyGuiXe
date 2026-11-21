@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -180,15 +181,30 @@ public class MonthlyTicketService implements VeThangService {
         }
         String displayPlate = vResult.displayValue();
 
-        // Chặn tạo nhiều vé tháng hoạt động trùng biển số
+        // 1. Chặn nếu phương tiện đã có vé tháng đang hoạt động và còn hạn sử dụng
         LocalDate today = LocalDate.now();
         List<VeThang> activePasses = veThangRepository.findByTrangThai("HOAT_DONG");
-        boolean existsActive = activePasses.stream().anyMatch(vt ->
-                BienSoXeHelper.isSamePlate(vt.getBienSoXe(), displayPlate) &&
-                vt.getNgayHetHan() != null && !today.isAfter(vt.getNgayHetHan())
-        );
-        if (existsActive) {
-            throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] hiện đang có vé tháng đang hoạt động và còn hạn sử dụng!");
+        Optional<VeThang> activePassOpt = activePasses.stream()
+                .filter(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), displayPlate) &&
+                        vt.getNgayHetHan() != null && !today.isAfter(vt.getNgayHetHan()))
+                .findFirst();
+        if (activePassOpt.isPresent()) {
+            VeThang active = activePassOpt.get();
+            String expireStr = active.getNgayHetHan() != null 
+                    ? active.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) 
+                    : "đang hiệu lực";
+            throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] hiện đang có vé tháng đang hoạt động (Mã thẻ: " 
+                    + active.getMaThe() + ", còn hạn sử dụng đến hết ngày " + expireStr + ")! Quý khách không cần đăng ký mới.");
+        }
+
+        // 2. Chặn nếu thẻ vé tháng của phương tiện đang bị tạm khóa
+        List<VeThang> lockedPasses = veThangRepository.findByTrangThai("KHOA");
+        Optional<VeThang> lockedPassOpt = lockedPasses.stream()
+                .filter(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), displayPlate))
+                .findFirst();
+        if (lockedPassOpt.isPresent()) {
+            throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] đang có thẻ vé tháng [" 
+                    + lockedPassOpt.get().getMaThe() + "] ở trạng thái TẠM KHÓA! Quý khách vui lòng liên hệ ban quản lý bãi xe để được hỗ trợ mở khóa.");
         }
 
         // Tìm hoặc tạo mới khách hàng (ưu tiên findFirstBySoDienThoai để an toàn nếu CSDL có nhiều bản ghi cùng SĐT)
@@ -265,6 +281,42 @@ public class MonthlyTicketService implements VeThangService {
     @Transactional
     public VeThang dangKyVeThangOnline(String hoTen, String sdt, String cccd, String email, String diaChi,
                                        String bienSoXe, Long loaiXeId, int soThang) {
+        // Kiểm tra xem phương tiện đã có đơn đăng ký trực tuyến chờ thanh toán (CHO_THANH_TOAN) hay chưa
+        LoaiXe loaiXe = loaiXeRepository.findById(loaiXeId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy loại phương tiện ID: " + loaiXeId));
+        BienSoXeHelper.ValidationResult vResult = BienSoXeHelper.validate(bienSoXe, loaiXe.getTenLoai());
+        if (!vResult.valid()) {
+            throw new BadRequestException("Biển số xe không hợp lệ: " + vResult.message());
+        }
+        String displayPlate = vResult.displayValue();
+
+        List<VeThang> pendingPasses = veThangRepository.findByTrangThai("CHO_THANH_TOAN");
+        Optional<VeThang> existingPending = pendingPasses.stream()
+                .filter(vt -> BienSoXeHelper.isSamePlate(vt.getBienSoXe(), displayPlate))
+                .findFirst();
+
+        if (existingPending.isPresent()) {
+            VeThang pending = existingPending.get();
+            // Cập nhật thông tin khách hàng nếu có thay đổi
+            KhachHang kh = pending.getKhachHang();
+            if (kh != null) {
+                kh.setHoTen(hoTen);
+                if (sdt != null && !sdt.isBlank()) kh.setSoDienThoai(sdt);
+                if (email != null && !email.isBlank()) kh.setEmail(email);
+                if (diaChi != null && !diaChi.isBlank()) kh.setDiaChi(diaChi);
+                khachHangRepository.save(kh);
+            }
+            // Cập nhật loại xe và giá tiền nếu khách chọn lại
+            pending.setLoaiXe(loaiXe);
+            if (loaiXe.getGiaThang() != null && soThang > 0) {
+                pending.setGiaTien(loaiXe.getGiaThang() * soThang);
+                LocalDate start = pending.getNgayBatDau() != null ? pending.getNgayBatDau() : LocalDate.now();
+                pending.setNgayBatDau(start);
+                pending.setNgayHetHan(start.plusMonths(soThang));
+            }
+            return veThangRepository.save(pending);
+        }
+
         VeThang vt = dangKyVeThang(hoTen, sdt, cccd, email, diaChi, bienSoXe, loaiXeId, soThang);
         vt.setTrangThai("CHO_THANH_TOAN");
         return veThangRepository.save(vt);
