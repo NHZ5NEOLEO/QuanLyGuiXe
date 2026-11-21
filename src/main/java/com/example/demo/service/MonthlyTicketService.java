@@ -82,7 +82,39 @@ public class MonthlyTicketService implements VeThangService {
     @Override
     public Optional<VeThang> timTheoMaThe(String maThe) {
         if (maThe == null || maThe.isBlank()) return Optional.empty();
-        return veThangRepository.findByMaThe(maThe.trim());
+        String clean = maThe.trim();
+
+        // 1. Trích xuất mã dạng VT-XXXX nếu truyền vào link URL hoặc chuỗi dài
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("VT-[A-Za-z0-9]+", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(clean);
+        if (m.find()) {
+            clean = m.group().toUpperCase();
+        } else {
+            clean = clean.toUpperCase();
+        }
+
+        // 2. Tìm kiếm chính xác
+        Optional<VeThang> opt = veThangRepository.findByMaThe(clean);
+        if (opt.isPresent()) return opt;
+
+        // 3. Xử lý dung sai nhầm lẫn phổ biến giữa ký tự số '0' và chữ 'D' (VD: VT-095D18A5 <-> VT-D95D18A5)
+        if (clean.startsWith("VT-0")) {
+            String alt = "VT-D" + clean.substring(4);
+            opt = veThangRepository.findByMaThe(alt);
+            if (opt.isPresent()) return opt;
+        } else if (clean.startsWith("VT-D")) {
+            String alt = "VT-0" + clean.substring(4);
+            opt = veThangRepository.findByMaThe(alt);
+            if (opt.isPresent()) return opt;
+        }
+
+        // 4. Tìm kiếm không phân biệt hoa thường trong toàn bộ danh sách vé tháng
+        List<VeThang> all = veThangRepository.findAll();
+        for (VeThang vt : all) {
+            if (vt.getMaThe() != null && vt.getMaThe().trim().equalsIgnoreCase(clean)) {
+                return Optional.of(vt);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override

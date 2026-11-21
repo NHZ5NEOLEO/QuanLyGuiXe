@@ -106,8 +106,8 @@ public class GateController {
 
         String raw = plate.trim();
         String targetPlate = raw;
-        if (raw.toUpperCase().startsWith("VT-")) {
-            var cardOpt = monthlyTicketService.timTheoMaThe(raw.toUpperCase());
+        if (raw.toUpperCase().contains("VT-")) {
+            var cardOpt = monthlyTicketService.timTheoMaThe(raw);
             if (cardOpt.isPresent()) {
                 VeThang vt = cardOpt.get();
                 targetPlate = vt.getBienSoXe();

@@ -14,6 +14,8 @@ public interface VeXeRepository extends JpaRepository<VeXe, Integer> {
 
     Optional<VeXe> findFirstByBienSoXeAndTrangThaiOrderByThoiGianVaoDesc(String bienSoXe, String trangThai);
 
+    Optional<VeXe> findFirstByVeThangIdAndTrangThaiOrderByThoiGianVaoDesc(Long veThangId, String trangThai);
+
     Optional<VeXe> findFirstByBienSoCleanAndTrangThai(String bienSoClean, String trangThai);
 
     boolean existsByBienSoCleanAndTrangThai(String bienSoClean, String trangThai);

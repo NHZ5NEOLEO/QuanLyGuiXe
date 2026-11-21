@@ -109,8 +109,8 @@ public class ParkingService implements XuLyGuiXeService {
 
         String rawPlate = request.getBienSoXe().trim();
         VeThang scannedMonthlyPass = null;
-        if (rawPlate.toUpperCase().startsWith("VT-")) {
-            var cardOpt = monthlyTicketService.timTheoMaThe(rawPlate.toUpperCase());
+        if (rawPlate.toUpperCase().contains("VT-")) {
+            var cardOpt = monthlyTicketService.timTheoMaThe(rawPlate);
             if (cardOpt.isPresent()) {
                 scannedMonthlyPass = cardOpt.get();
                 if ("KHOA".equalsIgnoreCase(scannedMonthlyPass.getTrangThai())) {
@@ -320,8 +320,8 @@ public class ParkingService implements XuLyGuiXeService {
 
         String query = identifier.trim();
         VeThang scannedMonthlyCard = null;
-        if (query.toUpperCase().startsWith("VT-")) {
-            var cardOpt = monthlyTicketService.timTheoMaThe(query.toUpperCase());
+        if (query.toUpperCase().contains("VT-")) {
+            var cardOpt = monthlyTicketService.timTheoMaThe(query);
             if (cardOpt.isPresent()) {
                 scannedMonthlyCard = cardOpt.get();
                 if ("KHOA".equalsIgnoreCase(scannedMonthlyCard.getTrangThai())) {
@@ -339,7 +339,13 @@ public class ParkingService implements XuLyGuiXeService {
                 throw new ResourceNotFoundException("Thẻ vé tháng [" + query.toUpperCase() + "] không tồn tại trên hệ thống! Vui lòng kiểm tra lại thẻ.");
             }
         }
-        Optional<VeXe> veXeOpt = veXeRepository.findByMaQR(query);
+        Optional<VeXe> veXeOpt = Optional.empty();
+        if (scannedMonthlyCard != null && scannedMonthlyCard.getId() != null) {
+            veXeOpt = veXeRepository.findFirstByVeThangIdAndTrangThaiOrderByThoiGianVaoDesc(scannedMonthlyCard.getId(), "Đang gửi");
+        }
+        if (veXeOpt.isEmpty()) {
+            veXeOpt = veXeRepository.findByMaQR(query);
+        }
         if (veXeOpt.isEmpty()) {
             veXeOpt = veXeRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianVaoDesc(query.toUpperCase(), "Đang gửi");
         }
@@ -348,6 +354,10 @@ public class ParkingService implements XuLyGuiXeService {
             if (!displayPlate.equalsIgnoreCase(query)) {
                 veXeOpt = veXeRepository.findFirstByBienSoXeAndTrangThaiOrderByThoiGianVaoDesc(displayPlate, "Đang gửi");
             }
+        }
+        if (veXeOpt.isEmpty()) {
+            String cleanKey = BienSoXeHelper.toCleanKey(query);
+            veXeOpt = veXeRepository.findFirstByBienSoCleanAndTrangThai(cleanKey, "Đang gửi");
         }
         if (veXeOpt.isEmpty()) {
             List<VeXe> activeList = veXeRepository.findByTrangThaiOrderByThoiGianVaoDesc("Đang gửi");
