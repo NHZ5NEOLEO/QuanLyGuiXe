@@ -947,7 +947,7 @@
                     ngayBatDauHidden.value = formatDateISO(new Date());
                     updateSummary();
                 } else {
-                    showError(data.message || 'Lỗi khi lưu dữ liệu đăng ký vào hệ thống. Vui lòng thử lại.');
+                    showError(data.message || data.error || 'Lỗi khi lưu dữ liệu đăng ký vào hệ thống. Vui lòng thử lại.');
                 }
             } catch (err) {
                 console.error('Lỗi gửi đăng ký:', err);

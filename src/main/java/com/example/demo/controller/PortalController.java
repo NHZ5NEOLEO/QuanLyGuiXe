@@ -42,9 +42,13 @@ import java.util.regex.Matcher;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.service.MonthlyTicketService;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class PortalController {
+
+    private static final Logger log = LoggerFactory.getLogger(PortalController.class);
 
     private final LoaiXeRepository loaiXeRepository;
     private final VeXeRepository veXeRepository;
@@ -526,9 +530,11 @@ public class PortalController {
 
             return ResponseEntity.ok(resp);
         } catch (BadRequestException e) {
+            log.warn("Yêu cầu đăng ký vé tháng không hợp lệ: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Lỗi đăng ký: " + e.getMessage()));
+        } catch (Throwable t) {
+            log.error("Lỗi xử lý đăng ký vé tháng trực tuyến: ", t);
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Lỗi đăng ký: " + (t.getMessage() != null ? t.getMessage() : t.toString())));
         }
     }
 

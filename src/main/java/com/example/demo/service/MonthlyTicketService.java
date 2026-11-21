@@ -191,11 +191,19 @@ public class MonthlyTicketService implements VeThangService {
             throw new BadRequestException("Phương tiện biển số [" + displayPlate + "] hiện đang có vé tháng đang hoạt động và còn hạn sử dụng!");
         }
 
-        // Tìm hoặc tạo mới khách hàng
-        KhachHang khachHang = khachHangRepository.findBySoDienThoai(sdt)
+        // Tìm hoặc tạo mới khách hàng (ưu tiên findFirstBySoDienThoai để an toàn nếu CSDL có nhiều bản ghi cùng SĐT)
+        KhachHang khachHang = khachHangRepository.findFirstBySoDienThoai(sdt)
+                .or(() -> {
+                    try {
+                        return khachHangRepository.findBySoDienThoai(sdt);
+                    } catch (Exception ex) {
+                        return Optional.empty();
+                    }
+                })
                 .orElseGet(() -> {
                     KhachHang newKh = new KhachHang(hoTen, sdt, cccd, email, diaChi);
-                    return khachHangRepository.save(newKh);
+                    KhachHang saved = khachHangRepository.save(newKh);
+                    return saved != null ? saved : newKh;
                 });
 
         // Cập nhật thông tin nếu cần
@@ -206,7 +214,18 @@ public class MonthlyTicketService implements VeThangService {
         khachHangRepository.save(khachHang);
 
         // Đảm bảo khách hàng luôn có tài khoản đăng nhập (tenDangNhap = sdt) với mật khẩu mã hóa BCrypt
-        if (nguoiDungRepository.findByTenDangNhap(sdt).isEmpty()) {
+        boolean hasUser = nguoiDungRepository.findByTenDangNhap(sdt).isPresent()
+                || nguoiDungRepository.findFirstBySoDienThoai(sdt).isPresent();
+        if (!hasUser) {
+            try {
+                if (nguoiDungRepository.findBySoDienThoai(sdt).isPresent()) {
+                    hasUser = true;
+                }
+            } catch (Exception ignored) {
+                hasUser = true;
+            }
+        }
+        if (!hasUser) {
             NguoiDung nd = new NguoiDung(sdt, passwordEncoder.encode("123456"), hoTen, "KHACH_HANG", sdt);
             nguoiDungRepository.save(nd);
         }
