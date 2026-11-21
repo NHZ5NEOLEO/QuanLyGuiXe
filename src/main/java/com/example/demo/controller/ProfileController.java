@@ -42,22 +42,21 @@ public class ProfileController {
     private final VeThangRepository veThangRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired(required = false)
-    private MonthlyTicketService monthlyTicketService;
+    private final MonthlyTicketService monthlyTicketService;
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(0|\\+84)[0-9]{8,10}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     public ProfileController(
-            NguoiDungRepository nguoiDungRepository,
-            KhachHangRepository khachHangRepository,
-            VeThangRepository veThangRepository,
-            PasswordEncoder passwordEncoder
-    ) {
+NguoiDungRepository nguoiDungRepository, 
+KhachHangRepository khachHangRepository, 
+VeThangRepository veThangRepository, 
+PasswordEncoder passwordEncoder, MonthlyTicketService monthlyTicketService) {
         this.nguoiDungRepository = nguoiDungRepository;
         this.khachHangRepository = khachHangRepository;
         this.veThangRepository = veThangRepository;
         this.passwordEncoder = passwordEncoder;
+        this.monthlyTicketService = monthlyTicketService;
     }
 
     /**

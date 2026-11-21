@@ -167,15 +167,42 @@
                                         <span>Nhóm 2 &mdash; Thông tin phương tiện</span>
                                     </div>
                                     <div class="row g-3">
-                                        <!-- Biển số xe -->
+                                        <!-- Biển số xe đăng ký (Thiết kế chuẩn khung biển số xe Việt Nam) -->
                                         <div class="col-md-6">
-                                            <label for="bienSoXe" class="form-label small fw-bold text-dark">
-                                                Biển số xe đăng ký <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text" id="bienSoXe" class="form-control portal-form-control font-monospace text-uppercase fw-bold" 
-                                                   placeholder="VD: 29A-123.45 HOẶC 59F1-234.56" required oninput="updateSummary()">
-                                            <div class="invalid-feedback text-xs">Vui lòng nhập biển số xe hợp lệ.</div>
-                                            <div class="form-text text-2xs text-muted">Biển số sẽ gắn liền với thẻ vé tháng và dùng đối soát khi qua cổng.</div>
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <label for="bienSoXe" class="form-label small fw-bold text-dark mb-0">
+                                                    Biển số xe đăng ký <span class="text-danger">*</span>
+                                                </label>
+                                                <span class="badge bg-light text-primary border text-2xs fw-semibold" id="plateTypeBadge">
+                                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>Tự động định dạng
+                                                </span>
+                                            </div>
+
+                                            <div class="plate-input-card-box" id="plateInputContainer">
+                                                <span class="plate-screw-dot plate-screw-left"></span>
+                                                <div class="plate-vn-strip" title="Biển số lưu hành Việt Nam">
+                                                    <span class="vn-star"><i class="fa-solid fa-star"></i></span>
+                                                    <span class="vn-text">VN</span>
+                                                </div>
+                                                <input type="text" 
+                                                       id="bienSoXe" 
+                                                       name="bienSoXe" 
+                                                       class="plate-license-input" 
+                                                       placeholder="59-S1 298.82" 
+                                                       autocomplete="off" 
+                                                       spellcheck="false" 
+                                                       required>
+                                                <span class="plate-screw-dot plate-screw-right"></span>
+                                            </div>
+
+                                            <div class="d-flex align-items-center justify-content-between mt-1 text-2xs">
+                                                <div class="text-muted" id="plateFormatGuide">
+                                                    <i class="fa-solid fa-keyboard me-1 text-primary"></i>Nhập liên tục chữ và số, hệ thống tự động cách &amp; chấm.
+                                                </div>
+                                                <div class="fw-bold text-success d-none" id="plateValidStatus">
+                                                    <i class="fa-solid fa-circle-check me-1"></i>Đúng chuẩn biển số
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <!-- Loại phương tiện -->
@@ -964,13 +991,215 @@
             showNotification('danger', msg, 'Lỗi Đăng Ký');
         }
 
-        // Lắng nghe sự kiện kiểm tra nhập liệu tức thời
-        bienSoXeInput.addEventListener('input', function() {
-            this.value = this.value.toUpperCase();
-            const clean = this.value.replace(/[^A-Z0-9]/g, '');
+        // =========================================================================
+        // TỰ ĐỘNG ĐỊNH DẠNG BIỂN SỐ XE VIỆT NAM (SMART LICENSE PLATE AUTO-FORMATTER)
+        // Tự động thêm gạch nối, khoảng cách và dấu chấm theo chuẩn - không cần gõ phím cách
+        // =========================================================================
+        const plateInputContainer = document.getElementById('plateInputContainer');
+        const plateTypeBadge = document.getElementById('plateTypeBadge');
+        const plateValidStatus = document.getElementById('plateValidStatus');
+
+        function autoFormatLicensePlate(inputVal, vehicleType) {
+            if (!inputVal) return '';
+            let raw = inputVal.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!raw) return '';
+            
+            // Hỗ trợ xe đạp / xe điện không biển số (XD-01)
+            if (raw.startsWith('XD')) {
+                return raw.length > 2 ? 'XD-' + raw.substring(2) : 'XD';
+            }
+            
+            // Cần tối thiểu 2 số đầu tỉnh thành
+            if (raw.length <= 2) {
+                return raw;
+            }
+            
+            let prov = raw.substring(0, 2);
+            let rest = raw.substring(2);
+            
+            if (!/^\d{2}/.test(prov)) {
+                return raw;
+            }
+            
+            let c2 = rest.charAt(0);
+            if (!/[A-Z]/.test(c2)) {
+                return prov + '-' + rest;
+            }
+            
+            const vType = (vehicleType || '').toLowerCase();
+            const isCar = vType.includes('tô') || vType.includes('car') || vType.includes('tải');
+            
+            // 1. Sê-ri 2 chữ cái (51LD, 29MD, 29AA...)
+            if (rest.length >= 2 && /[A-Z]/.test(rest.charAt(1))) {
+                let series = rest.substring(0, 2);
+                let nums = rest.substring(2);
+                let res = prov + series;
+                if (nums.length > 0) {
+                    res += '-';
+                    if (nums.length <= 4) {
+                        res += nums;
+                    } else {
+                        res += nums.substring(0, 3) + '.' + nums.substring(3, 5);
+                    }
+                }
+                return res;
+            }
+            
+            // 2. Ô tô (Sê-ri 1 chữ cái: 30A-123.45)
+            if (isCar) {
+                let series = rest.substring(0, 1);
+                let nums = rest.substring(1);
+                let res = prov + series;
+                if (nums.length > 0) {
+                    res += '-';
+                    if (nums.length <= 4) {
+                        res += nums;
+                    } else {
+                        res += nums.substring(0, 3) + '.' + nums.substring(3, 5);
+                    }
+                }
+                return res;
+            }
+            
+            // 3. Xe máy thông thường (1 chữ + 1 số sê-ri: 59-S1 298.82)
+            if (rest.length >= 2 && /\d/.test(rest.charAt(1))) {
+                let series = rest.substring(0, 2); // S1
+                let nums = rest.substring(2);      // 29882
+                let res = prov + '-' + series;
+                if (nums.length > 0) {
+                    res += ' '; // TỰ ĐỘNG THÊM DẤU CÁCH
+                    if (nums.length <= 4) {
+                        res += nums; // Xe máy 4 số: 29-B1 1234
+                    } else {
+                        res += nums.substring(0, 3) + '.' + nums.substring(3, 5); // 59-S1 298.82
+                    }
+                }
+                return res;
+            } else {
+                // Đang gõ dở sê-ri chữ cái
+                return prov + '-' + c2;
+            }
+        }
+
+        function updatePlateStatus(plateVal) {
+            if (!plateVal) {
+                if (plateTypeBadge) plateTypeBadge.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>Tự động định dạng';
+                if (plateValidStatus) plateValidStatus.classList.add('d-none');
+                if (plateInputContainer) {
+                    plateInputContainer.classList.remove('is-valid', 'is-invalid');
+                }
+                return;
+            }
+
+            const clean = plateVal.replace(/[^A-Z0-9]/g, '');
             if (clean.startsWith('QR') || clean.startsWith('VT') || clean.startsWith('BK') || clean.startsWith('TICKET')) {
                 showNotification('warning', 'Chuỗi bạn đang nhập là mã hệ thống (Mã vé / Mã thẻ / Mã đặt chỗ). Vui lòng nhập đúng biển số xe trên giấy đăng ký xe (Ví dụ: 29A-123.45 hoặc 59-S1 298.82)!', 'Nhầm Lẫn Mã Hệ Thống', [], 'bienSoXe');
+                if (plateInputContainer) plateInputContainer.classList.add('is-invalid');
+                return;
             }
+
+            // Tự động nhận diện dòng xe & gợi ý loại phương tiện
+            if (clean.length >= 4) {
+                const prov = clean.substring(0, 2);
+                const rest = clean.substring(2);
+                if (/^\d{2}/.test(prov)) {
+                    if (rest.length >= 2 && /[A-Z]/.test(rest.charAt(0)) && /\d/.test(rest.charAt(1))) {
+                        if (plateTypeBadge) plateTypeBadge.innerHTML = '<i class="fa-solid fa-motorcycle me-1 text-success"></i>Xe máy (' + prov + '-' + rest.substring(0, 2) + ')';
+                        autoSelectVehicleType('máy');
+                    } else if (/[A-Z]/.test(rest.charAt(0))) {
+                        if (plateTypeBadge) plateTypeBadge.innerHTML = '<i class="fa-solid fa-car me-1 text-primary"></i>Ô tô (' + prov + rest.substring(0, 1) + ')';
+                        autoSelectVehicleType('tô');
+                    }
+                }
+            }
+
+            // Kiểm tra xem định dạng đã hoàn chỉnh chưa
+            const isFullMoto = /^\d{2}\-[A-Z]\d\s\d{3}\.\d{2}$/.test(plateVal) || /^\d{2}\-[A-Z]\d\s\d{4}$/.test(plateVal);
+            const isFullCar = /^\d{2}[A-Z]{1,2}\-\d{3}\.\d{2}$/.test(plateVal) || /^\d{2}[A-Z]{1,2}\-\d{4}$/.test(plateVal);
+            const isBicycle = /^XD\-\d+$/.test(plateVal);
+
+            if (isFullMoto || isFullCar || isBicycle) {
+                if (plateValidStatus) plateValidStatus.classList.remove('d-none');
+                if (plateInputContainer) {
+                    plateInputContainer.classList.remove('is-invalid');
+                    plateInputContainer.classList.add('is-valid');
+                }
+            } else {
+                if (plateValidStatus) plateValidStatus.classList.add('d-none');
+                if (plateInputContainer) plateInputContainer.classList.remove('is-valid');
+            }
+        }
+
+        function autoSelectVehicleType(keyword) {
+            if (!loaiXeSelect) return;
+            if (!loaiXeSelect.value || loaiXeSelect.value === '') {
+                for (let i = 0; i < loaiXeSelect.options.length; i++) {
+                    const opt = loaiXeSelect.options[i];
+                    if (opt.value && opt.text.toLowerCase().includes(keyword)) {
+                        loaiXeSelect.selectedIndex = i;
+                        updateSummary();
+                        break;
+                    }
+                }
+            }
+        }
+
+        let isDeletingPlate = false;
+        bienSoXeInput.addEventListener('keydown', function(e) {
+            isDeletingPlate = (e.key === 'Backspace' || e.key === 'Delete');
+        });
+
+        bienSoXeInput.addEventListener('input', function() {
+            if (isDeletingPlate) {
+                updateSummary();
+                updatePlateStatus(this.value);
+                return;
+            }
+
+            const selectedOpt = loaiXeSelect ? loaiXeSelect.options[loaiXeSelect.selectedIndex] : null;
+            const vehicleType = selectedOpt ? (selectedOpt.getAttribute('data-name') || selectedOpt.text) : '';
+            
+            const formatted = autoFormatLicensePlate(this.value, vehicleType);
+            if (formatted !== this.value) {
+                this.value = formatted;
+            }
+
+            updateSummary();
+            updatePlateStatus(this.value);
+        });
+
+        bienSoXeInput.addEventListener('paste', function() {
+            setTimeout(() => {
+                const selectedOpt = loaiXeSelect ? loaiXeSelect.options[loaiXeSelect.selectedIndex] : null;
+                const vehicleType = selectedOpt ? (selectedOpt.getAttribute('data-name') || selectedOpt.text) : '';
+                this.value = autoFormatLicensePlate(this.value, vehicleType);
+                updateSummary();
+                updatePlateStatus(this.value);
+            }, 10);
+        });
+
+        bienSoXeInput.addEventListener('blur', function() {
+            const selectedOpt = loaiXeSelect ? loaiXeSelect.options[loaiXeSelect.selectedIndex] : null;
+            const vehicleType = selectedOpt ? (selectedOpt.getAttribute('data-name') || selectedOpt.text) : '';
+            const formatted = autoFormatLicensePlate(this.value, vehicleType);
+            if (formatted) {
+                this.value = formatted;
+            }
+            updateSummary();
+            updatePlateStatus(this.value);
+        });
+
+        loaiXeSelect.addEventListener('change', function() {
+            if (bienSoXeInput && bienSoXeInput.value) {
+                const selectedOpt = this.options[this.selectedIndex];
+                const vehicleType = selectedOpt ? (selectedOpt.getAttribute('data-name') || selectedOpt.text) : '';
+                const formatted = autoFormatLicensePlate(bienSoXeInput.value, vehicleType);
+                if (formatted) {
+                    bienSoXeInput.value = formatted;
+                }
+                updatePlateStatus(bienSoXeInput.value);
+            }
+            updateSummary();
         });
 
         sdtInput.addEventListener('input', function() {
