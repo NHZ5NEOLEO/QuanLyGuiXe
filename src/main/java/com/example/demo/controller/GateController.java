@@ -220,11 +220,13 @@ public class GateController {
         }
 
         // 3. Kiểm tra xem xe có Vé Tháng hợp lệ còn hạn không
+        Optional<VeThang> veThangOpt = Optional.empty();
         if (res.containsKey("scannedCardCode")) {
             boolean isExpired = Boolean.TRUE.equals(res.get("isExpired"));
             boolean isLocked = Boolean.TRUE.equals(res.get("isLocked"));
             boolean isPending = Boolean.TRUE.equals(res.get("isPendingPayment"));
             if (!isExpired && !isLocked && !isPending) {
+                veThangOpt = monthlyTicketService.timTheoMaThe((String) res.get("scannedCardCode"));
                 res.put("hasMonthlyPass", true);
                 res.put("monthlyPassCode", res.get("scannedCardCode"));
                 res.put("customerName", res.get("monthlyCustomerName"));
@@ -233,7 +235,7 @@ public class GateController {
                 res.put("hasMonthlyPass", false);
             }
         } else {
-            Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.displayValue());
+            veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.displayValue());
             if (veThangOpt.isEmpty() && !vResult.cleanKey().equalsIgnoreCase(vResult.displayValue())) {
                 veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.cleanKey());
             }

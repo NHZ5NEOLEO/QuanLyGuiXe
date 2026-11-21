@@ -184,10 +184,11 @@ public class ParkingService implements XuLyGuiXeService {
             }
 
             // 3. Xác thực loại xe và tìm khu vực được cấu hình cho loại xe đó (không suy đoán tên loại xe)
+            final Long currentLoaiXeId = loaiXe.getId();
             KhuVuc khuVuc = loaiXe.getKhuVuc();
             if (khuVuc == null && khuVucRepository != null) {
                 khuVuc = khuVucRepository.findAll().stream()
-                        .filter(kv -> kv.getLoaiXe() != null && kv.getLoaiXe().getId().equals(loaiXe.getId()))
+                        .filter(kv -> kv.getLoaiXe() != null && kv.getLoaiXe().getId().equals(currentLoaiXeId))
                         .findFirst().orElse(null);
             }
             if (khuVuc == null) {
