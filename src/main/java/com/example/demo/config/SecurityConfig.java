@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requireExplicitSave(false)
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**", "/monthly-tickets/**", "/ve-thang/**", "/price-settings/**", "/bang-gia/**", "/bang_gia/**")
+                .ignoringRequestMatchers("/api/**", "/portal/api/**", "/login", "/dang-nhap", "/logout", "/dang-xuat", "/quen-mat-khau", "/quen-mat-khau/**", "/forgot-password", "/forgot-password/**", "/tai-khoan/**", "/portal/ho-so/**", "/monthly-tickets/**", "/ve-thang/**", "/price-settings/**", "/bang-gia/**", "/bang_gia/**", "/api/dat-cho-truoc/**", "/api/quan-ly-dat-cho/**", "/dat-cho-truoc/**", "/quan-ly-dat-cho/**")
             )
             .authorizeHttpRequests(auth -> auth
                 // 1. Static resources & assets
@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers("/tra-cuu", "/tra-cuu/**", "/tra-cuu-xe", "/tra-cuu-xe/**", "/portal/api/lookup").permitAll()
                 .requestMatchers("/bang-gia-dich-vu", "/bang-gia-dich-vu/**", "/dich-vu/**").permitAll()
                 .requestMatchers("/dang-ky-ve-thang", "/dang-ky-ve-thang/**", "/portal/api/register-monthly").permitAll()
+                .requestMatchers("/dat-cho-truoc", "/dat-cho-truoc/**", "/portal/dat-cho-truoc", "/booking", "/api/dat-cho-truoc/**", "/portal/api/booking/**").permitAll()
                 .requestMatchers("/danh-gia", "/danh-gia/**", "/portal/api/feedback", "/portal/api/feedbacks").permitAll()
                 .requestMatchers("/qr-entry", "/qr-exit", "/qr-cong-vao", "/qr-cong-ra", "/customer-checkin", "/customer-checkout", "/khach-gui-xe", "/khach-nhan-xe", "/khach-xe-vao", "/khach-xe-ra").permitAll()
                 // 4. API tra cứu công khai & khách quét mã check-in cổng vào
@@ -100,6 +101,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/parking/check-in", "/api/parking/check-out").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/active-vehicles/**", "/xe-trong-bai/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/ve-xe", "/ve-xe/**", "/tickets", "/tickets/**", "/history/**", "/monthly-tickets/**", "/ve-thang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers("/quan-ly-dat-cho", "/quan-ly-dat-cho/**", "/admin/dat-cho-truoc", "/dat-cho-truoc/quan-ly", "/api/quan-ly-dat-cho/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/security-alerts/**", "/canh-bao-an-ninh/**", "/shift/**", "/ca-truc/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .requestMatchers("/api/tickets/**", "/api/ve-xe/**", "/api/parking/**", "/api/parking-map/**", "/api/gate/**").hasAnyRole("ADMIN", "NHAN_VIEN")
 

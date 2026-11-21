@@ -81,7 +81,13 @@
             <span>Vé tháng</span>
         </a>
 
-        <!-- 5b. Cảnh báo an ninh (Xe gửi quá 24h & Danh sách đen) -->
+        <!-- 5b. Quản lý đặt chỗ trước (Dành cho cả ADMIN & NHAN_VIEN) -->
+        <a th:href="@{/quan-ly-dat-cho}" th:classappend="${activePage == 'dat-cho-truoc' or activePage == 'booking'} ? 'active' : ''" class="sidebar-link" title="Quản lý danh sách đặt giữ chỗ đỗ xe trước">
+            <i class="fa-solid fa-calendar-check text-info" aria-hidden="true"></i>
+            <span>Đặt chỗ trước</span>
+        </a>
+
+        <!-- 5c. Cảnh báo an ninh (Xe gửi quá 24h & Danh sách đen) -->
         <a th:href="@{/canh-bao-an-ninh}" th:classappend="${activePage == 'security-alerts' or activePage == 'canh-bao-an-ninh'} ? 'active' : ''" class="sidebar-link" title="Xử lý xe gửi quá 24 giờ và danh sách đen an ninh">
             <i class="fa-solid fa-triangle-exclamation text-danger" aria-hidden="true"></i>
             <span>Cảnh báo an ninh</span>

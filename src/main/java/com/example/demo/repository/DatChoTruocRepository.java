@@ -20,6 +20,20 @@ public interface DatChoTruocRepository extends JpaRepository<DatChoTruoc, Long> 
 
     List<DatChoTruoc> findByTrangThaiAndThoiGianHetHanBefore(String trangThai, LocalDateTime now);
 
+    List<DatChoTruoc> findAllByOrderByThoiGianDatDesc();
+
+    List<DatChoTruoc> findByBienSoXeOrderByThoiGianDatDesc(String bienSoXe);
+
+    List<DatChoTruoc> findBySoDienThoaiOrderByThoiGianDatDesc(String soDienThoai);
+
+    List<DatChoTruoc> findByBienSoXeContainingIgnoreCaseOrHoTenContainingIgnoreCaseOrSoDienThoaiContainingOrderByThoiGianDatDesc(
+            String bienSoXe, String hoTen, String soDienThoai);
+
+    long countByTrangThai(String trangThai);
+
     @Query("SELECT COALESCE(SUM(d.tienCoc), 0.0) FROM DatChoTruoc d WHERE d.thoiGianDat BETWEEN :start AND :end AND d.daThanhToanCoc = true AND d.trangThai IN ('DA_VAO', 'CHO_DEN')")
     Double calculateDepositRevenueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(d.tienCoc), 0.0) FROM DatChoTruoc d WHERE d.daThanhToanCoc = true")
+    Double calculateTotalDepositRevenue();
 }

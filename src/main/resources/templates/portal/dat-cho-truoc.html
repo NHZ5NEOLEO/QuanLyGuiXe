@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle : 'Đặt Chỗ Đỗ Xe Trước — QUẢN LÝ GỬI XE'}">Đặt Chỗ Đỗ Xe Trước — QUẢN LÝ GỬI XE</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Portal Modern Design System CSS -->
+    <link th:href="@{/css/portal.css}" rel="stylesheet">
+    <style>
+        .booking-hero {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #052c65 100%);
+            color: #ffffff;
+            padding: 48px 0 36px;
+            position: relative;
+            overflow: hidden;
+        }
+        .booking-hero::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+        .step-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #0d6efd;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .badge-timer {
+            background: #fff3cd;
+            color: #664d03;
+            border: 1px solid #ffe69c;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .qr-card-box {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .qr-img-preview {
+            max-width: 230px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: #fff;
+            padding: 8px;
+        }
+        .nav-pills-booking .nav-link {
+            font-weight: 600;
+            padding: 10px 22px;
+            border-radius: 30px;
+            color: #495057;
+            background: #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        .nav-pills-booking .nav-link.active {
+            background: #0d6efd;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .status-CHO_DEN { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .status-DA_VAO { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .status-HET_HAN { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .status-HUY { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body class="portal-body">
+
+    <!-- Shared Header -->
+    <div th:replace="~{portal/fragments/header :: header(activeNav='dat-cho')}"></div>
+
+    <main class="flex-grow-1">
+        <!-- Hero Section -->
+        <section class="booking-hero">
+            <div class="container-xl px-3 px-sm-4 text-center">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-20 text-white text-xs fw-bold mb-3">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>DỊCH VỤ TIỆN ÍCH DÀNH CHO CƯ DÂN &amp; KHÁCH HÀNG</span>
+                </div>
+                <h1 class="h2 fw-bold mb-2">ĐẶT GIỮ CHỖ ĐỖ XE TRƯỚC</h1>
+                <p class="text-white text-opacity-90 mx-auto mw-620 mb-0">
+                    Chủ động giữ ô đỗ trong vòng 60 phút trước khi đến bãi. Tiền cọc <strong>20.000 VNĐ</strong> sẽ được hệ thống tự động khấu trừ 100% vào tiền phí gửi xe khi xe qua cổng xuất bãi.
+                </p>
+            </div>
+        </section>
+
+        <!-- Main Body -->
+        <section class="py-4 py-md-5">
+            <div class="container-xl px-3 px-sm-4">
+
+                <!-- Navigation Tabs: Đặt chỗ mới & Tra cứu -->
+                <div class="d-flex justify-content-center mb-4">
+                    <ul class="nav nav-pills nav-pills-booking gap-2" id="bookingTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="book-tab" data-bs-toggle="pill" data-bs-target="#tab-book" type="button" role="tab" aria-controls="tab-book" aria-selected="true">
+                                <i class="fa-solid fa-plus-circle me-1.5"></i> Đặt Chỗ Đỗ Mới
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="lookup-tab" data-bs-toggle="pill" data-bs-target="#tab-lookup" type="button" role="tab" aria-controls="tab-lookup" aria-selected="false">
+                                <i class="fa-solid fa-magnifying-glass me-1.5"></i> Tra Cứu &amp; Hủy Đơn
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="bookingTabContent">
+
+                    <!-- =================================================================
+                         TAB 1: ĐẶT CHỖ MỚI
+                         ================================================================= -->
+                    <div class="tab-pane fade show active" id="tab-book" role="tabpanel" aria-labelledby="book-tab">
+                        <div class="row g-4 justify-content-center">
+                            
+                            <!-- Form Column -->
+                            <div class="col-lg-7 col-xl-8">
+                                <div class="portal-card p-4 p-md-4 shadow-sm mb-4">
+                                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="step-pill"><i class="fa-solid fa-car"></i></span>
+                                            <div>
+                                                <h5 class="fw-bold mb-0 text-dark">Thông tin đăng ký giữ chỗ</h5>
+                                                <small class="text-muted">Nhập thông tin phương tiện để nhân viên và camera cổng đối soát</small>
+                                            </div>
+                                        </div>
+                                        <div class="badge-timer">
+                                            <i class="fa-regular fa-clock"></i>
+                                            <span>Hiệu lực: 60 phút</span>
+                                        </div>
+                                    </div>
+
+                                    <form id="formDatCho" onsubmit="handleDatChoSubmit(event)">
+                                        <div class="row g-3">
+                                            <!-- Họ và tên -->
+                                            <div class="col-md-6">
+                                                <label for="hoTen" class="form-label small fw-bold text-dark">Họ và tên của bạn <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="fa-regular fa-user"></i></span>
+                                                    <input type="text" class="form-control" id="hoTen" name="hoTen" 
+                                                           th:value="${currentUser != null ? currentUser.hoTen : ''}" 
+                                                           placeholder="Ví dụ: Nguyễn Văn An" required>
+                                                </div>
+                                            </div>
+
+                                            <!-- Số điện thoại -->
+                                            <div class="col-md-6">
+                                                <label for="soDienThoai" class="form-label small fw-bold text-dark">Số điện thoại liên hệ <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-phone"></i></span>
+                                                    <input type="tel" class="form-control" id="soDienThoai" name="soDienThoai" 
+                                                           th:value="${currentUser != null ? currentUser.soDienThoai : ''}" 
+                                                           placeholder="Ví dụ: 0912345678" maxlength="11" required>
+                                                </div>
+                                            </div>
+
+                                            <!-- Biển số xe (Chuẩn ô nhập biển số xe) -->
+                                            <div class="col-md-7">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <label for="bienSoXe" class="form-label small fw-bold text-dark mb-0">
+                                                        Biển số xe giữ chỗ <span class="text-danger">*</span>
+                                                    </label>
+                                                    <span class="badge bg-light text-primary border text-2xs fw-semibold" id="plateTypeBadge">
+                                                        <i class="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>Tự động định dạng
+                                                    </span>
+                                                </div>
+                                                <div class="plate-input-card-box" id="plateInputContainer">
+                                                    <span class="plate-screw-dot plate-screw-left"></span>
+                                                    <input type="text" 
+                                                           id="bienSoXe" 
+                                                           name="bienSoXe" 
+                                                           class="plate-license-input" 
+                                                           placeholder="Nhập biển số xe của bạn" 
+                                                           autocomplete="off" 
+                                                           spellcheck="false" 
+                                                           required>
+                                                    <span class="plate-screw-dot plate-screw-right"></span>
+                                                </div>
+                                                <div class="form-text text-2xs text-muted mt-1">
+                                                    <i class="fa-solid fa-circle-info text-primary me-1"></i>Camera cổng sẽ quét biển số này khi vào bãi để kích hoạt đơn giữ chỗ.
+                                                </div>
+                                            </div>
+
+                                            <!-- Khu vực đỗ xe -->
+                                            <div class="col-md-5">
+                                                <label for="maKhuVuc" class="form-label small fw-bold text-dark">Khu vực đỗ xe mong muốn <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-square-parking"></i></span>
+                                                    <select class="form-select" id="maKhuVuc" name="maKhuVuc" required>
+                                                        <option th:each="kv : ${khuVucs}" 
+                                                                th:value="${kv.maKhu != null ? kv.maKhu : kv.tenKhu}" 
+                                                                th:text="${(kv.tenKhu != null ? kv.tenKhu : kv.maKhu) + ' (Còn ' + (kv.sucChua != null ? kv.sucChua : 20) + ' chỗ)'}">
+                                                            Khu Đỗ Xe 2 Bánh (Còn 50 chỗ)
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Ghi chú về tiền cọc -->
+                                            <div class="col-12 mt-3">
+                                                <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fa-solid fa-money-bill-wave text-success fs-4"></i>
+                                                        <div>
+                                                            <div class="small fw-bold text-dark">Mức tiền cọc giữ chỗ: <span class="text-primary fs-6 fw-bold">20.000 đ</span></div>
+                                                            <div class="text-2xs text-muted">Số tiền này sẽ được trừ thẳng 100% vào hoá đơn gửi xe khi bạn thanh toán xuất bãi.</div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success fw-bold px-2.5 py-1.5">
+                                                        Khấu trừ 100%
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Nút xác nhận đặt chỗ -->
+                                            <div class="col-12 mt-4">
+                                                <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="btnSubmitDatCho">
+                                                    <i class="fa-solid fa-shield-check"></i>
+                                                    <span>Xác Nhận Giữ Chỗ &amp; Lấy Mã VietQR</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Policy & Summary Column -->
+                            <div class="col-lg-5 col-xl-4">
+                                <div class="portal-card p-4 shadow-sm mb-4">
+                                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-circle-question text-primary"></i> Quy trình hoạt động
+                                    </h6>
+                                    <div class="timeline-steps">
+                                        <div class="d-flex gap-3 mb-3">
+                                            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">1</span>
+                                            <div class="small">
+                                                <strong>Điền thông tin &amp; nhận mã:</strong> Nhập biển số xe chính xác và quét mã QR chuyển cọc 20.000 đ.
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-3 mb-3">
+                                            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">2</span>
+                                            <div class="small">
+                                                <strong>Đến bãi trong 60 phút:</strong> Ô đỗ được hệ thống bảo lưu riêng cho biển số của bạn trong 60 phút.
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-3">
+                                            <span class="badge bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">3</span>
+                                            <div class="small">
+                                                <strong>Khấu trừ tiền cọc:</strong> Khi xe check-out xuất bãi, hệ thống tự động trừ 20.000 đ vào tổng tiền phí gửi xe.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-3">
+
+                                    <div class="alert alert-info border-info bg-info bg-opacity-10 p-2.5 rounded-3 mb-0 text-2xs text-dark">
+                                        <i class="fa-solid fa-circle-exclamation text-info me-1"></i>
+                                        <strong>Lưu ý:</strong> Nếu quá 60 phút quý khách không đến bãi, hệ thống sẽ tự động hủy trạng thái giữ chỗ để nhường ô đỗ cho khách hàng khác.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- =================================================================
+                         TAB 2: TRA CỨU & HỦY ĐƠN ĐẶT CHỖ
+                         ================================================================= -->
+                    <div class="tab-pane fade" id="tab-lookup" role="tabpanel" aria-labelledby="lookup-tab">
+                        <div class="portal-card p-4 p-md-4 shadow-sm max-w-900 mx-auto">
+                            <div class="text-center mb-4">
+                                <h4 class="fw-bold text-dark mb-1">Tra cứu đơn đặt chỗ đỗ xe</h4>
+                                <p class="text-muted small">Nhập Mã đặt chỗ (BK-...) hoặc Biển số xe để kiểm tra trạng thái</p>
+                            </div>
+
+                            <div class="row g-2 justify-content-center mb-4">
+                                <div class="col-sm-8 col-md-7">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                        <input type="text" class="form-control border-start-0" id="lookupQuery" 
+                                               placeholder="Ví dụ: BK- hoặc 59-S1 298.82..." autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-md-3">
+                                    <button class="btn btn-primary w-100 fw-bold" type="button" onclick="handleTraCuu()">
+                                        <i class="fa-solid fa-search me-1"></i> Tra cứu
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Result Container -->
+                            <div id="lookupResultContainer" class="d-none">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle border">
+                                        <thead class="table-light text-2xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Mã đặt chỗ</th>
+                                                <th>Khách hàng</th>
+                                                <th>Biển số xe</th>
+                                                <th>Khu vực</th>
+                                                <th>Thời gian đặt</th>
+                                                <th>Hạn giữ chỗ</th>
+                                                <th>Tiền cọc</th>
+                                                <th>Trạng thái</th>
+                                                <th class="text-end">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="lookupTableBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Empty Message -->
+                            <div id="lookupEmptyMsg" class="d-none text-center py-4 text-muted">
+                                <i class="fa-solid fa-folder-open fa-2x mb-2 text-secondary opacity-50"></i>
+                                <div>Không tìm thấy đơn đặt chỗ nào phù hợp với từ khóa này.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Success & VietQR Cọc -->
+    <div class="modal fade" id="modalBookingSuccess" tabindex="-1" aria-labelledby="modalBookingSuccessLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="modalBookingSuccessLabel">
+                        <i class="fa-solid fa-circle-check me-2"></i> Khởi tạo đơn giữ chỗ thành công!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <span class="text-muted small">MÃ ĐƠN ĐẶT CHỖ CỦA BẠN:</span>
+                        <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                            <span class="fs-4 fw-bold text-primary font-monospace" id="modalMaDatCho">BK-XXXXXXXX</span>
+                            <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="copyMaDatCho()" title="Sao chép mã">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2 bg-light rounded-3 border mb-3 text-start small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Biển số xe:</span>
+                            <strong class="font-monospace text-dark" id="modalBienSoXe">---</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Khu vực đỗ xe:</span>
+                            <strong class="text-dark" id="modalKhuVuc">---</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Hạn giữ chỗ (60 phút):</span>
+                            <strong class="text-danger" id="modalHanGiuCho">---</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Tiền cọc giữ chỗ:</span>
+                            <strong class="text-success fs-6" id="modalTienCoc">20.000 đ</strong>
+                        </div>
+                    </div>
+
+                    <!-- VietQR Preview -->
+                    <div class="qr-card-box mb-3">
+                        <div class="text-xs fw-bold text-muted mb-2 text-uppercase">Quét mã VietQR thanh toán cọc</div>
+                        <img src="" id="modalQrImg" class="qr-img-preview mb-2" alt="VietQR Đặt cọc">
+                        <div class="text-2xs text-muted">
+                            Hệ thống Napas 24/7 tự động đối soát nội dung chuyển khoản.<br>
+                            Khi đến cổng bãi, camera sẽ tự động nhận diện biển số của bạn.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <a th:href="@{/tra-cuu}" class="btn btn-primary">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Đến trang tra cứu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & Portal JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const bienSoXeInput = document.getElementById('bienSoXe');
+        const plateTypeBadge = document.getElementById('plateTypeBadge');
+        const plateInputContainer = document.getElementById('plateInputContainer');
+
+        // Biển số xe format logic chuẩn Việt Nam
+        function autoFormatLicensePlate(val, vehicleType) {
+            if (!val) return '';
+            let s = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (s.length === 0) return '';
+
+            if (s.startsWith('XD')) {
+                let nums = s.substring(2);
+                return 'XD-' + nums;
+            }
+
+            let prov = s.substring(0, 2);
+            let rest = s.substring(2);
+            if (!/^\d{2}/.test(prov)) return s;
+            if (rest.length === 0) return prov;
+
+            let c1 = rest.charAt(0);
+            if (!/[A-Z]/.test(c1)) return prov + '-' + rest;
+            if (rest.length === 1) return prov + c1;
+
+            let c2 = rest.charAt(1);
+            let isCar = false;
+            if (vehicleType) {
+                let vt = vehicleType.toLowerCase();
+                if (vt.includes('tô') || vt.includes('du lịch') || vt.includes('tải') || vt.includes('4 bánh')) isCar = true;
+            }
+            if (/[A-Z]/.test(c2)) isCar = true;
+
+            if (isCar) {
+                let series = rest.substring(0, /[A-Z]/.test(c2) ? 2 : 1);
+                let nums = rest.substring(series.length);
+                let res = prov + series;
+                if (nums.length > 0) {
+                    res += '-';
+                    if (nums.length <= 4) res += nums;
+                    else res += nums.substring(0, 3) + '.' + nums.substring(3, 5);
+                }
+                return res;
+            }
+
+            if (rest.length >= 2 && /\d/.test(rest.charAt(1))) {
+                let series = rest.substring(0, 2);
+                let nums = rest.substring(2);
+                let res = prov + '-' + series;
+                if (nums.length > 0) {
+                    res += ' ';
+                    if (nums.length <= 4) res += nums;
+                    else res += nums.substring(0, 3) + '.' + nums.substring(3, 5);
+                }
+                return res;
+            } else {
+                return prov + '-' + c2;
+            }
+        }
+
+        let isDeletingPlate = false;
+        bienSoXeInput.addEventListener('keydown', function(e) {
+            isDeletingPlate = (e.key === 'Backspace' || e.key === 'Delete');
+        });
+
+        bienSoXeInput.addEventListener('input', function() {
+            if (isDeletingPlate) return;
+            const maKhu = document.getElementById('maKhuVuc').value;
+            const formatted = autoFormatLicensePlate(this.value, maKhu);
+            if (formatted !== this.value) this.value = formatted;
+
+            const clean = this.value.replace(/[^A-Z0-9]/g, '');
+            if (clean.length >= 4) {
+                const prov = clean.substring(0, 2);
+                const rest = clean.substring(2);
+                if (rest.length >= 2 && /[A-Z]/.test(rest.charAt(0)) && /\d/.test(rest.charAt(1))) {
+                    plateTypeBadge.innerHTML = '<i class="fa-solid fa-motorcycle me-1 text-success"></i>Xe máy (' + prov + '-' + rest.substring(0, 2) + ')';
+                } else if (/[A-Z]/.test(rest.charAt(0))) {
+                    plateTypeBadge.innerHTML = '<i class="fa-solid fa-car me-1 text-primary"></i>Ô tô (' + prov + rest.substring(0, 1) + ')';
+                }
+            } else {
+                plateTypeBadge.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>Tự động định dạng';
+            }
+        });
+
+        // Submit form tạo đặt chỗ
+        async function handleDatChoSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitDatCho');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang khởi tạo đơn giữ chỗ...';
+
+            const payload = {
+                hoTen: document.getElementById('hoTen').value.trim(),
+                soDienThoai: document.getElementById('soDienThoai').value.trim(),
+                bienSoXe: document.getElementById('bienSoXe').value.trim(),
+                maKhuVuc: document.getElementById('maKhuVuc').value,
+                soPhutGiu: "60"
+            };
+
+            try {
+                const res = await fetch('/api/dat-cho-truoc/tao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    document.getElementById('modalMaDatCho').textContent = data.maDatCho || '';
+                    document.getElementById('modalBienSoXe').textContent = data.bienSoXe || '';
+                    document.getElementById('modalKhuVuc').textContent = data.maKhuVuc || 'Tiêu chuẩn';
+                    document.getElementById('modalHanGiuCho').textContent = data.thoiGianHetHan || '';
+                    document.getElementById('modalTienCoc').textContent = new Intl.NumberFormat('vi-VN').format(data.tienCoc || 20000) + ' đ';
+                    document.getElementById('modalQrImg').src = data.qrUrl || '';
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalBookingSuccess'));
+                    modal.show();
+                    document.getElementById('formDatCho').reset();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra khi tạo đơn đặt chỗ!');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối máy chủ! Vui lòng thử lại sau.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> <span>Xác Nhận Giữ Chỗ &amp; Lấy Mã VietQR</span>';
+            }
+        }
+
+        // Copy mã đặt chỗ
+        function copyMaDatCho() {
+            const code = document.getElementById('modalMaDatCho').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Đã sao chép mã đặt chỗ: ' + code);
+                });
+            }
+        }
+
+        // Tra cứu đơn đặt chỗ
+        async function handleTraCuu() {
+            const query = document.getElementById('lookupQuery').value.trim();
+            if (!query) {
+                alert('Vui lòng nhập mã đặt chỗ hoặc biển số xe để tra cứu!');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/dat-cho-truoc/tra-cuu?q=' + encodeURIComponent(query));
+                const data = await res.json();
+                const tbody = document.getElementById('lookupTableBody');
+                const container = document.getElementById('lookupResultContainer');
+                const emptyMsg = document.getElementById('lookupEmptyMsg');
+
+                tbody.innerHTML = '';
+                if (data.success && data.data && data.data.length > 0) {
+                    emptyMsg.classList.add('d-none');
+                    container.classList.remove('d-none');
+
+                    data.data.forEach(item => {
+                        let statusText = 'Chờ xe vào';
+                        if (item.trangThai === 'DA_VAO') statusText = 'Đã vào bãi';
+                        else if (item.trangThai === 'HET_HAN') statusText = 'Hết hạn';
+                        else if (item.trangThai === 'HUY') statusText = 'Đã hủy';
+
+                        let statusBadge = `<span class="status-badge status-${item.trangThai}">${statusText}</span>`;
+
+                        let canCancel = item.trangThai === 'CHO_DEN' && !item.isExpired;
+                        let actionBtn = canCancel ? 
+                            `<button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="cancelBooking(${item.id})"><i class="fa-solid fa-xmark me-1"></i>Hủy giữ chỗ</button>` : 
+                            `<span class="text-muted text-2xs">---</span>`;
+
+                        let row = `
+                            <tr>
+                                <td><strong class="font-monospace text-primary">${item.maDatCho || ''}</strong></td>
+                                <td>${item.hoTen || ''}</td>
+                                <td><span class="badge bg-dark font-monospace">${item.bienSoXe || ''}</span></td>
+                                <td>${item.maKhuVuc || ''}</td>
+                                <td class="text-2xs text-muted">${item.thoiGianDat || ''}</td>
+                                <td class="text-2xs text-danger fw-bold">${item.thoiGianHetHan || ''}</td>
+                                <td><strong class="text-success">${new Intl.NumberFormat('vi-VN').format(item.tienCoc || 20000)} đ</strong></td>
+                                <td>${statusBadge}</td>
+                                <td class="text-end">${actionBtn}</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+                } else {
+                    container.classList.add('d-none');
+                    emptyMsg.classList.remove('d-none');
+                }
+            } catch (err) {
+                alert('Lỗi tra cứu! Vui lòng thử lại sau.');
+            }
+        }
+
+        // Hủy đơn đặt chỗ
+        async function cancelBooking(id) {
+            if (!confirm('Bạn có chắc chắn muốn hủy đơn giữ chỗ này không?')) return;
+            try {
+                const res = await fetch('/api/dat-cho-truoc/huy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Hủy đơn giữ chỗ thành công!');
+                    handleTraCuu();
+                } else {
+                    alert(data.message || 'Không thể hủy đơn đặt chỗ!');
+                }
+            } catch (err) {
+                alert('Lỗi khi hủy đơn!');
+            }
+        }
+    </script>
+</body>
+</html>

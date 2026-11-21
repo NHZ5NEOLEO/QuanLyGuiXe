@@ -52,6 +52,10 @@
                         <i class="fa-solid fa-id-card"></i>
                         <span>Đăng ký vé tháng</span>
                     </a>
+                    <a th:href="@{/dat-cho-truoc}" class="btn-portal-outline" style="border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); color: #fff;">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Đặt chỗ trước</span>
+                    </a>
                 </div>
 
                 <!-- Interactive Search Bar with Enter key, loading, & result handling -->
@@ -220,6 +224,25 @@
                             <span class="shortcut-cta mt-auto text-info">
                                 Gửi đánh giá <i class="fa-solid fa-arrow-right"></i>
                             </span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Banner Đặt chỗ trước mới -->
+                <div class="mt-4 p-4 rounded-4 bg-primary text-white d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 shadow-sm" style="background: linear-gradient(135deg, #0d6efd 0%, #052c65 100%) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-20 rounded-circle p-3 text-white fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; min-width: 56px;">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <span class="badge bg-white text-primary fw-bold text-xs mb-1">DỊCH VỤ MỚI</span>
+                            <h4 class="fw-bold mb-1 fs-5">Đặt Giữ Chỗ Đỗ Xe Trước 60 Phút</h4>
+                            <p class="text-white text-opacity-90 mb-0 small">Chủ động giữ ô đỗ cho phương tiện của bạn trước khi đến bãi. Tiền cọc 20.000 VNĐ qua VietQR được khấu trừ 100% khi thanh toán xuất bãi.</p>
+                        </div>
+                    </div>
+                    <div class="text-nowrap ms-md-3">
+                        <a th:href="@{/dat-cho-truoc}" class="btn btn-light text-primary fw-bold px-4 py-2 shadow-xs">
+                            Đặt chỗ ngay <i class="fa-solid fa-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>

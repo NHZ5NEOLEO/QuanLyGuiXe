@@ -31,6 +31,24 @@ public class VietQrService {
         }
     }
 
+    public String generateDepositQrUrl(double amount, String bienSoXe, String maDatCho) {
+        if (amount <= 0) {
+            return defaultQrImage;
+        }
+        try {
+            long intAmount = Math.round(amount);
+            String addInfo = "COC BK " + (maDatCho != null ? maDatCho : "") + " " + (bienSoXe != null ? bienSoXe : "");
+            String encodedAddInfo = URLEncoder.encode(addInfo.trim(), StandardCharsets.UTF_8);
+            String encodedName = URLEncoder.encode(accountName, StandardCharsets.UTF_8);
+            return String.format(
+                    "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
+                    bankId, accountNo, intAmount, encodedAddInfo, encodedName
+            );
+        } catch (Exception e) {
+            return defaultQrImage;
+        }
+    }
+
     public String getDefaultQrImage() {
         return defaultQrImage;
     }

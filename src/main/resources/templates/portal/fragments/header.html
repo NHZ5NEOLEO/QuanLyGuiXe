@@ -50,6 +50,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'dat-cho' ? 'active' : ''}" th:href="@{/dat-cho-truoc}">
+                            <i class="fa-solid fa-calendar-check me-2 text-primary opacity-90"></i><span>Đặt chỗ trước</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link portal-nav-link" th:classappend="${activeNav == 'danh-gia' ? 'active' : ''}" th:href="@{/danh-gia}">
                             <i class="fa-solid fa-star me-2 text-primary opacity-90"></i><span>Đánh giá dịch vụ</span>
                         </a>

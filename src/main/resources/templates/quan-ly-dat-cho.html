@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle : 'Quản lý Đặt chỗ đỗ xe trước - PARKING'}">Quản lý Đặt chỗ đỗ xe trước - PARKING</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Design System -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        .badge-status-CHO_DEN { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-weight: 600; }
+        .badge-status-DA_VAO { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; font-weight: 600; }
+        .badge-status-HET_HAN { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; font-weight: 600; }
+        .badge-status-HUY { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; font-weight: 600; }
+        .qr-preview-img { width: 220px; height: 220px; object-fit: contain; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Shared Sidebar -->
+    <div th:replace="~{fragments/navbar :: sidebar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Shared Header -->
+        <div th:replace="~{fragments/navbar :: topbar}"></div>
+
+        <!-- Main Body -->
+        <main class="content-body">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-box">
+                    <h2>Quản lý Đặt Chỗ Đỗ Xe Trước</h2>
+                    <p>Theo dõi danh sách khách hàng đặt giữ chỗ, kiểm soát tiền cọc VietQR và trạng thái check-in tại cổng</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a th:href="@{/dat-cho-truoc}" target="_blank" class="btn-pro btn-outline-pro">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Trang Đặt Chỗ Công Khai
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reusable Flash alerts -->
+            <div th:replace="~{fragments/alerts :: flash-alerts}"></div>
+
+            <!-- KPI Summary Cards -->
+            <div class="kpi-grid mb-4">
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Tổng đơn đặt chỗ</div>
+                        <div class="kpi-value text-primary" th:text="${totalBookings != null ? totalBookings : 0}">0</div>
+                        <div class="kpi-subtext">Hồ sơ giữ chỗ trên hệ thống</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-blue">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Đang giữ chỗ (Chờ đến)</div>
+                        <div class="kpi-value text-info" th:text="${waitingCount != null ? waitingCount : 0}">0</div>
+                        <div class="kpi-subtext">Trong hạn 60 phút</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-cyan">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Đã vào bãi (Check-in)</div>
+                        <div class="kpi-value text-success" th:text="${checkedInCount != null ? checkedInCount : 0}">0</div>
+                        <div class="kpi-subtext">Đã khấu trừ cọc tại cổng</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">Tổng tiền cọc ghi nhận</div>
+                        <div class="kpi-value text-warning" th:text="${#numbers.formatDecimal(totalDeposit != null ? totalDeposit : 0, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
+                        <div class="kpi-subtext">Đã thanh toán VietQR</div>
+                    </div>
+                    <div class="kpi-icon-circle kpi-icon-orange">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="toolbar-box mb-4">
+                <form th:action="@{/quan-ly-dat-cho}" method="get" class="row g-2 align-items-center w-100 m-0">
+                    <div class="col-12 col-md-4 p-0 pe-md-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                            <input type="text" name="keyword" class="form-control border-start-0" 
+                                   placeholder="Tìm mã đơn, biển số xe, họ tên, SĐT..." 
+                                   th:value="${keyword}">
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-md-3 p-0 pe-2">
+                        <select name="status" class="form-select" onchange="this.form.submit()">
+                            <option value="ALL" th:selected="${selectedStatus == 'ALL'}">-- Tất cả trạng thái --</option>
+                            <option value="CHO_DEN" th:selected="${selectedStatus == 'CHO_DEN'}">Chờ xe đến (CHO_DEN)</option>
+                            <option value="DA_VAO" th:selected="${selectedStatus == 'DA_VAO'}">Đã vào bãi (DA_VAO)</option>
+                            <option value="HET_HAN" th:selected="${selectedStatus == 'HET_HAN'}">Quá hạn (HET_HAN)</option>
+                            <option value="HUY" th:selected="${selectedStatus == 'HUY'}">Đã hủy (HUY)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-6 col-md-2 p-0 pe-2">
+                        <button type="submit" class="btn-pro btn-primary-pro w-100">
+                            <i class="fa-solid fa-filter me-1"></i> Lọc dữ liệu
+                        </button>
+                    </div>
+
+                    <div class="col-12 col-md-3 p-0 text-md-end mt-2 mt-md-0">
+                        <a th:href="@{/quan-ly-dat-cho}" class="btn-pro btn-outline-pro">
+                            <i class="fa-solid fa-rotate me-1"></i> Làm mới
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Data Table Card -->
+            <div class="table-card">
+                <div class="table-card-header d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-table-list text-primary"></i>
+                        <span class="fw-bold">Danh sách đơn đặt giữ chỗ</span>
+                        <span class="badge bg-light text-dark border ms-1" th:text="${bookings != null ? bookings.size() : 0} + ' bản ghi'">0 bản ghi</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>MÃ ĐẶT CHỖ</th>
+                                <th>KHÁCH HÀNG</th>
+                                <th>SỐ ĐIỆN THOẠI</th>
+                                <th>BIỂN SỐ XE</th>
+                                <th>KHU VỰC</th>
+                                <th>THỜI GIAN ĐẶT</th>
+                                <th>HẠN GIỮ CHỖ</th>
+                                <th>TIỀN CỌC</th>
+                                <th>TRẠNG THÁI</th>
+                                <th class="text-end">THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${bookings == null or bookings.isEmpty()}">
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="fa-solid fa-calendar-xmark fa-2x mb-2 text-secondary opacity-50"></i>
+                                    <div>Không tìm thấy dữ liệu đặt chỗ nào phù hợp.</div>
+                                </td>
+                            </tr>
+                            <tr th:each="b : ${bookings}">
+                                <td>
+                                    <strong class="font-monospace text-primary" th:text="${b.maDatCho}">BK-0001</strong>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${b.hoTen}">Nguyễn Văn An</div>
+                                </td>
+                                <td>
+                                    <span class="text-muted" th:text="${b.soDienThoai}">0912345678</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark font-monospace text-warning px-2 py-1" th:text="${b.bienSoXe}">29B1-123.45</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" th:text="${b.maKhuVuc != null ? b.maKhuVuc : 'Tiêu chuẩn'}">2B</span>
+                                </td>
+                                <td class="text-xs text-muted" th:text="${b.thoiGianDat != null ? #temporals.format(b.thoiGianDat, 'HH:mm dd/MM/yyyy') : ''}">
+                                    10:00 21/11/2026
+                                </td>
+                                <td class="text-xs fw-bold text-danger" th:text="${b.thoiGianHetHan != null ? #temporals.format(b.thoiGianHetHan, 'HH:mm dd/MM/yyyy') : ''}">
+                                    11:00 21/11/2026
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong class="text-success" th:text="${#numbers.formatDecimal(b.tienCoc != null ? b.tienCoc : 20000, 0, 'COMMA', 0, 'POINT')} + ' đ'">20.000 đ</strong>
+                                    </div>
+                                    <div>
+                                        <span th:if="${b.daThanhToanCoc}" class="badge bg-success bg-opacity-10 text-success border border-success text-2xs">
+                                            <i class="fa-solid fa-check me-1"></i>Đã cọc
+                                        </span>
+                                        <span th:unless="${b.daThanhToanCoc}" class="badge bg-warning bg-opacity-10 text-warning border border-warning text-2xs">
+                                            <i class="fa-solid fa-clock me-1"></i>Chờ cọc
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${b.trangThai == 'CHO_DEN'}" class="badge badge-status-CHO_DEN">
+                                        <i class="fa-regular fa-clock me-1"></i>Chờ đến
+                                    </span>
+                                    <span th:if="${b.trangThai == 'DA_VAO'}" class="badge badge-status-DA_VAO">
+                                        <i class="fa-solid fa-check me-1"></i>Đã vào bãi
+                                    </span>
+                                    <span th:if="${b.trangThai == 'HET_HAN'}" class="badge badge-status-HET_HAN">
+                                        <i class="fa-solid fa-ban me-1"></i>Hết hạn
+                                    </span>
+                                    <span th:if="${b.trangThai == 'HUY'}" class="badge badge-status-HUY">
+                                        <i class="fa-solid fa-xmark me-1"></i>Đã hủy
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Xác nhận đã nhận tiền cọc -->
+                                        <button th:if="${!b.daThanhToanCoc and b.trangThai == 'CHO_DEN'}" 
+                                                class="btn btn-outline-success" 
+                                                th:onclick="'xacNhanCoc(' + ${b.id} + ')'" 
+                                                title="Xác nhận đã nhận cọc VietQR">
+                                            <i class="fa-solid fa-check"></i> Thu cọc
+                                        </button>
+
+                                        <!-- Hủy đơn giữ chỗ -->
+                                        <button th:if="${b.trangThai == 'CHO_DEN'}" 
+                                                class="btn btn-outline-warning" 
+                                                th:onclick="'huyBooking(' + ${b.id} + ')'" 
+                                                title="Hủy đơn giữ chỗ">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+
+                                        <!-- Xóa đơn (ADMIN) -->
+                                        <button sec:authorize="hasRole('ADMIN')" 
+                                                class="btn btn-outline-danger" 
+                                                th:onclick="'xoaBooking(' + ${b.id} + ')'" 
+                                                title="Xóa đơn giữ chỗ khỏi hệ thống">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    async function xacNhanCoc(id) {
+        if (!confirm('Xác nhận đã nhận được tiền cọc 20.000 VNĐ cho đơn đặt chỗ này?')) return;
+        try {
+            const res = await fetch('/api/quan-ly-dat-cho/xac-nhan-coc/' + id, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Đã xác nhận thanh toán cọc thành công!');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Lỗi xác nhận cọc!');
+            }
+        } catch (e) {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+
+    async function huyBooking(id) {
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn giữ chỗ này không?')) return;
+        try {
+            const res = await fetch('/api/quan-ly-dat-cho/huy/' + id, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Đã hủy đơn giữ chỗ!');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Lỗi khi hủy đơn!');
+            }
+        } catch (e) {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+
+    async function xoaBooking(id) {
+        if (!confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn đơn đặt chỗ này?')) return;
+        try {
+            const res = await fetch('/api/quan-ly-dat-cho/xoa/' + id, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Đã xóa đơn đặt chỗ thành công!');
+                window.location.reload();
+            } else {
+                alert(data.message || 'Lỗi khi xóa!');
+            }
+        } catch (e) {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+</script>
+</body>
+</html>
