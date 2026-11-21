@@ -992,16 +992,18 @@ body.portal-body {
     letter-spacing: 0.12em !important;
     color: #0f172a !important;
     text-transform: uppercase !important;
-    padding: 6px 10px !important;
+    padding: 6px 16px !important;
     text-align: center;
 }
 
 .plate-license-input::placeholder {
     color: #94a3b8 !important;
-    font-weight: 700 !important;
-    font-size: 1.15rem !important;
-    letter-spacing: 0.1em !important;
-    opacity: 0.55;
+    font-weight: 500 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+    opacity: 0.75;
 }
 
 .summary-card {
