@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "password_reset_otp")
+@Table(name = "otp_dat_lai_mat_khau")
 public class PasswordResetOtp {
 
     @Id

@@ -48,10 +48,20 @@ public class ProfileController {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     public ProfileController(
-NguoiDungRepository nguoiDungRepository, 
-KhachHangRepository khachHangRepository, 
-VeThangRepository veThangRepository, 
-PasswordEncoder passwordEncoder, MonthlyTicketService monthlyTicketService) {
+            NguoiDungRepository nguoiDungRepository,
+            KhachHangRepository khachHangRepository,
+            VeThangRepository veThangRepository,
+            PasswordEncoder passwordEncoder) {
+        this(nguoiDungRepository, khachHangRepository, veThangRepository, passwordEncoder, null);
+    }
+
+    @Autowired
+    public ProfileController(
+            NguoiDungRepository nguoiDungRepository, 
+            KhachHangRepository khachHangRepository, 
+            VeThangRepository veThangRepository, 
+            PasswordEncoder passwordEncoder, 
+            @Autowired(required = false) MonthlyTicketService monthlyTicketService) {
         this.nguoiDungRepository = nguoiDungRepository;
         this.khachHangRepository = khachHangRepository;
         this.veThangRepository = veThangRepository;
@@ -83,7 +93,10 @@ PasswordEncoder passwordEncoder, MonthlyTicketService monthlyTicketService) {
         // Tìm hồ sơ Khách hàng tương ứng theo SĐT của tài khoản
         KhachHang customer = null;
         if (user.getSoDienThoai() != null && !user.getSoDienThoai().isBlank()) {
-            customer = khachHangRepository.findFirstBySoDienThoai(user.getSoDienThoai().trim()).orElse(null);
+            String sdt = user.getSoDienThoai().trim();
+            customer = khachHangRepository.findBySoDienThoai(sdt)
+                    .or(() -> khachHangRepository.findFirstBySoDienThoai(sdt))
+                    .orElse(null);
         }
 
         if (customer == null) {

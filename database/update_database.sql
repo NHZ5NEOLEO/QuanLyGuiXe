@@ -280,24 +280,31 @@ BEGIN
 END
 GO
 
--- 5.2. Bổ sung nguoi_dung_id vào password_reset_otp
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.password_reset_otp') AND name = N'nguoi_dung_id')
+-- 5.2. Chuyển đổi tên bảng sang tiếng Việt: otp_dat_lai_mat_khau
+IF OBJECT_ID(N'dbo.password_reset_otp', N'U') IS NOT NULL AND OBJECT_ID(N'dbo.otp_dat_lai_mat_khau', N'U') IS NULL
 BEGIN
-    ALTER TABLE dbo.password_reset_otp ADD nguoi_dung_id BIGINT NULL;
-    PRINT N'[OK] Đã thêm cột nguoi_dung_id vào bảng password_reset_otp.';
+    EXEC sp_rename 'dbo.password_reset_otp', 'otp_dat_lai_mat_khau';
+    PRINT N'[OK] Đã đổi tên bảng password_reset_otp thành otp_dat_lai_mat_khau.';
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.otp_dat_lai_mat_khau') AND name = N'nguoi_dung_id')
+BEGIN
+    ALTER TABLE dbo.otp_dat_lai_mat_khau ADD nguoi_dung_id BIGINT NULL;
+    PRINT N'[OK] Đã thêm cột nguoi_dung_id vào bảng otp_dat_lai_mat_khau.';
 END
 GO
 
 UPDATE p
 SET p.nguoi_dung_id = u.id
-FROM dbo.password_reset_otp p
+FROM dbo.otp_dat_lai_mat_khau p
 INNER JOIN dbo.nguoi_dung u ON p.email = u.email AND p.email <> ''
 WHERE p.nguoi_dung_id IS NULL;
 GO
 
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = N'FK_PasswordResetOtp_NguoiDung')
 BEGIN
-    ALTER TABLE dbo.password_reset_otp ADD CONSTRAINT FK_PasswordResetOtp_NguoiDung 
+    ALTER TABLE dbo.otp_dat_lai_mat_khau ADD CONSTRAINT FK_PasswordResetOtp_NguoiDung 
     FOREIGN KEY (nguoi_dung_id) REFERENCES dbo.nguoi_dung(id) ON DELETE CASCADE;
     PRINT N'[OK] Đã thêm ràng buộc FK_PasswordResetOtp_NguoiDung.';
 END

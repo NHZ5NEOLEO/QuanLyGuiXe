@@ -30,20 +30,29 @@ public class MonthlyTicketService implements VeThangService {
     private final LoaiXeRepository loaiXeRepository;
     private final NguoiDungRepository nguoiDungRepository;
     private final PasswordEncoder passwordEncoder;
+    private final VeXeRepository veXeRepository;
 
-    @Autowired(required = false)
-    private VeXeRepository veXeRepository;
+    @Autowired
+    public MonthlyTicketService(VeThangRepository veThangRepository,
+                                KhachHangRepository khachHangRepository,
+                                LoaiXeRepository loaiXeRepository,
+                                NguoiDungRepository nguoiDungRepository,
+                                PasswordEncoder passwordEncoder,
+                                @Autowired(required = false) VeXeRepository veXeRepository) {
+        this.veThangRepository = veThangRepository;
+        this.khachHangRepository = khachHangRepository;
+        this.loaiXeRepository = loaiXeRepository;
+        this.nguoiDungRepository = nguoiDungRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.veXeRepository = veXeRepository;
+    }
 
     public MonthlyTicketService(VeThangRepository veThangRepository,
                                 KhachHangRepository khachHangRepository,
                                 LoaiXeRepository loaiXeRepository,
                                 NguoiDungRepository nguoiDungRepository,
                                 PasswordEncoder passwordEncoder) {
-        this.veThangRepository = veThangRepository;
-        this.khachHangRepository = khachHangRepository;
-        this.loaiXeRepository = loaiXeRepository;
-        this.nguoiDungRepository = nguoiDungRepository;
-        this.passwordEncoder = passwordEncoder;
+        this(veThangRepository, khachHangRepository, loaiXeRepository, nguoiDungRepository, passwordEncoder, null);
     }
 
     @Override

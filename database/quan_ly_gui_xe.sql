@@ -20,7 +20,7 @@ GO
 -- 2. XÓA BẢNG CŨ THEO THỨ TỰ RÀNG BUỘC KHÓA NGOẠI ĐỂ TRÁNH XUNG ĐỘT
 -- =========================================================================================
 IF OBJECT_ID(N'dbo.ve_xe', N'U') IS NOT NULL DROP TABLE dbo.ve_xe;
-IF OBJECT_ID(N'dbo.password_reset_otp', N'U') IS NOT NULL DROP TABLE dbo.password_reset_otp;
+IF OBJECT_ID(N'dbo.otp_dat_lai_mat_khau', N'U') IS NOT NULL DROP TABLE dbo.otp_dat_lai_mat_khau;
 IF OBJECT_ID(N'dbo.danh_gia', N'U') IS NOT NULL DROP TABLE dbo.danh_gia;
 IF OBJECT_ID(N'dbo.dat_cho_truoc', N'U') IS NOT NULL DROP TABLE dbo.dat_cho_truoc;
 IF OBJECT_ID(N'dbo.danh_sach_den', N'U') IS NOT NULL DROP TABLE dbo.danh_sach_den;
@@ -211,7 +211,7 @@ CREATE TABLE dbo.danh_gia (
 GO
 
 -- Bảng 12: Mã OTP khôi phục mật khẩu qua Email
-CREATE TABLE dbo.password_reset_otp (
+CREATE TABLE dbo.otp_dat_lai_mat_khau (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     email VARCHAR(120) NOT NULL,
     otp VARCHAR(10) NOT NULL,
@@ -298,8 +298,8 @@ FOREIGN KEY (loai_xe_id) REFERENCES dbo.loai_xe(id);
 ALTER TABLE dbo.loai_xe ADD CONSTRAINT FKaf5r5t5wtw6cyq95spus5pp 
 FOREIGN KEY (khu_vuc_id) REFERENCES dbo.khu_vuc(id);
 
--- 11. password_reset_otp -> nguoi_dung
-ALTER TABLE dbo.password_reset_otp ADD CONSTRAINT FK_PasswordResetOtp_NguoiDung 
+-- 11. otp_dat_lai_mat_khau -> nguoi_dung
+ALTER TABLE dbo.otp_dat_lai_mat_khau ADD CONSTRAINT FK_PasswordResetOtp_NguoiDung 
 FOREIGN KEY (nguoi_dung_id) REFERENCES dbo.nguoi_dung(id) ON DELETE CASCADE;
 
 -- 12 & 13. phuong_tien -> khach_hang, loai_xe
