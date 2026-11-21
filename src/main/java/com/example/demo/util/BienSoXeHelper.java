@@ -79,6 +79,13 @@ public final class BienSoXeHelper {
 
         String cleanKey = toCleanKey(trimmed);
 
+        // 0. Chặn các tiền tố mã hệ thống (QR, VT, BK, TICKET) không phải biển số xe
+        if (cleanKey.startsWith("QR") || cleanKey.startsWith("VT") || cleanKey.startsWith("BK") || cleanKey.startsWith("TICKET")) {
+            return new ValidationResult(false, 
+                "Mã [" + trimmed + "] là mã hệ thống (Mã vé / Mã thẻ vé tháng / Mã đặt chỗ), không phải biển số xe!", 
+                cleanKey, "");
+        }
+
         // ĐẶC BIỆT: HỖ TRỢ PHƯƠNG TIỆN KHÔNG BIỂN SỐ (XE ĐẠP, XE ĐIỆN KHÔNG BIỂN, THẺ SỐ...)
         boolean isBicycle = (loaiXeTen != null && (loaiXeTen.toLowerCase().contains("đạp") || loaiXeTen.toLowerCase().contains("bicycle")))
                 || cleanKey.startsWith("XD") || cleanKey.startsWith("XEDAP");
@@ -183,6 +190,13 @@ public final class BienSoXeHelper {
 
         String trimmed = rawInput.trim();
         String cleanKey = toCleanKey(trimmed);
+
+        // 0. Chặn các tiền tố mã hệ thống (QR, VT, BK, TICKET) không phải biển số xe
+        if (cleanKey.startsWith("QR") || cleanKey.startsWith("VT") || cleanKey.startsWith("BK") || cleanKey.startsWith("TICKET")) {
+            return new ValidationResult(false, 
+                "Mã [" + trimmed + "] là mã hệ thống (Mã vé / Mã thẻ vé tháng / Mã đặt chỗ), không phải biển số xe!", 
+                cleanKey, "");
+        }
 
         boolean isBicycle = (loaiXeTen != null && (loaiXeTen.toLowerCase().contains("đạp") || loaiXeTen.toLowerCase().contains("bicycle")))
                 || cleanKey.startsWith("XD") || cleanKey.startsWith("XEDAP");

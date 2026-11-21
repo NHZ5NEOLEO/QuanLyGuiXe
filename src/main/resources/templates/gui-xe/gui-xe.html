@@ -1213,8 +1213,14 @@
 
         if (qrInput) qrInput.value = clean;
         if (plateInput) {
-            plateInput.value = clean;
-            plateInput.focus();
+            const isCodeToken = clean.startsWith('QR-') || clean.startsWith('VT-') || clean.startsWith('BK-') || clean.startsWith('VE-');
+            if (isCodeToken) {
+                plateInput.value = '';
+                plateInput.placeholder = 'Đang giải mã biển số từ ' + clean + '...';
+            } else {
+                plateInput.value = clean;
+                plateInput.focus();
+            }
         }
 
         playScanBeep();
@@ -3216,6 +3222,64 @@
                         } else {
                             notice.classList.add('d-none');
                             notice.style.display = 'none';
+                        }
+                    }).catch(e => console.warn(e));
+            }, 150);
+            return;
+        }
+
+        // KIỂM TRA ĐẶC BIỆT: QUÉT MÃ VÉ LƯỢT GỬI (QR-XXXX HOẶC VE-XXXX)
+        if (val.startsWith('QR-') || val.startsWith('VE-') || clean.startsWith('QR') || clean.startsWith('VE')) {
+            fb.innerHTML = '<span class="text-primary fw-bold"><i class="fa-solid fa-qrcode me-1"></i> Mã vé xe: <strong>' + val + '</strong> &bull; Đang tra cứu thông tin vé...</span>';
+            input.classList.remove('is-valid');
+            input.classList.remove('is-invalid');
+            if (lookupTimeout) clearTimeout(lookupTimeout);
+            lookupTimeout = setTimeout(() => {
+                fetch('/api/xe-vao/check-plate?plate=' + encodeURIComponent(val))
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!notice) return;
+                        if (data.resolvedPlate) {
+                            input.value = data.resolvedPlate;
+                        }
+                        if (data.alreadyInLot) {
+                            input.classList.add('is-invalid');
+                            input.classList.remove('is-valid');
+                            fb.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i> Đây là Mã Vé của xe biển số <strong>${data.resolvedPlate || ''}</strong> đang gửi trong bãi!</span>`;
+                            notice.classList.remove('d-none');
+                            notice.style.display = 'block';
+                            notice.innerHTML = `
+                                <div class="alert alert-danger py-2 px-3 small mb-2 shadow-sm d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                        <strong>Nhầm làn:</strong> Đây là Mã Vé xe của biển số <strong>${data.resolvedPlate}</strong> (vào lúc ${data.thoiGianVao}). Xe đang ở trong bãi!
+                                    </div>
+                                    <a href="/xe-ra?code=${encodeURIComponent(val)}" class="btn btn-sm btn-danger py-1 px-3 fw-bold text-nowrap">Chuyển sang Làn Xe Ra xuất bãi &rarr;</a>
+                                </div>
+                            `;
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'ĐÂY LÀ VÉ XE ĐANG TRONG BÃI!',
+                                    html: `
+                                        <div class="text-start">
+                                            <p class="mb-2">Mã <code>${val}</code> là <strong>Mã vé lượt gửi</strong> của xe biển số <strong>${data.resolvedPlate}</strong> (vào lúc ${data.thoiGianVao}).</p>
+                                            <p class="text-danger fw-bold mb-0"><i class="fa-solid fa-circle-exclamation me-1"></i> Xe này đang gửi trong bãi. Mã vé này dùng để xuất bãi tại <strong>Làn Xe Ra</strong>, không dùng để tiếp nhận xe vào!</p>
+                                        </div>
+                                    `,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Chuyển sang Làn Xe Ra',
+                                    confirmButtonColor: '#dc3545',
+                                    cancelButtonText: 'Đóng'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/xe-ra?code=' + encodeURIComponent(val);
+                                    }
+                                });
+                            }
+                        } else {
+                            input.classList.add('is-invalid');
+                            fb.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> ${data.message || 'Mã vé không hợp lệ để tiếp nhận vào bãi!'}</span>`;
                         }
                     }).catch(e => console.warn(e));
             }, 150);

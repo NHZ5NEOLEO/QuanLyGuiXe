@@ -154,6 +154,31 @@ public class GateController {
                 res.put("scannedBookingCode", bkOpt.get().getMaDatCho());
                 res.put("resolvedPlate", targetPlate);
             }
+        } else if (raw.toUpperCase().startsWith("QR-") || raw.toUpperCase().startsWith("VE-")) {
+            var ticketOpt = veXeRepository.findByMaQR(raw.trim());
+            if (ticketOpt.isPresent()) {
+                VeXe vx = ticketOpt.get();
+                targetPlate = vx.getBienSoXe();
+                res.put("isTicketQrCode", true);
+                res.put("ticketCode", vx.getMaQR());
+                res.put("resolvedPlate", targetPlate);
+                res.put("ticketStatus", vx.getTrangThai());
+                res.put("thoiGianVao", vx.getThoiGianVao() != null ? vx.getThoiGianVao().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) : "");
+                if ("Đang gửi".equalsIgnoreCase(vx.getTrangThai())) {
+                    res.put("alreadyInLot", true);
+                    res.put("valid", false);
+                    res.put("message", "Mã này là VÉ XE LƯỢT GỬI của xe biển số [" + targetPlate + "] (vào lúc " + res.get("thoiGianVao") + "). Xe đang ở trong bãi! Vui lòng quét tại LÀN XE RA (/xe-ra) để xuất bãi.");
+                    return ResponseEntity.ok(res);
+                } else {
+                    res.put("valid", false);
+                    res.put("message", "Mã vé xe [" + raw + "] thuộc xe [" + targetPlate + "] đã xuất bãi trước đó (" + vx.getTrangThai() + ").");
+                    return ResponseEntity.ok(res);
+                }
+            } else {
+                res.put("valid", false);
+                res.put("message", "Mã vé xe [" + raw + "] không tồn tại trên hệ thống!");
+                return ResponseEntity.ok(res);
+            }
         }
 
         var vResult = BienSoXeHelper.validate(targetPlate);
