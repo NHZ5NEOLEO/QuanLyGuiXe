@@ -108,10 +108,27 @@ public class ParkingService implements XuLyGuiXeService {
                 .orElseThrow(() -> new BadRequestException("Loại phương tiện không tồn tại (ID: " + request.getLoaiXeId() + ")!"));
 
         String rawPlate = request.getBienSoXe().trim();
+        VeThang scannedMonthlyPass = null;
         if (rawPlate.toUpperCase().startsWith("VT-")) {
             var cardOpt = monthlyTicketService.timTheoMaThe(rawPlate.toUpperCase());
             if (cardOpt.isPresent()) {
-                rawPlate = cardOpt.get().getBienSoXe();
+                scannedMonthlyPass = cardOpt.get();
+                if ("KHOA".equalsIgnoreCase(scannedMonthlyPass.getTrangThai())) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyPass.getMaThe() + "] đang bị KHÓA! Không thể tiếp nhận vào bãi.");
+                }
+                if ("CHO_THANH_TOAN".equalsIgnoreCase(scannedMonthlyPass.getTrangThai())) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyPass.getMaThe() + "] chưa kích hoạt/thanh toán!");
+                }
+                if (!scannedMonthlyPass.isConHan()) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyPass.getMaThe() + "] đã hết hạn từ ngày " +
+                            (scannedMonthlyPass.getNgayHetHan() != null ? scannedMonthlyPass.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "") + "!");
+                }
+                rawPlate = scannedMonthlyPass.getBienSoXe();
+                if (scannedMonthlyPass.getLoaiXe() != null && !scannedMonthlyPass.getLoaiXe().getId().equals(loaiXe.getId())) {
+                    loaiXe = scannedMonthlyPass.getLoaiXe();
+                }
+            } else {
+                throw new BadRequestException("Thẻ vé tháng [" + rawPlate.toUpperCase() + "] không tồn tại trên hệ thống! Vui lòng kiểm tra lại thẻ.");
             }
         } else if (rawPlate.toUpperCase().startsWith("BK-")) {
             var bkOpt = datChoTruocRepository.findByMaDatCho(rawPlate.toUpperCase());
@@ -193,12 +210,17 @@ public class ParkingService implements XuLyGuiXeService {
 
                 // 4. Kiểm tra vé tháng hợp lệ theo chính sách: Phải còn hạn tại thời điểm check-in, trạng thái HOAT_DONG và đúng loại xe
                 LocalDate checkInDate = thoiGianVao.toLocalDate();
-                Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(bienSoDisplay, loaiXe.getId());
-                if (veThangOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
-                    veThangOpt = monthlyTicketService.findActiveMonthlyPass(cleanKey, loaiXe.getId());
-                }
-                if (veThangOpt.isPresent() && !veThangOpt.get().isConHan(checkInDate)) {
-                    veThangOpt = Optional.empty();
+                Optional<VeThang> veThangOpt;
+                if (scannedMonthlyPass != null) {
+                    veThangOpt = Optional.of(scannedMonthlyPass);
+                } else {
+                    veThangOpt = monthlyTicketService.findActiveMonthlyPass(bienSoDisplay, loaiXe.getId());
+                    if (veThangOpt.isEmpty() && !cleanKey.equalsIgnoreCase(bienSoDisplay)) {
+                        veThangOpt = monthlyTicketService.findActiveMonthlyPass(cleanKey, loaiXe.getId());
+                    }
+                    if (veThangOpt.isPresent() && !veThangOpt.get().isConHan(checkInDate)) {
+                        veThangOpt = Optional.empty();
+                    }
                 }
 
                 // 5. Kiểm tra xem xe có đặt chỗ trước (Pre-booking) không
@@ -296,10 +318,24 @@ public class ParkingService implements XuLyGuiXeService {
         }
 
         String query = identifier.trim();
+        VeThang scannedMonthlyCard = null;
         if (query.toUpperCase().startsWith("VT-")) {
             var cardOpt = monthlyTicketService.timTheoMaThe(query.toUpperCase());
             if (cardOpt.isPresent()) {
-                query = cardOpt.get().getBienSoXe();
+                scannedMonthlyCard = cardOpt.get();
+                if ("KHOA".equalsIgnoreCase(scannedMonthlyCard.getTrangThai())) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyCard.getMaThe() + "] đang bị KHÓA! Vui lòng liên hệ quản lý để mở khóa.");
+                }
+                if ("CHO_THANH_TOAN".equalsIgnoreCase(scannedMonthlyCard.getTrangThai())) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyCard.getMaThe() + "] chưa kích hoạt/thanh toán!");
+                }
+                if (!scannedMonthlyCard.isConHan()) {
+                    throw new BadRequestException("Thẻ vé tháng [" + scannedMonthlyCard.getMaThe() + "] đã hết hạn từ ngày " +
+                            (scannedMonthlyCard.getNgayHetHan() != null ? scannedMonthlyCard.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "") + "!");
+                }
+                query = scannedMonthlyCard.getBienSoXe();
+            } else {
+                throw new ResourceNotFoundException("Thẻ vé tháng [" + query.toUpperCase() + "] không tồn tại trên hệ thống! Vui lòng kiểm tra lại thẻ.");
             }
         }
         Optional<VeXe> veXeOpt = veXeRepository.findByMaQR(query);
@@ -325,6 +361,11 @@ public class ParkingService implements XuLyGuiXeService {
         }
 
         if (veXeOpt.isEmpty()) {
+            if (scannedMonthlyCard != null) {
+                String custName = (scannedMonthlyCard.getKhachHang() != null) ? scannedMonthlyCard.getKhachHang().getHoTen() : "Khách vé tháng";
+                throw new ResourceNotFoundException("Thẻ vé tháng [" + scannedMonthlyCard.getMaThe() + "] hợp lệ (" +
+                        custName + " - " + scannedMonthlyCard.getBienSoXe() + ") nhưng hiện không có lượt gửi nào đang trong bãi (chưa check-in hoặc đã xuất bãi)!");
+            }
             // Kiểm tra xem vé có trong DB nhưng đã checkout chưa để báo lỗi chính xác
             Optional<VeXe> anyTicket = veXeRepository.findByMaQR(query);
             if (anyTicket.isEmpty()) {
@@ -343,6 +384,23 @@ public class ParkingService implements XuLyGuiXeService {
         if (!"Đang gửi".equals(veXe.getTrangThai())) {
             throw new InvalidTicketStateException("Vé xe này đã được xử lý xe ra trước đó vào lúc " +
                     (veXe.getThoiGianRa() != null ? veXe.getThoiGianRa().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : ""));
+        }
+
+        // Tự động gắn thẻ vé tháng nếu lúc ra quét thẻ vé tháng hợp lệ hoặc xe có vé tháng hợp lệ còn hạn
+        if (scannedMonthlyCard != null) {
+            veXe.setVeThang(scannedMonthlyCard);
+            veXe.setHinhThucThanhToan("VE_THANG");
+            veXeRepository.save(veXe);
+        } else if (veXe.getVeThang() == null) {
+            var activeOpt = monthlyTicketService.findActiveMonthlyPass(veXe.getBienSoXe(), veXe.getLoaiXe() != null ? veXe.getLoaiXe().getId() : null);
+            if (activeOpt.isEmpty() && veXe.getBienSoClean() != null) {
+                activeOpt = monthlyTicketService.findActiveMonthlyPass(veXe.getBienSoClean(), veXe.getLoaiXe() != null ? veXe.getLoaiXe().getId() : null);
+            }
+            if (activeOpt.isPresent() && activeOpt.get().isConHan()) {
+                veXe.setVeThang(activeOpt.get());
+                veXe.setHinhThucThanhToan("VE_THANG");
+                veXeRepository.save(veXe);
+            }
         }
 
         LocalDateTime thoiGianRa = LocalDateTime.now(); // Server time
@@ -417,7 +475,20 @@ public class ParkingService implements XuLyGuiXeService {
                 throw new InvalidTicketStateException("Thời gian ra không được nhỏ hơn thời gian vào!");
             }
 
+            // Tự động gắn vé tháng nếu có vé tháng hợp lệ còn hạn
             boolean laVeThang = checkValidMonthlyPass(veXe);
+            if (!laVeThang) {
+                var activeOpt = monthlyTicketService.findActiveMonthlyPass(veXe.getBienSoXe(), veXe.getLoaiXe() != null ? veXe.getLoaiXe().getId() : null);
+                if (activeOpt.isEmpty() && veXe.getBienSoClean() != null) {
+                    activeOpt = monthlyTicketService.findActiveMonthlyPass(veXe.getBienSoClean(), veXe.getLoaiXe() != null ? veXe.getLoaiXe().getId() : null);
+                }
+                if (activeOpt.isPresent() && activeOpt.get().isConHan()) {
+                    veXe.setVeThang(activeOpt.get());
+                    veXe.setHinhThucThanhToan("VE_THANG");
+                    veXeRepository.save(veXe);
+                    laVeThang = true;
+                }
+            }
             boolean daCoc = veXe.getDatChoTruoc() != null;
 
             // Tính phí ở backend - KHÔNG nhận số tiền từ frontend

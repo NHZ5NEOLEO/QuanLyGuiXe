@@ -109,9 +109,43 @@ public class GateController {
         if (raw.toUpperCase().startsWith("VT-")) {
             var cardOpt = monthlyTicketService.timTheoMaThe(raw.toUpperCase());
             if (cardOpt.isPresent()) {
-                targetPlate = cardOpt.get().getBienSoXe();
-                res.put("scannedCardCode", cardOpt.get().getMaThe());
+                VeThang vt = cardOpt.get();
+                targetPlate = vt.getBienSoXe();
+                res.put("scannedCardCode", vt.getMaThe());
                 res.put("resolvedPlate", targetPlate);
+                res.put("monthlyCustomerName", vt.getKhachHang() != null ? vt.getKhachHang().getHoTen() : "Khách cư dân");
+                res.put("monthlyCustomerPhone", vt.getKhachHang() != null ? vt.getKhachHang().getSoDienThoai() : "");
+                res.put("monthlyExpiry", vt.getNgayHetHan() != null ? vt.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+                res.put("monthlyRemainingDays", vt.getSoNgayConLai());
+                res.put("monthlyStatus", vt.getTrangThai());
+                res.put("isExpired", !vt.isConHan());
+                res.put("isLocked", "KHOA".equalsIgnoreCase(vt.getTrangThai()));
+                res.put("isPendingPayment", "CHO_THANH_TOAN".equalsIgnoreCase(vt.getTrangThai()));
+                if (vt.getLoaiXe() != null) {
+                    res.put("cardLoaiXeId", vt.getLoaiXe().getId());
+                    res.put("cardLoaiXeTen", vt.getLoaiXe().getTenLoai());
+                }
+                if ("KHOA".equalsIgnoreCase(vt.getTrangThai())) {
+                    res.put("valid", false);
+                    res.put("message", "Thẻ vé tháng [" + vt.getMaThe() + "] đang bị KHÓA! Không thể tiếp nhận vào bãi.");
+                    return ResponseEntity.ok(res);
+                }
+                if ("CHO_THANH_TOAN".equalsIgnoreCase(vt.getTrangThai())) {
+                    res.put("valid", false);
+                    res.put("message", "Thẻ vé tháng [" + vt.getMaThe() + "] chưa kích hoạt/thanh toán!");
+                    return ResponseEntity.ok(res);
+                }
+                if (!vt.isConHan()) {
+                    res.put("valid", false);
+                    res.put("message", "Thẻ vé tháng [" + vt.getMaThe() + "] đã HẾT HẠN từ ngày " +
+                            (vt.getNgayHetHan() != null ? vt.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "") + "!");
+                    return ResponseEntity.ok(res);
+                }
+            } else {
+                res.put("valid", false);
+                res.put("isMonthlyPass", false);
+                res.put("message", "Thẻ vé tháng [" + raw + "] không tồn tại trên hệ thống! Vui lòng kiểm tra lại thẻ.");
+                return ResponseEntity.ok(res);
             }
         } else if (raw.toUpperCase().startsWith("BK-")) {
             var bkOpt = datChoTruocRepository.findByMaDatCho(raw.toUpperCase());
@@ -165,6 +199,11 @@ public class GateController {
                 break;
             }
         }
+        // Nếu quét vé tháng, ưu tiên loại xe đã đăng ký theo thẻ vé tháng
+        if (res.containsKey("cardLoaiXeId")) {
+            suggestedLoaiXeId = (Long) res.get("cardLoaiXeId");
+            suggestedLoaiXeTen = (String) res.get("cardLoaiXeTen");
+        }
         res.put("suggestedLoaiXeId", suggestedLoaiXeId);
         res.put("suggestedLoaiXeTen", suggestedLoaiXeTen);
 
@@ -181,18 +220,32 @@ public class GateController {
         }
 
         // 3. Kiểm tra xem xe có Vé Tháng hợp lệ còn hạn không
-        Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.displayValue());
-        if (veThangOpt.isEmpty() && !vResult.cleanKey().equalsIgnoreCase(vResult.displayValue())) {
-            veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.cleanKey());
-        }
-        if (veThangOpt.isPresent()) {
-            VeThang vt = veThangOpt.get();
-            res.put("hasMonthlyPass", true);
-            res.put("monthlyPassCode", vt.getMaThe());
-            res.put("customerName", vt.getKhachHang() != null ? vt.getKhachHang().getHoTen() : "Khách vé tháng");
-            res.put("expiryDate", vt.getNgayHetHan() != null ? vt.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+        if (res.containsKey("scannedCardCode")) {
+            boolean isExpired = Boolean.TRUE.equals(res.get("isExpired"));
+            boolean isLocked = Boolean.TRUE.equals(res.get("isLocked"));
+            boolean isPending = Boolean.TRUE.equals(res.get("isPendingPayment"));
+            if (!isExpired && !isLocked && !isPending) {
+                res.put("hasMonthlyPass", true);
+                res.put("monthlyPassCode", res.get("scannedCardCode"));
+                res.put("customerName", res.get("monthlyCustomerName"));
+                res.put("expiryDate", res.get("monthlyExpiry"));
+            } else {
+                res.put("hasMonthlyPass", false);
+            }
         } else {
-            res.put("hasMonthlyPass", false);
+            Optional<VeThang> veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.displayValue());
+            if (veThangOpt.isEmpty() && !vResult.cleanKey().equalsIgnoreCase(vResult.displayValue())) {
+                veThangOpt = monthlyTicketService.findActiveMonthlyPass(vResult.cleanKey());
+            }
+            if (veThangOpt.isPresent()) {
+                VeThang vt = veThangOpt.get();
+                res.put("hasMonthlyPass", true);
+                res.put("monthlyPassCode", vt.getMaThe());
+                res.put("customerName", vt.getKhachHang() != null ? vt.getKhachHang().getHoTen() : "Khách vé tháng");
+                res.put("expiryDate", vt.getNgayHetHan() != null ? vt.getNgayHetHan().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+            } else {
+                res.put("hasMonthlyPass", false);
+            }
         }
 
         // 4. Kiểm tra xem xe có Đơn Đặt Chỗ Trước hợp lệ (CHO_DEN) không

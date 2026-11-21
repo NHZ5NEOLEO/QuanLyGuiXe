@@ -918,8 +918,17 @@
                                 <i class="fa-solid fa-qrcode text-success me-1"></i> Thử nhanh quét mã thẻ / vé tháng:
                             </div>
                             <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" onclick="simulateQrScan('VT-88888888')">
+                                    <i class="fa-solid fa-id-card me-1"></i> VT-88888888 (29B1-88888 • Xe máy)
+                                </button>
                                 <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" onclick="simulateQrScan('VT-99999999')">
-                                    <i class="fa-solid fa-id-card me-1"></i> Thẻ vé tháng (VT-99999999)
+                                    <i class="fa-solid fa-id-card me-1"></i> VT-99999999 (30E-99999 • Ô tô)
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" onclick="simulateQrScan('VT-095D18A5')">
+                                    <i class="fa-solid fa-id-card me-1"></i> VT-095D18A5 (59-E1 495.65 • Xe máy)
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" onclick="simulateQrScan('VT-12345678')">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> VT-12345678 (Hết hạn)
                                 </button>
                                 <button type="button" class="btn btn-xs btn-outline-success fw-semibold" onclick="simulateQrScan('XD-0088')">
                                     <i class="fa-solid fa-bicycle me-1"></i> Thẻ xe đạp (XD-0088)
@@ -3094,6 +3103,69 @@
             return;
         }
 
+        // KIỂM TRA ĐẶC BIỆT: QUÉT MÃ QR THẺ VÉ THÁNG (VT-XXXX)
+        if (val.startsWith('VT-') || /^VT[0-9A-Z]+/i.test(clean)) {
+            fb.innerHTML = '<span class="text-primary fw-bold"><i class="fa-solid fa-id-card me-1"></i> Thẻ vé tháng: <strong>' + val + '</strong> &bull; Đang tra cứu thông tin thẻ...</span>';
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            if (lookupTimeout) clearTimeout(lookupTimeout);
+            lookupTimeout = setTimeout(() => {
+                fetch('/api/xe-vao/check-plate?plate=' + encodeURIComponent(val))
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!notice) return;
+                        if (!data.valid) {
+                            input.classList.add('is-invalid');
+                            input.classList.remove('is-valid');
+                            fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> ' + (data.message || 'Thẻ không hợp lệ!') + '</span>';
+                            notice.classList.remove('d-none');
+                            notice.style.display = 'block';
+                            notice.innerHTML = `<div class="alert alert-danger py-2 px-3 small mb-2 border-2 border-danger shadow-sm d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation fs-3 text-danger"></i>
+                                <div><div class="fw-bold text-uppercase">CẢNH BÁO THẺ VÉ THÁNG</div><div class="text-xs">${data.message || 'Thẻ không hợp lệ'}</div></div>
+                            </div>`;
+                            return;
+                        }
+                        if (data.resolvedPlate && data.scannedCardCode) {
+                            input.value = data.resolvedPlate;
+                            fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-id-card me-1"></i> Thẻ vé tháng: <strong>' + data.scannedCardCode + '</strong> &rarr; Biển số: <strong>' + data.resolvedPlate + '</strong></span>';
+                            if (data.cardLoaiXeId && typeof selectVehicleType === 'function') {
+                                selectVehicleType(data.cardLoaiXeId, data.cardLoaiXeTen || 'Xe');
+                            }
+                        }
+                        let alertItems = [];
+                        if (data.alreadyInLot) {
+                            alertItems.push(`
+                                <div class="alert alert-danger py-2 px-3 small mb-2 d-flex align-items-center justify-content-between">
+                                    <div><i class="fa-solid fa-triangle-exclamation me-1"></i><strong>Phương tiện này đang ở trong bãi!</strong> (Vé #${data.ticketCode} - vào lúc ${data.thoiGianVao})</div>
+                                    <a href="/xe-ra?code=${encodeURIComponent(data.ticketCode)}" class="btn btn-sm btn-danger py-0 px-2 fw-bold text-nowrap">Xem tại Làn Xe Ra &rarr;</a>
+                                </div>
+                            `);
+                        }
+                        if (data.hasMonthlyPass) {
+                            alertItems.push(`
+                                <div class="alert alert-success border-2 border-success py-2 px-3 small mb-2 shadow-sm d-flex align-items-center gap-3">
+                                    <i class="fa-solid fa-circle-check fs-2 text-success"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-success text-uppercase">⭐ XÁC THỰC THÀNH CÔNG THẺ VÉ THÁNG: ${data.customerName || data.monthlyCustomerName || 'Cư dân'} (${data.monthlyPassCode || data.scannedCardCode})</div>
+                                        <div class="text-xs text-dark mt-1">Biển số: <strong class="license-plate-badge py-0 px-2">${data.resolvedPlate || data.displayValue}</strong> &bull; Hạn đến: <strong>${data.expiryDate || data.monthlyExpiry}</strong> (${data.monthlyRemainingDays != null ? 'Còn ' + data.monthlyRemainingDays + ' ngày' : 'Đang hiệu lực'}) &bull; <span class="badge bg-success text-white">MIỄN PHÍ 100% LƯỢT GỬI</span></div>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                        if (alertItems.length > 0) {
+                            notice.classList.remove('d-none');
+                            notice.style.display = 'block';
+                            notice.innerHTML = alertItems.join('');
+                        } else {
+                            notice.classList.add('d-none');
+                            notice.style.display = 'none';
+                        }
+                    }).catch(e => console.warn(e));
+            }, 150);
+            return;
+        }
+
         // 1. Kiểm tra nếu chỉ toàn số
         if (/^\d+$/.test(clean)) {
             fb.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-1"></i> Biển số không thể chỉ gồm chữ số (' + clean + ')! Cần có sê-ri chữ. <span class="text-primary fw-semibold"><i class="fa-solid fa-wand-magic-sparkles ms-1 text-warning"></i> Vui lòng bấm vào gợi ý bên dưới để sửa nhanh:</span></span>';
@@ -3153,7 +3225,10 @@
                     // Nếu quét thẻ/mã QR vé tháng (VT-xxxx) -> tự động điền biển số xe đăng ký
                     if (data.resolvedPlate && data.scannedCardCode) {
                         input.value = data.resolvedPlate;
-                        fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-qrcode me-1"></i> Quét thẻ vé tháng: <strong>' + data.scannedCardCode + '</strong> &rarr; Biển số: <strong>' + data.resolvedPlate + '</strong></span>';
+                        fb.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-id-card me-1"></i> Quét thẻ vé tháng: <strong>' + data.scannedCardCode + '</strong> &rarr; Biển số: <strong>' + data.resolvedPlate + '</strong></span>';
+                        if (data.cardLoaiXeId && typeof selectVehicleType === 'function') {
+                            selectVehicleType(data.cardLoaiXeId, data.cardLoaiXeTen || 'Xe');
+                        }
                     }
 
                     let alertItems = [];
@@ -3222,11 +3297,11 @@
                     // 5. KHÁCH VÉ THÁNG HỢP LỆ
                     if (data.hasMonthlyPass) {
                         alertItems.push(`
-                            <div class="monthly-pass-alert small d-flex align-items-center gap-2 mb-2">
-                                <i class="fa-solid fa-id-card fs-4 text-purple"></i>
-                                <div>
-                                    <div class="fw-bold">⭐ KHÁCH VÉ THÁNG: ${data.customerName} (${data.monthlyPassCode})</div>
-                                    <div class="text-xs opacity-75">Hạn sử dụng đến: <strong>${data.expiryDate}</strong> &bull; Áp dụng miễn phí theo quy định vé tháng</div>
+                            <div class="alert alert-success border-2 border-success py-2 px-3 small mb-2 shadow-sm d-flex align-items-center gap-3">
+                                <i class="fa-solid fa-circle-check fs-2 text-success"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-success text-uppercase">⭐ XÁC THỰC THÀNH CÔNG THẺ VÉ THÁNG: ${data.customerName || data.monthlyCustomerName || 'Cư dân'} (${data.monthlyPassCode || data.scannedCardCode || ''})</div>
+                                    <div class="text-xs text-dark mt-1">Biển số xe: <strong class="license-plate-badge py-0 px-2">${data.resolvedPlate || data.displayValue}</strong> &bull; Hạn dùng: <strong>${data.expiryDate || data.monthlyExpiry}</strong> (${data.monthlyRemainingDays != null ? 'Còn ' + data.monthlyRemainingDays + ' ngày' : 'Đang hiệu lực'}) &bull; <span class="badge bg-success text-white">MIỄN PHÍ 100% LƯỢT GỬI</span></div>
                                 </div>
                             </div>
                         `);

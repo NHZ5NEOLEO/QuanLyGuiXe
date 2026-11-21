@@ -597,7 +597,7 @@
                                         </span>
                                         <input type="text" class="form-control font-monospace fw-bold text-uppercase plate-input-lg" 
                                                id="ticketCodeInput" name="code" 
-                                               placeholder="VD: 30A-123.45 HOẶC MÃ VÉ QR-..." 
+                                               placeholder="VD: 30A-123.45, MÃ VÉ QR-..., HOẶC MÃ THẺ VT-..." 
                                                th:value="${searchedCode}"
                                                required autofocus autocomplete="off">
                                         <button type="button" class="btn btn-outline-secondary px-3" onclick="clearTicketSearch()" title="Làm mới ô nhập">
@@ -656,7 +656,10 @@
                                     </div>
                                     <div class="col-sm-6 text-sm-end">
                                         <div class="text-muted small">Tổng tiền thanh toán:</div>
-                                        <div class="fs-2 fw-bold text-danger font-monospace" id="displayFeeAmount"
+                                        <div th:if="${preview.laVeThang or preview.soTien == 0}" class="fs-2 fw-bold text-success font-monospace" id="displayFeeAmount" th:data-fee="0">
+                                            0 VNĐ <span class="badge bg-success-subtle text-success border border-success-subtle fs-6 align-middle ms-1">MIỄN PHÍ VÉ THÁNG</span>
+                                        </div>
+                                        <div th:unless="${preview.laVeThang or preview.soTien == 0}" class="fs-2 fw-bold text-danger font-monospace" id="displayFeeAmount"
                                              th:data-fee="${preview.soTien}"
                                              th:text="${#numbers.formatDecimal(preview.soTien, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">
                                             15.000 VNĐ
@@ -709,7 +712,7 @@
                                 <!-- ========================================================================= -->
                                 <!-- MÃ VIETQR THANH TOÁN TỰ ĐỘNG ĐƯỢC ĐƯA RA CHO KHÁCH (TÂM ĐIỂM)               -->
                                 <!-- ========================================================================= -->
-                                <div th:if="${preview.soTien > 0}" class="vietqr-box mb-4" id="vietQrPaymentBox">
+                                <div th:if="${preview.soTien > 0 and !preview.laVeThang}" class="vietqr-box mb-4" id="vietQrPaymentBox">
                                     <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
                                         <span class="badge bg-primary px-3 py-1 text-uppercase fw-bold">
                                             <i class="fa-solid fa-qrcode me-1"></i> Quét mã VietQR thanh toán tự động
@@ -775,11 +778,17 @@
                                     </div>
 
                                     <!-- Thông báo miễn phí cho khách Vé tháng còn hạn -->
-                                    <div th:if="${preview.laVeThang or preview.soTien == 0}" class="alert alert-success py-2 px-3 small mb-3 border-success border-2 shadow-xs d-flex align-items-center gap-2">
-                                        <i class="fa-solid fa-id-card fs-4 text-success"></i>
-                                        <div>
-                                            <div class="fw-bold">Phương tiện sử dụng Vé Tháng còn hạn (Miễn phí lượt gửi)</div>
-                                            <div class="text-xs">Không thu tiền của khách. Bấm nút bên dưới để hoàn tất xác nhận xe ra và mở cổng.</div>
+                                    <div th:if="${preview.laVeThang or preview.soTien == 0}" class="alert alert-success py-3 px-3 small mb-3 border-success border-2 shadow-sm d-flex align-items-center gap-3">
+                                        <i class="fa-solid fa-circle-check fs-2 text-success"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold text-uppercase fs-6 text-success">
+                                                <i class="fa-solid fa-id-card me-1"></i> ⭐ XÁC THỰC THÀNH CÔNG THẺ VÉ THÁNG (MIỄN PHÍ 100%)
+                                            </div>
+                                            <div class="text-xs text-dark mt-1">
+                                                Chủ thẻ: <strong th:text="${preview.tenKhachHang != null ? preview.tenKhachHang : 'Khách vé tháng'}">Nguyễn Văn An</strong> 
+                                                &bull; Biển số: <strong class="license-plate-badge py-0 px-2 fs-6" th:text="${preview.bienSoXe}">29A-123.45</strong>
+                                                &bull; Lượt gửi được miễn phí theo chính sách vé tháng. Nhấn nút bên dưới để mở Barie xuất bãi.
+                                            </div>
                                         </div>
                                     </div>
 
@@ -831,7 +840,7 @@
                                     <!-- NÚT BẤM XÁC NHẬN THANH TOÁN & HOÀN TẤT LƯỢT XE RA -->
                                     <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm py-3 px-4 fs-6" id="btnConfirmCheckout">
                                         <i class="fa-solid fa-circle-check me-2"></i> 
-                                        <span th:text="${preview.laVeThang or preview.soTien == 0 ? 'Xác nhận xe ra (Miễn phí vé tháng)' : 'Xác nhận thanh toán & Hoàn tất xe ra'}">Xác nhận thanh toán & Hoàn tất xe ra</span> 
+                                        <span th:text="${preview.laVeThang or preview.soTien == 0 ? 'XÁC NHẬN XE RA & MỞ CỔNG BARIE (MIỄN PHÍ VÉ THÁNG)' : 'Xác nhận thanh toán & Hoàn tất xe ra'}">Xác nhận thanh toán & Hoàn tất xe ra</span> 
                                         <kbd class="kbd-key ms-2 bg-white text-dark">Enter</kbd>
                                     </button>
                                 </form>
@@ -873,9 +882,25 @@
                                     <span class="fw-bold" th:text="${av.bienSoXe}">29A-12345</span>
                                     <small class="text-muted ms-1" th:text="'(' + (${av.loaiXe != null ? av.loaiXe.tenLoai : 'Xe'}) + ')'"></small>
                                 </button>
+                            <div class="small fw-bold text-muted text-uppercase mb-2">
+                                <i class="fa-solid fa-qrcode text-success me-1"></i> Quét thử mã QR thẻ vé tháng xuất bãi:
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
                                 <button type="button" class="btn btn-xs btn-outline-primary font-monospace" 
-                                        onclick="setQuickSearchCode('VT-99999999')" title="Quét thử mã QR thẻ vé tháng">
-                                    <i class="fa-solid fa-id-card me-1 text-primary"></i> <span class="fw-bold">VT-99999999</span> (Vé tháng)
+                                        onclick="setQuickSearchCode('VT-88888888')" title="Quét thử thẻ vé tháng VT-88888888 (Xe máy 29B1-88888)">
+                                    <i class="fa-solid fa-id-card me-1 text-primary"></i> <span class="fw-bold">VT-88888888</span> (29B1-88888)
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-primary font-monospace" 
+                                        onclick="setQuickSearchCode('VT-99999999')" title="Quét thử thẻ vé tháng VT-99999999 (Ô tô 30E-99999)">
+                                    <i class="fa-solid fa-id-card me-1 text-primary"></i> <span class="fw-bold">VT-99999999</span> (30E-99999)
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-primary font-monospace" 
+                                        onclick="setQuickSearchCode('VT-095D18A5')" title="Quét thử thẻ vé tháng VT-095D18A5 (Xe máy 59-E1 495.65)">
+                                    <i class="fa-solid fa-id-card me-1 text-primary"></i> <span class="fw-bold">VT-095D18A5</span> (59-E1 495.65)
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary font-monospace" 
+                                        onclick="setQuickSearchCode('VT-12345678')" title="Quét thử thẻ vé tháng hết hạn">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> <span class="fw-bold">VT-12345678</span> (Hết hạn)
                                 </button>
                             </div>
 
