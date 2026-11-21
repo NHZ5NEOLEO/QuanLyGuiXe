@@ -932,6 +932,14 @@
                         </div>
                         <h3 class="h5 fw-bold text-dark mb-3">HÓA ĐƠN THU TIỀN XE RA (RECEIPT)</h3>
 
+                        <div th:if="${completedTicket.hinhThucThanhToan == 'VE_THANG'}" class="alert alert-success py-2 px-3 small mb-3 border-success border-2 shadow-xs d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-id-card fs-4 text-success"></i>
+                            <div class="text-start">
+                                <div class="fw-bold text-success text-uppercase">⭐ XÁC THỰC VÉ THÁNG – MIỄN PHÍ 100%</div>
+                                <div class="text-2xs text-dark">Cổng Barie đã tự động nâng mở cho xe xuất bãi.</div>
+                            </div>
+                        </div>
+
                         <div class="bg-white p-3 rounded-2 border text-start mb-3 small">
                             <div class="d-flex justify-content-between py-1 border-bottom">
                                 <span class="text-muted">Biển số:</span>
@@ -1338,15 +1346,21 @@
     document.addEventListener('DOMContentLoaded', function() {
         const invoiceEl = document.getElementById('printableInvoice');
         const successEl = document.getElementById('checkoutSuccessAlert');
+        const isAutoBarrier = /*[[${autoOpenedBarrier ?: false}]]*/ false;
+        const isMonthlyPassPreview = /*[[${preview != null and preview.laVeThang}]]*/ false;
+
         if (invoiceEl || successEl) {
             setTimeout(() => {
-                triggerBarrierOpen(6000, 'Thanh toán hoàn tất – Cổng Barie đã tự động nâng mở cho xe xuất bãi!');
-            }, 300);
+                const barrierMsg = isAutoBarrier
+                    ? '⭐ XÁC THỰC THẺ VÉ THÁNG THÀNH CÔNG – CỔNG BARIE ĐÃ TỰ ĐỘNG NÂNG MỞ CHO XE RA!'
+                    : 'Thanh toán hoàn tất – Cổng Barie đã tự động nâng mở cho xe xuất bãi!';
+                triggerBarrierOpen(8000, barrierMsg);
+            }, 250);
             if (successEl && typeof Swal !== 'undefined') {
                 const msg = successEl.innerText.trim();
                 Swal.fire({
                     icon: 'success',
-                    title: 'ĐÃ THANH TOÁN THÀNH CÔNG!',
+                    title: isAutoBarrier ? '⭐ VÉ THÁNG HỢP LỆ - BARIE ĐANG TỰ ĐỘNG MỞ!' : 'ĐÃ THANH TOÁN THÀNH CÔNG!',
                     text: msg,
                     timer: 5000,
                     timerProgressBar: true,
@@ -1356,6 +1370,13 @@
             }
             if (invoiceEl && window.innerWidth < 992) {
                 invoiceEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } else if (isMonthlyPassPreview) {
+            // Nếu có preview vé tháng nhưng chưa hoàn tất, tự động mở barie và submit form ngay
+            triggerBarrierOpen(8000, '⭐ XÁC THỰC THẺ VÉ THÁNG THÀNH CÔNG – CỔNG BARIE ĐÃ TỰ ĐỘNG NÂNG MỞ CHO XE RA!');
+            const form = document.getElementById('confirmCheckoutForm');
+            if (form) {
+                setTimeout(() => form.submit(), 400);
             }
         } else {
             const previewEl = document.getElementById('confirmCheckoutForm');
@@ -2122,6 +2143,17 @@
         playScanBeep();
         const input = document.getElementById('ticketCodeInput');
         if (input) input.value = code.trim();
+        if (code.toUpperCase().startsWith('VT-') && typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: '⭐ Quét thẻ vé tháng: ' + code.trim(),
+                text: 'Hệ thống đang tự động kiểm tra và nâng mở Barie...',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
         document.getElementById('searchTicketForm').submit();
     }
 
@@ -2175,6 +2207,17 @@
         const input = document.getElementById('ticketCodeInput');
         if (input) {
             input.value = code.trim();
+            if (code.toUpperCase().startsWith('VT-') && typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '⭐ Quét thẻ vé tháng: ' + code.trim(),
+                    text: 'Hệ thống đang tự động kiểm tra và nâng mở Barie...',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
             document.getElementById('searchTicketForm').submit();
         }
     }

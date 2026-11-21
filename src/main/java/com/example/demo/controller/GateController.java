@@ -366,6 +366,7 @@ public class GateController {
             @RequestParam(value = "paidSuccess", required = false) String paidSuccess,
             @RequestParam(value = "plate", required = false) String plate,
             @RequestParam(value = "fee", required = false) Double fee,
+            java.security.Principal principal,
             Model model
     ) {
         if ("true".equals(paidSuccess)) {
@@ -379,15 +380,39 @@ public class GateController {
         if (code != null && !code.trim().isEmpty()) {
             try {
                 CheckOutPreviewResponse preview = parkingService.previewCheckOut(code.trim());
+                boolean isBlacklisted = false;
                 if (preview != null && preview.getBienSoXe() != null) {
                     var blackOpt = blacklistService.checkBlacklist(preview.getBienSoXe());
                     if (blackOpt.isPresent()) {
+                        isBlacklisted = true;
                         model.addAttribute("isBlacklisted", true);
                         model.addAttribute("blacklistReason", blackOpt.get().getLyDo());
                         model.addAttribute("blacklistLevel", blackOpt.get().getMucDo() != null ? blackOpt.get().getMucDo() : "CAO");
                     }
                 }
-                model.addAttribute("preview", preview);
+
+                // Nếu là vé tháng hợp lệ và không thuộc danh sách đen:
+                // Tự động hoàn tất xuất bãi và tự động mở barie ngay lập tức (1-chạm không cần ấn xác nhận)
+                if (preview != null && preview.isLaVeThang() && !isBlacklisted) {
+                    String staff = (principal != null) ? principal.getName() : "Bảo vệ trực cổng";
+                    VeXe completed = parkingService.confirmCheckOut(
+                            preview.getVeXeId(),
+                            "VE_THANG",
+                            null,
+                            "Quét mã QR vé tháng tự động mở barie xuất bãi",
+                            preview.getBienSoXe(),
+                            staff
+                    );
+                    model.addAttribute("completedTicket", completed);
+                    model.addAttribute("autoOpenedBarrier", true);
+                    String cardCode = (completed.getVeThang() != null) ? completed.getVeThang().getMaThe() : "";
+                    String custName = (completed.getVeThang() != null && completed.getVeThang().getKhachHang() != null) 
+                            ? completed.getVeThang().getKhachHang().getHoTen() : "Khách vé tháng";
+                    model.addAttribute("successMessage", "⭐ XÁC THỰC THẺ VÉ THÁNG [" + cardCode + "] THÀNH CÔNG: " +
+                            custName + " - Biển số [" + completed.getBienSoXe() + "] (Miễn phí 100%). CỔNG BARIE ĐÃ TỰ ĐỘNG MỞ CHO XE XUẤT BÃI!");
+                } else {
+                    model.addAttribute("preview", preview);
+                }
                 model.addAttribute("searchedCode", code.trim());
             } catch (Exception e) {
                 model.addAttribute("errorMessage", e.getMessage());
